@@ -11,6 +11,7 @@ $finder = PhpCsFixer\Finder::create()
         [
             __DIR__ . '/admin',
             __DIR__ . '/site',
+            __DIR__ . '/tests',
         ]
     )
     ->notPath('/tmpl/')

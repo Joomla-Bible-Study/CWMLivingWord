@@ -2,15 +2,77 @@
   "name": "cwm/com-livingword",
   "type": "project",
   "description": "CWM LivingWord Bible Reading Plan Component for Joomla 5",
+  "keywords": [
+    "bible",
+    "joomla",
+    "reading-plan",
+    "livingword"
+  ],
+  "homepage": "https://github.com/Joomla-Bible-Study/CWMLivingWord",
   "license": "GPL-2.0-or-later",
-  "require": {
-    "php": "^8.3.0"
+  "authors": [
+    {
+      "name": "Brent Cordis",
+      "email": "info@christianwebministries.org",
+      "homepage": "https://www.christianwebministries.org",
+      "role": "Lead Developer"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "optimize-autoloader": true,
+    "platform": {
+      "php": "8.3.0"
+    },
+    "vendor-dir": "libraries/vendor",
+    "github-protocols": [
+      "https"
+    ],
+    "allow-plugins": {}
+  },
+  "support": {
+    "issues": "https://www.christianwebministries.org/issues",
+    "forum": "https://www.christianwebministries.org/forum",
+    "docs": "https://www.christianwebministries.org/docs"
   },
   "autoload": {
     "psr-4": {
       "CWM\\Component\\Livingword\\Administrator\\": "admin/src/",
       "CWM\\Component\\Livingword\\Site\\": "site/src/",
-      "CWM\\Library\\Scripture\\": "libraries/cwmscripture_src/src/"
+      "CWM\\Library\\Scripture\\": "libraries/cwmscripture_src/lib_cwmscripture/src/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "CWM\\Component\\Livingword\\Tests\\": "tests/unit/"
+    }
+  },
+  "require": {
+    "php": "^8.3.0",
+    "ext-mbstring": "*",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.0",
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "roave/security-advisories": "dev-latest",
+    "joomla/database": "^4.0",
+    "joomla/registry": "^4.0",
+    "joomla/di": "^4.0",
+    "joomla/event": "^4.0",
+    "joomla/input": "^4.0",
+    "joomla/filter": "^4.0",
+    "joomla/filesystem": "^4.0",
+    "joomla/uri": "^4.0",
+    "joomla/application": "^4.0",
+    "joomla/string": "^4.0"
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test:unit": "phpunit --testsuite 'LivingWord Unit Tests'",
+    "lint": "php-cs-fixer fix --dry-run --diff",
+    "lint:fix": "php-cs-fixer fix",
+    "check": ["@lint", "@test"]
   }
 }
