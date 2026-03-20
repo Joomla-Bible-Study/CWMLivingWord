@@ -1,0 +1,16 @@
+{
+  "name": "cwm/com-livingword",
+  "type": "project",
+  "description": "CWM LivingWord Bible Reading Plan Component for Joomla 5",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": "^8.3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "CWM\\Component\\Livingword\\Administrator\\": "admin/src/",
+      "CWM\\Component\\Livingword\\Site\\": "site/src/",
+      "CWM\\Library\\Scripture\\": "libraries/cwmscripture_src/src/"
+    }
+  }
+}

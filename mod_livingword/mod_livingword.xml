@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="module" client="site" method="upgrade">
+    <name>mod_livingword</name>
+    <author>CWM Team</author>
+    <authorEmail>info@christianwebministries.org</authorEmail>
+    <authorUrl>www.christianwebministries.org</authorUrl>
+    <copyright>(C) 2026 CWM Team All rights reserved.</copyright>
+    <version>5.0.0</version>
+    <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+    <description>MOD_LIVINGWORD_XML_DESCRIPTION</description>
+    <namespace path="src">CWM\Module\Livingword\Site</namespace>
+
+    <files>
+        <folder>services</folder>
+        <folder>src</folder>
+        <folder>tmpl</folder>
+        <folder>language</folder>
+    </files>
+
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                <field name="show_reading_link" type="radio" class="btn-group" default="1"
+                       label="MOD_LIVINGWORD_SHOW_LINK" description="MOD_LIVINGWORD_SHOW_LINK_DESC">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+            </fieldset>
+        </fields>
+    </config>
+</extension>

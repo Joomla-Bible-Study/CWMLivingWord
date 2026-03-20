@@ -1,0 +1,91 @@
+<?php
+
+/**
+ * @package    Livingword.Admin
+ * @copyright  (C) 2026 CWM Team All rights reserved
+ * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * @link       https://www.christianwebministries.org
+ */
+
+namespace CWM\Component\Livingword\Administrator\View\Cwmplandetail;
+
+// phpcs:disable PSR1.Files.SideEffects
+\defined('_JEXEC') or die;
+
+// phpcs:enable PSR1.Files.SideEffects
+
+use Joomla\CMS\Factory;
+use Joomla\CMS\Helper\ContentHelper;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
+use Joomla\CMS\Toolbar\ToolbarHelper;
+
+/**
+ * Plan detail (reading) edit view
+ *
+ * @since  5.0.0
+ */
+class HtmlView extends BaseHtmlView
+{
+    /** @var mixed @since 5.0.0 */
+    protected mixed $form;
+
+    /** @var ?object @since 5.0.0 */
+    protected ?object $item = null;
+
+    /** @var ?object @since 5.0.0 */
+    protected ?object $state = null;
+
+    /** @var ?object @since 5.0.0 */
+    protected ?object $canDo = null;
+
+    /**
+     * @param   string  $tpl  Template name.
+     *
+     * @return  void
+     *
+     * @throws  \Exception
+     * @since   5.0.0
+     */
+    #[\Override]
+    public function display($tpl = null): void
+    {
+        $model = $this->getModel();
+
+        $this->form  = $model->getForm();
+        $this->item  = $model->getItem();
+        $this->state = $model->getState();
+        $this->canDo = ContentHelper::getActions('com_livingword');
+
+        if (\count($errors = $model->getErrors())) {
+            throw new \RuntimeException(implode("\n", $errors), 500);
+        }
+
+        $this->setLayout('edit');
+        $this->addToolbar();
+
+        parent::display($tpl);
+    }
+
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     * @since 5.0.0
+     */
+    protected function addToolbar(): void
+    {
+        Factory::getApplication()->getInput()->set('hidemainmenu', true);
+        $isNew = ((int) $this->item->id === 0);
+        $title = $isNew ? Text::_('JNEW') : Text::_('JACTION_EDIT');
+
+        ToolbarHelper::title(Text::_('COM_LIVINGWORD_READING') . ': ' . $title, 'list');
+
+        if ($this->canDo->get('core.create') || $this->canDo->get('core.edit')) {
+            ToolbarHelper::apply('cwmplandetail.apply');
+            ToolbarHelper::save('cwmplandetail.save');
+        }
+
+        ToolbarHelper::cancel('cwmplandetail.cancel', $isNew ? 'JTOOLBAR_CANCEL' : 'JTOOLBAR_CLOSE');
+    }
+}

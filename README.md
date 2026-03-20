@@ -1,14 +1,44 @@
-# LivingWord Component
+# CWM LivingWord Component
 
-NEW! Version 3.0.0 for Joomla 3.x!! Version 2.5.0 is still available for Joomla 1.5x-2.5x.  LivingWord is a Joomla bible reading component. Utilizing bible resources from BibleGateway.com, this component offers many bible reading plans, bible versions and translations, and audio versions as well. With the use of an included plugin, users can have their daily readings emailed to them. The daily bible reading module is also available.  
+LivingWord (`com_livingword`) is a Joomla Bible reading plan component adopted and maintained by Christian Web Ministries (CWM). It integrates with BibleGateway.com for Bible text, audio versions, and translations.
 
-Features include:
-* Bible translations in many different languages
-* Several different Bible reading plans
-* Capability to create your own reading plan through the Administrative console
-* Bible resources include non-English Bibles available on PDF
-* Bible study tools include commentaries, Bible search, and keyword search
-* Optional module to display daily Bible reading
+## Requirements
 
+- Joomla 5.0+
+- PHP 8.3+
+- MySQL 8.0+ / MariaDB 10.4+
 
+## Features
 
+- Multiple Bible reading plans (Comprehensive, New Testament, Old Testament, Chronological, Biographical, Survey, Thru the Bible, NT + Psalms)
+- Bible translations in many different languages via BibleGateway.com
+- Create custom reading plans through the admin panel
+- Curated Bible resource links organized by category
+- User preferences: plan selection, Bible version, start date, email subscription
+- Calendar and list views for full plan display
+- Daily reading email notifications via Joomla Task Scheduler
+- Standalone module (`mod_livingword`) for displaying daily readings
+- Frontend ACL: configurable access to Home, Resources, Settings, and Tools pages
+- Database utilities: optimize, check, repair, backup
+
+## Architecture
+
+This component follows the Joomla 5 MVC architecture with PSR-4 namespaces, DI container registration, and the same coding standards as the CWM Proclaim component.
+
+- **Namespace**: `CWM\Component\Livingword`
+- **Admin**: `admin/src/` — Controllers, Models, Views, Tables, Helpers, Dispatcher, Extension
+- **Site**: `site/src/` — Controllers, Models, Views, Helpers, Router, Dispatcher
+- **Module**: `mod_livingword/` — Joomla 5 module with DI provider
+- **Task Plugin**: `plg_task_livingword/` — Scheduled email notifications
+
+### Legacy Code
+
+The original Joomla 3.x codebase (v3.0.0 by Mike Leeper / MLWebTechnologies) is preserved in the `Component/` directory for reference.
+
+## Installation
+
+Package the component directory as a zip and install via Joomla's Extension Manager. The module and task plugin are installed separately from their respective directories.
+
+## License
+
+GNU General Public License version 2 or later.

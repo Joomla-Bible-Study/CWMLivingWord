@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" method="upgrade">
+    <name>com_livingword</name>
+    <author>CWM Team</author>
+    <authorEmail>info@christianwebministries.org</authorEmail>
+    <authorUrl>www.christianwebministries.org</authorUrl>
+    <copyright>(C) 2026 CWM Team All rights reserved.</copyright>
+    <version>5.0.0</version>
+    <creationDate>Mar 2026</creationDate>
+    <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+    <description>COM_LIVINGWORD_XML_DESCRIPTION</description>
+    <namespace path="src">CWM\Component\Livingword</namespace>
+
+    <scriptfile>script.php</scriptfile>
+
+    <languages folder="admin">
+        <language tag="en-GB">language/en-GB/com_livingword.ini</language>
+        <language tag="en-GB">language/en-GB/com_livingword.sys.ini</language>
+    </languages>
+
+    <install>
+        <sql>
+            <file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+        </sql>
+    </install>
+
+    <uninstall>
+        <sql>
+            <file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+        </sql>
+    </uninstall>
+
+    <update>
+        <schemas>
+            <schemapath type="mysql">sql/updates/mysql</schemapath>
+        </schemas>
+    </update>
+
+    <files folder="site">
+        <folder>src</folder>
+        <folder>tmpl</folder>
+    </files>
+
+    <media destination="com_livingword" folder="media/com_livingword">
+        <filename>joomla.asset.json</filename>
+        <folder>css</folder>
+        <folder>js</folder>
+        <folder>images</folder>
+    </media>
+
+    <administration>
+        <menu img="class:component">COM_LIVINGWORD</menu>
+        <submenu>
+            <menu link="option=com_livingword&amp;view=cwmcpanel"
+                  view="cwmcpanel"
+                  alt="LivingWord/ControlPanel">
+                COM_LIVINGWORD_CPANEL
+            </menu>
+            <menu link="option=com_livingword&amp;view=cwmplans"
+                  view="cwmplans"
+                  alt="LivingWord/Plans">
+                COM_LIVINGWORD_MANAGE_PLANS
+            </menu>
+            <menu link="option=com_livingword&amp;view=cwmlinks"
+                  view="cwmlinks"
+                  alt="LivingWord/Links">
+                COM_LIVINGWORD_MANAGE_LINKS
+            </menu>
+            <menu link="option=com_livingword&amp;view=cwmusers"
+                  view="cwmusers"
+                  alt="LivingWord/Users">
+                COM_LIVINGWORD_MANAGE_SUBSCRIBERS
+            </menu>
+        </submenu>
+
+        <files folder="admin">
+            <filename>access.xml</filename>
+            <filename>config.xml</filename>
+            <folder>forms</folder>
+            <folder>language</folder>
+            <folder>services</folder>
+            <folder>sql</folder>
+            <folder>src</folder>
+            <folder>tmpl</folder>
+        </files>
+    </administration>
+</extension>

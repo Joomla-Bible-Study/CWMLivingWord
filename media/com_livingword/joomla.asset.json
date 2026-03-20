@@ -1,0 +1,8 @@
+{
+  "$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
+  "name": "com_livingword",
+  "version": "5.0.0",
+  "description": "CWM LivingWord Web Assets",
+  "license": "GPL-2.0-or-later",
+  "assets": []
+}

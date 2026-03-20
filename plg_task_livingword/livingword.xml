@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="task" method="upgrade">
+    <name>plg_task_livingword</name>
+    <author>CWM Team</author>
+    <authorEmail>info@christianwebministries.org</authorEmail>
+    <authorUrl>www.christianwebministries.org</authorUrl>
+    <copyright>(C) 2026 CWM Team All rights reserved.</copyright>
+    <version>5.0.0</version>
+    <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+    <description>PLG_TASK_LIVINGWORD_XML_DESCRIPTION</description>
+    <namespace path="src">CWM\Plugin\Task\Livingword</namespace>
+
+    <files>
+        <folder>services</folder>
+        <folder>src</folder>
+        <folder>language</folder>
+    </files>
+</extension>
