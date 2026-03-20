@@ -41,13 +41,6 @@
         <folder>tmpl</folder>
     </files>
 
-    <media destination="com_livingword" folder="media/com_livingword">
-        <filename>joomla.asset.json</filename>
-        <folder>css</folder>
-        <folder>js</folder>
-        <folder>images</folder>
-    </media>
-
     <administration>
         <menu img="class:component">COM_LIVINGWORD</menu>
         <submenu>
