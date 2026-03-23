@@ -1,7 +1,7 @@
 {
   "name": "cwm/com-livingword",
   "type": "project",
-  "description": "CWM LivingWord Bible Reading Plan Component for Joomla 5",
+  "description": "CWM LivingWord Bible Reading Plan Component for Joomla 5+",
   "keywords": [
     "bible",
     "joomla",
@@ -12,7 +12,7 @@
   "license": "GPL-2.0-or-later",
   "authors": [
     {
-      "name": "Brent Cordis",
+      "name": "CWM Team",
       "email": "info@christianwebministries.org",
       "homepage": "https://www.christianwebministries.org",
       "role": "Lead Developer"
@@ -71,8 +71,20 @@
   "scripts": {
     "test": "phpunit",
     "test:unit": "phpunit --testsuite 'LivingWord Unit Tests'",
+    "test:integration": "phpunit --testsuite 'LivingWord Integration Tests'",
+    "lint:syntax": "php build/livingword_build.php lint-syntax",
     "lint": "php-cs-fixer fix --dry-run --diff",
     "lint:fix": "php-cs-fixer fix",
-    "check": ["@lint", "@test"]
+    "check": ["@lint:syntax", "@lint", "@test"],
+    "setup": "php build/livingword_build.php setup",
+    "joomla-install": "php build/livingword_build.php install-joomla",
+    "joomla-latest": "php build/livingword_build.php joomla-latest",
+    "symlink": "php build/livingword_build.php link",
+    "verify": "php build/livingword_build.php verify",
+    "clean": "php build/livingword_build.php clean",
+    "build": "php build/livingword_build.php build",
+    "post-install-cmd": [
+      "@php -r \"if (!file_exists('build.properties')) { copy('build.dist.properties', 'build.properties'); echo 'Created build.properties from template. Run composer setup to configure.\\n'; }\""
+    ]
   }
 }

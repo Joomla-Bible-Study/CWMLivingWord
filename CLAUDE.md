@@ -4,47 +4,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LivingWord is a **Joomla 3.x component** (`com_livingword`) that provides Bible reading plans and resources. It integrates with BibleGateway.com for Bible text, audio versions, and translations. The component includes an admin panel, a frontend site component, a Joomla module (`mod_livingword`), and a Joomla plugin for email subscriptions.
+LivingWord is a **Joomla 5+ component** (`com_livingword`) that provides Bible reading plans and resources. The component includes an admin panel, a frontend site component, a Joomla module (`mod_livingword`), and a task plugin (`plg_task_livingword`) for scheduled email delivery.
 
-**Version:** 3.0.0 | **License:** GNU/GPL | **Original Author:** Mike Leeper (MLWebTechnologies)
+**Version:** 5.0.0 | **License:** GPL-2.0-or-later | **Maintained by:** CWM Team (Christian Web Ministries)
+
+Originally created by Mike Leeper (MLWebTechnologies) as a Joomla 3.x component, migrated to Joomla 5 architecture with namespaced MVC, PSR-4 autoloading, and modern PHP 8.3+ patterns.
 
 ## Architecture
 
-This follows the standard **Joomla MVC component pattern** with legacy API classes (`JControllerLegacy`, `JModelAdmin`, `JViewLegacy`, etc.).
+This follows the standard **Joomla 5 MVC component pattern** with namespaced classes under `CWM\Component\Livingword`.
 
 ### Top-level Layout
 
-- `Component/` — The installable Joomla component package
-  - `livingword.xml` — Joomla extension manifest (defines files, SQL scripts, menus, update server)
-  - `script.php` — Install/update/uninstall script (`com_livingwordInstallerScript`)
-- `Update/` — Update server XML for Joomla's extension updater
+- `livingword.xml` — Joomla extension manifest (defines files, SQL scripts, menus, update server)
+- `script.php` — Install/update/uninstall script
+- `admin/` — Administrator component (controllers, models, views, templates, forms, SQL, language)
+- `site/` — Frontend component (controllers, models, views, templates, language)
+- `mod_livingword/` — Joomla module for displaying daily Bible reading
+- `plg_task_livingword/` — Task plugin for scheduled email delivery
+- `media/com_livingword/` — Media assets and `joomla.asset.json`
+- `build/` — Build tools and scripts
+- `tests/` — PHPUnit test suites (unit + integration)
 
 ### Component Structure (MVC)
 
-**Admin side** (`Component/admin/`):
-- `livingword.php` — Admin entry point; loads helpers, boots controller
-- `controller.php` — Main admin controller with tasks: `manage_plans`, `manage_books`, `manage_lang`, `manage_link`, `manage_sub`, `manage_css`, `utilities`, `addplan`, `editplan`, `addreading`, `editreading`, `addlink`, `editlink`, DB maintenance (`optimizeLWTables`, `checkLWTables`, `repairLWTables`, `backupLWTables`)
-- `controllers/` — Sub-controllers for plans, links
-- `models/` — Admin models (edit/manage plans, links, readings, subscribers, books, languages)
-- `views/` — Admin views: `livingword` (cpanel), `editplan`, `editreading`, `editlink`, `editbook`, `editlang`, `manageplans`, `manageplan`, `managelink`, `managebooks`, `managelang`, `managesub`, `managecss`, `settings`, `utilities`
-- `tables/` — Joomla table classes for DB access
-- `helpers/` — `LivingWordHelper` (submenu), `admin_lw_class.php` (admin logic), `admin_lw_includes.php` (global setup), `lw_version.php`
-- `elements/` — Custom Joomla form field types (version/plan selectors)
-- `sql/` — MySQL install/uninstall/update scripts
+**Admin side** (`admin/src/`):
+- `Controller/` — Admin controllers (Cwmcpanel, Cwmplans, Cwmplan, Cwmlinks, Cwmlink, Cwmplandetails, Cwmplandetail, Cwmusers, Cwmutilities)
+- `Model/` — Admin models for CRUD operations on plans, links, plan details, users
+- `View/` — Admin HTML views
+- `Table/` — Joomla table classes for DB access
+- `Helper/` — Admin helper classes
+- `Extension/` — Component extension/boot class
+- `Field/` — Custom form field types
 
-**Site (frontend) side** (`Component/site/`):
-- `livingword.php` — Site entry point; loads controller + helpers
-- `controller.php` — Site controller with tasks: `display`, `settings`, `resources`, `view_plan`, `tools`, `createICS` (calendar export), `rss` (feed generation)
-- `helpers/lw_class.php` — Core `livingword` class: user auth (`LWgetAuth`), reading plan logic, Bible version/plan data arrays, BibleGateway integration
-- `helpers/lw_includes.php` — Global includes and config setup
-- `views/` — Site views: `livingword` (main), `showplan` (plan display with calendar layout option), `showresources`, `showsettings`, `showtools`, `rss`
+**Site (frontend) side** (`site/src/`):
+- `Controller/` — Site display controller
+- `Model/` — Site models
+- `View/` — Site HTML views
+- `Helper/` — `CwmreadingHelper` (reading plan date calculations)
 
-**Module** (`Component/module/`):
-- `mod_livingword.php` + `helper.php` — Standalone Joomla module for displaying daily Bible reading
-- A Joomla 3.0-specific version also exists in `Component/admin/module/j30/`
+### Namespace Structure
 
-**Plugin** (`Component/admin/plugin/j30/`):
-- Email subscription plugin that sends daily readings to subscribers
+```
+CWM\Component\Livingword\Administrator\  → admin/src/
+CWM\Component\Livingword\Site\           → site/src/
+CWM\Component\Livingword\Tests\          → tests/unit/
+```
 
 ### Database Tables (MySQL, prefixed with `#__`)
 
@@ -55,15 +60,70 @@ This follows the standard **Joomla MVC component pattern** with legacy API class
 | `#__livingword_plans` | Reading plan definitions (name, description, audio/NT flags) |
 | `#__livingword_plans_details` | Individual daily readings per plan (reading text, audio ref, description) |
 
-### Key Globals
+## Development Setup
 
-The codebase uses PHP globals extensively: `$livingword` (site-side core class instance), `$livingwordadmin` (admin-side), `$lwConfig` (component configuration array), `$bible_version`, `$bible_plan`, `$db`.
+### Prerequisites
 
-## Development Notes
+- PHP 8.3+
+- Composer
+- A local Joomla 5 (or 6) installation for symlinked development
 
-- **No build system or package manager** — This is plain PHP with no Composer, npm, or build step.
-- **No test suite** — There are no automated tests.
-- **Joomla 3.x legacy API** — Uses deprecated classes like `JRequest`, `JError::raiseWarning`, `jimport()`. The `JFactory::getDBO()`, `JControllerLegacy`, `JModelAdmin` patterns are standard Joomla 3.x.
-- **Installation** — Package the `Component/` directory as a zip and install via Joomla's Extension Manager. SQL scripts in `admin/sql/` create the required tables automatically.
-- **Bible data source** — Reading content is fetched from BibleGateway.com at runtime; the `lw_class.php` helper contains all version/plan mappings and URL construction logic.
-- **ACL** — Custom access levels defined in `admin/access.xml`: `livingword.home`, `livingword.links`, `livingword.settings`, `livingword.tools`.
+### Quick Start
+
+```bash
+# Install dependencies (auto-creates build.properties from template)
+composer install
+
+# Interactive setup wizard (configure Joomla paths, dev site URLs, DB credentials)
+composer setup
+
+# Create symlinks to your local Joomla installation(s)
+composer symlink
+
+# Verify extensions are registered in Joomla's database
+composer verify
+```
+
+### Build & Test Commands
+
+| Command | Description |
+|---------|-------------|
+| `composer test` | Run all PHPUnit tests |
+| `composer test:unit` | Run unit tests only |
+| `composer test:integration` | Run integration tests only |
+| `composer lint` | Check code style (PSR-12 + custom rules) |
+| `composer lint:fix` | Auto-fix code style |
+| `composer lint:syntax` | Check PHP syntax errors |
+| `composer check` | Run syntax check + lint + tests |
+| `composer build` | Build installable ZIP package |
+| `composer setup` | Interactive dev environment setup |
+| `composer symlink` | Create symlinks to Joomla |
+| `composer clean` | Remove symlinks |
+| `composer verify` | Verify extensions in Joomla DB |
+| `composer joomla-install` | Download and install Joomla |
+| `composer joomla-latest` | Show latest Joomla version |
+
+### Code Style
+
+- **PSR-12** base with custom rules via `.php-cs-fixer.dist.php`
+- **EditorConfig** for consistent formatting (`.editorconfig`)
+- PHP: 4-space indent; JS/JSON/CSS/YAML: 2-space indent; others: tabs
+- Unix line endings (LF), UTF-8, trim trailing whitespace
+
+### CI/CD
+
+- **GitHub Actions CI** (`.github/workflows/ci.yml`): PHP lint + PHPUnit on push/PR
+- **CodeQL** (`.github/workflows/codeql.yml`): Weekly security scanning
+- **Auto-assign** (`.github/auto-assign.yml`): Auto-assigns reviewers to PRs
+
+### Build Properties
+
+The `build.dist.properties` file is the template. Copy to `build.properties` (gitignored) for local config. Supports multiple Joomla installations (comma-separated paths) for simultaneous J5/J6 development.
+
+## Coding Standards
+
+This project follows Proclaim coding standards:
+- PSR-12 with CWM customizations
+- PHP 8.3+ features (named arguments, match expressions, enums, readonly properties)
+- Joomla 5 namespaced MVC pattern
+- ACL defined in `admin/access.xml`

@@ -1,0 +1,50 @@
+# IDE & System Related Files
+.buildpath
+.project
+.settings
+.DS_Store
+.idea
+.vscode
+.docker
+/docker-compose.yml
+/nbproject
+/.devcontainer
+/.vscode
+
+# AI tooling
+.ai/
+
+# Dependencies
+/libraries/vendor/
+node_modules/
+composer.phar
+
+# Build outputs
+*.zip
+bin/
+out/
+gen/
+
+# Build reports and output
+build/reports/
+build/__pycache__/
+build/packages/
+
+# Local configuration
+/build.properties
+
+# Test cache
+.phpunit.cache/
+
+# OSX
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Never ignore
+!/.gitignore
+.claude/worktrees/

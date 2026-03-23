@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master", "development" ]
+    paths-ignore:
+      - '**.md'
+      - 'admin/language/**'
+      - 'site/language/**'
+      - '.claude/**'
+  pull_request:
+    branches: [ "master", "development" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php-checks:
+    name: PHP Lint & Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_USER: livingword_test
+          MYSQL_PASSWORD: livingword_test
+          MYSQL_ROOT_PASSWORD: livingword_test
+          MYSQL_DATABASE: livingword_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, xml, mysqli
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Clone joomla-cms for test framework
+        run: git clone --depth 1 --branch 5.4.3 https://github.com/joomla/joomla-cms.git $GITHUB_WORKSPACE/../joomla-cms
+
+      - name: Install Composer dependencies
+        run: composer install --dev --no-interaction --prefer-dist
+
+      - name: Import database schema
+        run: |
+          sed 's/#__/livingword_/g' admin/sql/install.mysql.utf8.sql > /tmp/schema.sql
+          mysql --force -h 127.0.0.1 -u livingword_test -plivingword_test livingword_test < /tmp/schema.sql 2>&1 | grep -v "doesn't exist" || true
+
+      - name: Check PHP syntax
+        run: composer lint:syntax
+
+      - name: Run PHPUnit tests
+        run: composer test
+        env:
+          JOOMLA_CMS_PATH: /home/runner/work/CWMLivingWord/joomla-cms
+          JTEST_DB_HOST: 127.0.0.1
+          JTEST_DB_NAME: livingword_test
+          JTEST_DB_USER: livingword_test
+          JTEST_DB_PASSWORD: livingword_test
+          JTEST_DB_PREFIX: livingword_
