@@ -34,11 +34,12 @@
         />
         <field
             name="audio"
-            type="text"
+            type="url"
             label="COM_LIVINGWORD_READING_AUDIO"
-            description="COM_LIVINGWORD_READING_AUDIO_DESC"
-            size="50"
-            maxlength="50"
+            description="COM_LIVINGWORD_READING_AUDIO_OVERRIDE_DESC"
+            hint="COM_LIVINGWORD_READING_AUDIO_HINT"
+            size="80"
+            maxlength="255"
         />
         <field
             name="descrip"

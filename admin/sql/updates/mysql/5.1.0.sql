@@ -12,6 +12,12 @@ ALTER TABLE `#__livingword_plans_details` DROP COLUMN IF EXISTS `figure`;
 -- Audio is now derived from the reading field by BibleBrain provider
 UPDATE `#__livingword_plans_details` SET `audio` = '' WHERE `audio` != '';
 
+-- Widen audio column on readings for URL overrides
+ALTER TABLE `#__livingword_plans_details` MODIFY `audio` varchar(255) NOT NULL DEFAULT '';
+
+-- Add audio_version column to plans for BibleBrain fileset selection
+ALTER TABLE `#__livingword_plans` ADD COLUMN IF NOT EXISTS `audio_version` varchar(20) NOT NULL DEFAULT '' AFTER `audio`;
+
 -- Convert LWBIBLEBOOK references to human-readable book names
 -- This handles the 73-book numbering used by the original Joomla 3 component
 UPDATE `#__livingword_plans_details` SET `reading` = REPLACE(`reading`, 'LWBIBLEBOOK01 ', 'Genesis ') WHERE `reading` LIKE '%LWBIBLEBOOK01 %';

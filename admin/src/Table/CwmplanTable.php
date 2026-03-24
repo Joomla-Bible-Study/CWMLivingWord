@@ -36,8 +36,11 @@ class CwmplanTable extends Table
     /** @var string|null Plan message/info text @since 5.0.0 */
     public ?string $message = '';
 
-    /** @var int|null Has audio readings (0/1) @since 5.0.0 */
+    /** @var int|null Enable audio for this plan (0/1) @since 5.0.0 */
     public ?int $audio = 0;
+
+    /** @var string|null BibleBrain audio translation/fileset code (e.g. ENGESV) @since 5.1.0 */
+    public ?string $audio_version = '';
 
     /** @var int|null Testament scope: 0=full, 1=NT-only, 2=OT-only @since 5.0.0 */
     public ?int $newtest = 0;

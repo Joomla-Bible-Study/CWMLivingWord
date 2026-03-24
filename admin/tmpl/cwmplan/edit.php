@@ -29,6 +29,7 @@ use Joomla\CMS\Router\Route;
             <div class="col-lg-3">
                 <?php echo $this->form->renderField('published'); ?>
                 <?php echo $this->form->renderField('audio'); ?>
+                <?php echo $this->form->renderField('audio_version'); ?>
                 <?php echo $this->form->renderField('newtest'); ?>
                 <?php echo $this->form->renderField('ordering'); ?>
                 <?php echo $this->form->renderField('id'); ?>

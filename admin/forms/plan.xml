@@ -43,6 +43,16 @@
             <option value="0">JNO</option>
         </field>
         <field
+            name="audio_version"
+            type="text"
+            label="COM_LIVINGWORD_PLAN_AUDIO_VERSION"
+            description="COM_LIVINGWORD_PLAN_AUDIO_VERSION_DESC"
+            hint="COM_LIVINGWORD_PLAN_AUDIO_VERSION_HINT"
+            size="20"
+            maxlength="20"
+            showon="audio:1"
+        />
+        <field
             name="newtest"
             type="list"
             label="COM_LIVINGWORD_PLAN_TESTAMENT"
