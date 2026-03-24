@@ -11,6 +11,7 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Language\Text;
 
 /** @var object $reading */
@@ -21,13 +22,7 @@ use Joomla\CMS\Language\Text;
             <strong><?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $reading->currentDay, $reading->totalDays); ?></strong>
         </p>
         <p class="mod-livingword-reading">
-            <?php if ($params->get('show_reading_link', 1) && !empty($reading->readingUrl)) : ?>
-                <a href="<?php echo htmlspecialchars($reading->readingUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
-                    <?php echo htmlspecialchars($reading->readingText, ENT_QUOTES, 'UTF-8'); ?>
-                </a>
-            <?php else : ?>
-                <?php echo htmlspecialchars($reading->readingText, ENT_QUOTES, 'UTF-8'); ?>
-            <?php endif; ?>
+            <?php echo CwmscriptureHelper::buildReadingLink($reading->readingText, $reading->bibleversion ?? 'kjv'); ?>
         </p>
     <?php else : ?>
         <p><?php echo Text::_('COM_LIVINGWORD_NO_READING_TODAY'); ?></p>

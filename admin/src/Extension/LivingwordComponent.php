@@ -86,5 +86,15 @@ class LivingwordComponent extends MVCComponent implements
                 'error'
             );
         }
+
+        if (
+            class_exists('CWM\\Library\\Scripture\\LibraryVersion')
+            && !\CWM\Library\Scripture\LibraryVersion::isInstalled()
+        ) {
+            Factory::getApplication()->enqueueMessage(
+                Text::_('COM_LIVINGWORD_ERROR_SCRIPTURE_LIBRARY'),
+                'warning'
+            );
+        }
     }
 }

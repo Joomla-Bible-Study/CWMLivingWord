@@ -11,7 +11,7 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
-use CWM\Component\Livingword\Site\Helper\CwmbiblegatewayHelper;
+use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Language\Text;
 
 /** @var \CWM\Component\Livingword\Site\View\Cwmplanview\HtmlView $this */
@@ -67,8 +67,7 @@ $startDate = new \DateTime($user->startdate ?: date('Y-01-01'));
                             <div class="card-body p-1 small">
                                 <strong><?php echo $entry['date']; ?></strong><br>
                                 <?php
-                                $passageText = CwmbiblegatewayHelper::parseReadingReference($entry['reading']->reading);
-                                echo CwmbiblegatewayHelper::buildReadingLink($passageText, $user->bibleversion, true, 'small');
+                                echo CwmscriptureHelper::buildReadingLink($entry['reading']->reading, $user->bibleversion);
                                 ?>
                             </div>
                         </div>

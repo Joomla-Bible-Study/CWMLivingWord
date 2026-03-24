@@ -11,7 +11,7 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
-use CWM\Component\Livingword\Site\Helper\CwmbiblegatewayHelper;
+use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
@@ -38,11 +38,13 @@ $user    = $data->userData;
         <?php if ($reading) : ?>
             <div class="livingword-today-reading">
                 <p class="lead">
-                    <?php
-                    $passageText = CwmbiblegatewayHelper::parseReadingReference($reading->reading);
-                    echo CwmbiblegatewayHelper::buildReadingLink($passageText, $user->bibleversion);
-                    ?>
+                    <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bibleversion); ?>
                 </p>
+                <?php if (CwmscriptureHelper::isLibraryAvailable()) : ?>
+                    <div class="livingword-scripture-text mt-3">
+                        <?php echo CwmscriptureHelper::renderReading($reading->reading, $user->bibleversion); ?>
+                    </div>
+                <?php endif; ?>
                 <?php if (!empty($reading->descrip)) : ?>
                     <p class="text-muted"><?php echo $this->escape($reading->descrip); ?></p>
                 <?php endif; ?>

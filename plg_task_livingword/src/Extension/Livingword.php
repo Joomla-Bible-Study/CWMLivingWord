@@ -13,8 +13,8 @@ namespace CWM\Plugin\Task\Livingword\Extension;
 
 // phpcs:enable PSR1.Files.SideEffects
 
-use CWM\Component\Livingword\Site\Helper\CwmbiblegatewayHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
+use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Mail\MailerFactoryInterface;
 use Joomla\CMS\Plugin\CMSPlugin;
@@ -111,12 +111,8 @@ class Livingword extends CMSPlugin implements SubscriberInterface
                 continue;
             }
 
-            $passageText = CwmbiblegatewayHelper::parseReadingReference($reading->reading);
-            $readingUrl  = CwmbiblegatewayHelper::buildReadingUrl($passageText, $version);
-
             $body = '<p>Today\'s reading (Day ' . $currentDay . '):</p>'
-                  . '<p><a href="' . htmlspecialchars($readingUrl, ENT_QUOTES, 'UTF-8') . '">'
-                  . htmlspecialchars($passageText, ENT_QUOTES, 'UTF-8') . '</a></p>'
+                  . CwmscriptureHelper::buildEmailContent($reading->reading, $version)
                   . '<p>From ' . htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8') . '</p>';
 
             try {

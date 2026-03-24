@@ -26,7 +26,7 @@ use Joomla\CMS\Language\Text;
                 <div class="card-body">
                     <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_TOOLS_DICTIONARY'); ?></h5>
                     <p class="card-text"><?php echo Text::_('COM_LIVINGWORD_TOOLS_DICTIONARY_DESC'); ?></p>
-                    <a href="https://www.biblegateway.com/resources/dictionaries/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
+                    <a href="https://www.blueletterbible.org/lexicon/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
                         <?php echo Text::_('COM_LIVINGWORD_TOOLS_OPEN'); ?>
                     </a>
                 </div>
@@ -37,7 +37,7 @@ use Joomla\CMS\Language\Text;
                 <div class="card-body">
                     <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_TOOLS_COMMENTARY'); ?></h5>
                     <p class="card-text"><?php echo Text::_('COM_LIVINGWORD_TOOLS_COMMENTARY_DESC'); ?></p>
-                    <a href="https://www.biblegateway.com/resources/commentaries/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
+                    <a href="https://enduringword.com/bible-commentary/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
                         <?php echo Text::_('COM_LIVINGWORD_TOOLS_OPEN'); ?>
                     </a>
                 </div>

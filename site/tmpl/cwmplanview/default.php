@@ -11,7 +11,7 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
-use CWM\Component\Livingword\Site\Helper\CwmbiblegatewayHelper;
+use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Language\Text;
 
 /** @var \CWM\Component\Livingword\Site\View\Cwmplanview\HtmlView $this */
@@ -44,10 +44,7 @@ $user     = $data->userData;
                     <tr<?php echo $dayNum === $data->currentDay ? ' class="table-active fw-bold"' : ''; ?>>
                         <td><?php echo $dayNum; ?></td>
                         <td>
-                            <?php
-                            $passageText = CwmbiblegatewayHelper::parseReadingReference($reading->reading);
-                            echo CwmbiblegatewayHelper::buildReadingLink($passageText, $user->bibleversion);
-                            ?>
+                            <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bibleversion); ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

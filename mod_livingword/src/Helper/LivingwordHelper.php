@@ -13,10 +13,8 @@ namespace CWM\Module\Livingword\Site\Helper;
 
 // phpcs:enable PSR1.Files.SideEffects
 
-use CWM\Component\Livingword\Site\Helper\CwmbiblegatewayHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
-use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseAwareInterface;
 use Joomla\Database\DatabaseAwareTrait;
@@ -36,7 +34,7 @@ class LivingwordHelper implements DatabaseAwareInterface
      *
      * @param   Registry  $params  Module parameters
      *
-     * @return  object  Object with readingText, readingUrl, planDescription
+     * @return  object  Object with readingText, planDescription, currentDay, totalDays
      *
      * @throws \Exception
      * @since   5.0.0
@@ -52,17 +50,9 @@ class LivingwordHelper implements DatabaseAwareInterface
         $reading    = CwmreadingHelper::getReadingForDay($db, $userData->bibleplan, $currentDay);
         $plan       = CwmreadingHelper::getPlanByName($db, $userData->bibleplan);
 
-        $readingText = '';
-        $readingUrl  = '';
-
-        if ($reading) {
-            $readingText = CwmbiblegatewayHelper::parseReadingReference($reading->reading);
-            $readingUrl  = CwmbiblegatewayHelper::buildReadingUrl($readingText, $userData->bibleversion);
-        }
-
         return (object) [
-            'readingText'     => $readingText,
-            'readingUrl'      => $readingUrl,
+            'readingText'     => $reading->reading ?? '',
+            'bibleversion'    => $userData->bibleversion,
             'planDescription' => $plan->description ?? '',
             'currentDay'      => $currentDay,
             'totalDays'       => $totalDays,
