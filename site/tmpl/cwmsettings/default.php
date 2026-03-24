@@ -11,6 +11,7 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
@@ -19,6 +20,17 @@ use Joomla\CMS\Router\Route;
 
 $user  = $this->userSettings;
 $plans = $this->plans;
+
+// Calculate current position for display
+$planId   = (int) ($user->plan_id ?? 0);
+$totalDays = 0;
+$currentDay = 0;
+
+if ($planId > 0) {
+    $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+    $totalDays  = CwmreadingHelper::getPlanTotalDays($db, $planId);
+    $currentDay = CwmreadingHelper::getCurrentReadingDay($user->start_date ?? '', (int) ($user->date_offset ?? 0), $totalDays ?: 365);
+}
 ?>
 <div class="com-livingword-settings">
     <?php echo $this->menu; ?>
@@ -53,10 +65,61 @@ $plans = $this->plans;
                     <input type="checkbox" name="email" id="email" class="form-check-input" value="1"<?php echo $user->email ? ' checked' : ''; ?>>
                     <label for="email" class="form-check-label"><?php echo Text::_('COM_LIVINGWORD_EMAIL_SUBSCRIBE'); ?></label>
                 </div>
+            </div>
 
-                <button type="submit" class="btn btn-primary"><?php echo Text::_('JSAVE'); ?></button>
+            <div class="col-lg-6">
+                <?php if ($totalDays > 0) : ?>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_READING_POSITION'); ?></h5>
+                            <p class="mb-2">
+                                <?php echo Text::sprintf('COM_LIVINGWORD_POSITION_INFO', $currentDay, $totalDays); ?>
+                            </p>
+
+                            <div class="mb-3">
+                                <label for="date_offset" class="form-label"><?php echo Text::_('COM_LIVINGWORD_JUMP_TO_DAY'); ?></label>
+                                <div class="input-group">
+                                    <input type="number" name="date_offset_day" id="date_offset_day" class="form-control"
+                                           min="1" max="<?php echo $totalDays; ?>" value="<?php echo $currentDay; ?>">
+                                    <span class="input-group-text"><?php echo Text::sprintf('COM_LIVINGWORD_OF_DAYS', $totalDays); ?></span>
+                                </div>
+                                <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_JUMP_TO_DAY_DESC'); ?></small>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="action" value="skip_to_today" class="btn btn-sm btn-outline-warning">
+                                    <?php echo Text::_('COM_LIVINGWORD_SKIP_TO_TODAY'); ?>
+                                </button>
+                                <button type="submit" name="action" value="restart" class="btn btn-sm btn-outline-secondary">
+                                    <?php echo Text::_('COM_LIVINGWORD_RESTART_PLAN'); ?>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php if ((int) ($user->streak_current ?? 0) > 0 || (int) ($user->streak_best ?? 0) > 0) : ?>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_STREAKS'); ?></h5>
+                                <div class="d-flex gap-4">
+                                    <div>
+                                        <span class="fs-3 fw-bold"><?php echo (int) ($user->streak_current ?? 0); ?></span>
+                                        <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STREAK_CURRENT_LABEL'); ?></small>
+                                    </div>
+                                    <div>
+                                        <span class="fs-3 fw-bold"><?php echo (int) ($user->streak_best ?? 0); ?></span>
+                                        <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STREAK_BEST_LABEL'); ?></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
         </div>
+
+        <input type="hidden" name="date_offset" id="date_offset" value="<?php echo (int) ($user->date_offset ?? 0); ?>">
+        <button type="submit" class="btn btn-primary"><?php echo Text::_('JSAVE'); ?></button>
 
         <?php echo HTMLHelper::_('form.token'); ?>
     </form>

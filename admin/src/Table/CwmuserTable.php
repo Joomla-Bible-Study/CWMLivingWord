@@ -51,6 +51,15 @@ class CwmuserTable extends Table
     /** @var int|null Date offset in days @since 5.2.0 */
     public ?int $date_offset = 0;
 
+    /** @var int|null Current consecutive days streak @since 5.4.0 */
+    public ?int $streak_current = 0;
+
+    /** @var int|null Best streak ever @since 5.4.0 */
+    public ?int $streak_best = 0;
+
+    /** @var string|null Last date a reading was completed @since 5.4.0 */
+    public ?string $streak_last_date = null;
+
     /** @var string|null @since 5.2.0 */
     public ?string $created = null;
 

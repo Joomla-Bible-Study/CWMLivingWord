@@ -123,8 +123,69 @@ class CwmprogressHelper
         }
 
         self::markComplete($db, $userId, $planId, $day);
+        self::updateStreak($db, $userId);
 
         return true;
+    }
+
+    /**
+     * Update the user's reading streak based on today's date.
+     *
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $userId  Joomla user ID
+     *
+     * @return  void
+     *
+     * @since   5.4.0
+     */
+    public static function updateStreak(DatabaseInterface $db, int $userId): void
+    {
+        $today = date('Y-m-d');
+
+        $query = $db->getQuery(true)
+            ->select($db->quoteName(['streak_current', 'streak_best', 'streak_last_date']))
+            ->from($db->quoteName('#__livingword_users'))
+            ->where($db->quoteName('user_id') . ' = ' . $userId);
+
+        $db->setQuery($query);
+        $row = $db->loadObject();
+
+        if (!$row) {
+            return;
+        }
+
+        $lastDate = $row->streak_last_date;
+        $current  = (int) $row->streak_current;
+        $best     = (int) $row->streak_best;
+
+        if ($lastDate === $today) {
+            // Already counted today
+            return;
+        }
+
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+        if ($lastDate === $yesterday) {
+            // Consecutive day — extend streak
+            $current++;
+        } else {
+            // Streak broken — start fresh
+            $current = 1;
+        }
+
+        if ($current > $best) {
+            $best = $current;
+        }
+
+        $query = $db->getQuery(true)
+            ->update($db->quoteName('#__livingword_users'))
+            ->set($db->quoteName('streak_current') . ' = ' . $current)
+            ->set($db->quoteName('streak_best') . ' = ' . $best)
+            ->set($db->quoteName('streak_last_date') . ' = ' . $db->quote($today))
+            ->where($db->quoteName('user_id') . ' = ' . $userId);
+
+        $db->setQuery($query);
+        $db->execute();
     }
 
     /**

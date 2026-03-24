@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Site\Model;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
@@ -81,14 +82,39 @@ class CwmsettingsModel extends BaseDatabaseModel
             return false;
         }
 
+        $planId    = (int) ($data['plan_id'] ?? 0);
+        $startDate = $data['start_date'] ?? date('Y-m-d');
+        $action    = $data['action'] ?? '';
+
+        // Calculate date_offset based on action
+        $dateOffset = (int) ($data['date_offset'] ?? 0);
+
+        if ($action === 'skip_to_today') {
+            // Reset offset so current day matches today's actual date position
+            $dateOffset = 0;
+        } elseif ($action === 'restart') {
+            // Set start date to today, reset offset
+            $startDate  = date('Y-m-d');
+            $dateOffset = 0;
+        } elseif (!empty($data['date_offset_day'])) {
+            // Jump to specific day — calculate the offset needed
+            $targetDay = (int) $data['date_offset_day'];
+            $totalDays = CwmreadingHelper::getPlanTotalDays($db, $planId);
+
+            if ($totalDays > 0 && $targetDay >= 1 && $targetDay <= $totalDays) {
+                $naturalDay = CwmreadingHelper::getCurrentReadingDay($startDate, 0, $totalDays);
+                $dateOffset = $targetDay - $naturalDay;
+            }
+        }
+
         $settings = (object) [
             'user_id'       => $userId,
-            'plan_id'       => (int) ($data['plan_id'] ?? 0),
+            'plan_id'       => $planId,
             'bible_version' => $data['bible_version'] ?? 'kjv',
             'email'         => (int) ($data['email'] ?? 0),
             'plan_view'     => (int) ($data['plan_view'] ?? 0),
-            'start_date'    => $data['start_date'] ?? date('Y-m-d'),
-            'date_offset'   => (int) ($data['date_offset'] ?? 0),
+            'start_date'    => $startDate,
+            'date_offset'   => $dateOffset,
         ];
 
         return CwmuserHelper::saveUserData($db, $settings);
