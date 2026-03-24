@@ -82,4 +82,18 @@
             label="JFIELD_ORDERING_LABEL"
         />
     </fieldset>
+    <fieldset name="readings_fieldset" label="COM_LIVINGWORD_PLAN_READINGS">
+        <field
+            name="readings"
+            type="subform"
+            label="COM_LIVINGWORD_PLAN_READINGS"
+            formsource="reading_row"
+            multiple="true"
+            min="0"
+            max="400"
+            layout="joomla.form.field.subform.repeatable-table"
+            buttons="add,remove,move"
+            groupByFieldset="false"
+        />
+    </fieldset>
 </form>

@@ -68,6 +68,8 @@ class CwmplanModel extends AdminModel
     }
 
     /**
+     * Load form data, injecting readings from the plans_details table.
+     *
      * @return  mixed
      *
      * @throws \Exception
@@ -81,7 +83,127 @@ class CwmplanModel extends AdminModel
             $data = $this->getItem();
         }
 
+        if (\is_object($data) && !empty($data->name)) {
+            $data->readings = $this->getReadingsForPlan($data->name);
+        }
+
         return $data;
+    }
+
+    /**
+     * Save the plan and sync its readings to the plans_details table.
+     *
+     * @param   array  $data  The form data
+     *
+     * @return  bool  True on success
+     *
+     * @since   5.1.0
+     */
+    #[\Override]
+    public function save($data): bool
+    {
+        $readings = $data['readings'] ?? [];
+        unset($data['readings']);
+
+        // Get old plan name before save (for FK update if name changed)
+        $oldName = '';
+
+        if (!empty($data['id'])) {
+            $existing = $this->getItem($data['id']);
+            $oldName  = $existing->name ?? '';
+        }
+
+        if (!parent::save($data)) {
+            return false;
+        }
+
+        $planName = $data['name'];
+
+        $this->syncReadings($oldName ?: $planName, $planName, $readings);
+
+        return true;
+    }
+
+    /**
+     * Load all readings for a plan as an array suitable for the subform field.
+     *
+     * @param   string  $planName  Plan name slug
+     *
+     * @return  array  Array of reading row arrays
+     *
+     * @since   5.1.0
+     */
+    public function getReadingsForPlan(string $planName): array
+    {
+        if (empty($planName)) {
+            return [];
+        }
+
+        $db    = $this->getDatabase();
+        $query = $db->getQuery(true)
+            ->select($db->quoteName(['reading', 'audio', 'descrip']))
+            ->from($db->quoteName('#__livingword_plans_details'))
+            ->where($db->quoteName('plan') . ' = ' . $db->quote($planName))
+            ->order($db->quoteName('ordering') . ' ASC');
+
+        $db->setQuery($query);
+
+        return $db->loadAssocList() ?: [];
+    }
+
+    /**
+     * Sync readings from the subform data to the plans_details table.
+     *
+     * Deletes all existing readings for the old plan name, then inserts
+     * the new readings with ordering derived from array position.
+     *
+     * @param   string  $oldPlanName  Previous plan name (for deletion)
+     * @param   string  $newPlanName  Current plan name (for insertion)
+     * @param   array   $readings     Array of reading row data from subform
+     *
+     * @return  void
+     *
+     * @since   5.1.0
+     */
+    private function syncReadings(string $oldPlanName, string $newPlanName, array $readings): void
+    {
+        $db = $this->getDatabase();
+
+        // Delete existing readings
+        if (!empty($oldPlanName)) {
+            $query = $db->getQuery(true)
+                ->delete($db->quoteName('#__livingword_plans_details'))
+                ->where($db->quoteName('plan') . ' = ' . $db->quote($oldPlanName));
+
+            $db->setQuery($query);
+            $db->execute();
+        }
+
+        // Insert new readings
+        if (empty($readings)) {
+            return;
+        }
+
+        $ordering = 1;
+
+        foreach ($readings as $row) {
+            $reading = trim($row['reading'] ?? '');
+
+            if (empty($reading)) {
+                continue;
+            }
+
+            $record = (object) [
+                'plan'     => $newPlanName,
+                'reading'  => $reading,
+                'audio'    => trim($row['audio'] ?? ''),
+                'descrip'  => trim($row['descrip'] ?? ''),
+                'ordering' => $ordering,
+            ];
+
+            $db->insertObject('#__livingword_plans_details', $record);
+            $ordering++;
+        }
     }
 
     /**

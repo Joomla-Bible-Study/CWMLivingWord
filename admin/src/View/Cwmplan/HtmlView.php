@@ -59,6 +59,10 @@ class HtmlView extends BaseHtmlView
         $this->state = $model->getState();
         $this->canDo = ContentHelper::getActions('com_livingword');
 
+        if (!empty($this->item->name)) {
+            $this->item->readings = $model->getReadingsForPlan($this->item->name);
+        }
+
         if (\count($errors = $model->getErrors())) {
             throw new GenericDataException(implode("\n", $errors), 500);
         }
