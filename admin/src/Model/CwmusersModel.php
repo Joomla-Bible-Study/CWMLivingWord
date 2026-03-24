@@ -37,9 +37,9 @@ class CwmusersModel extends ListModel
         if (empty($config['filter_fields'])) {
             $config['filter_fields'] = [
                 'id', 'a.id',
-                'userid', 'a.userid',
-                'bibleplan', 'a.bibleplan',
-                'bibleversion', 'a.bibleversion',
+                'user_id', 'a.user_id',
+                'plan_id', 'a.plan_id',
+                'bible_version', 'a.bible_version',
                 'email', 'a.email',
                 'username',
             ];
@@ -89,13 +89,18 @@ class CwmusersModel extends ListModel
         $query = $db->getQuery(true);
 
         $query->select(implode(', ', $db->quoteName([
-            'a.id', 'a.userid', 'a.bibleplan', 'a.bibleversion',
-            'a.audioversion', 'a.email', 'a.startdate',
+            'a.id', 'a.user_id', 'a.plan_id', 'a.bible_version',
+            'a.email', 'a.start_date',
         ])));
-        $query->from($db->quoteName('#__livingword', 'a'));
+        $query->from($db->quoteName('#__livingword_users', 'a'));
 
+        // Join users table for display name
         $query->select($db->quoteName('u.name', 'username'))
-            ->join('LEFT', $db->quoteName('#__users', 'u') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('a.userid'));
+            ->join('LEFT', $db->quoteName('#__users', 'u') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('a.user_id'));
+
+        // Join plans table for plan alias
+        $query->select($db->quoteName('p.alias', 'plan_alias'))
+            ->join('LEFT', $db->quoteName('#__livingword_plans', 'p') . ' ON ' . $db->quoteName('p.id') . ' = ' . $db->quoteName('a.plan_id'));
 
         $search = $this->getState('filter.search');
 

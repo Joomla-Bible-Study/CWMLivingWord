@@ -45,9 +45,9 @@ if ($showAudio && $reading) {
 
     <div class="livingword-reading mt-3">
         <?php if ($plan) : ?>
-            <h2><?php echo $this->escape(Text::_($plan->description)); ?></h2>
+            <h2><?php echo $this->escape($plan->description); ?></h2>
             <?php if (!empty($plan->message)) : ?>
-                <div class="livingword-plan-message mb-3"><?php echo Text::_($plan->message); ?></div>
+                <div class="livingword-plan-message mb-3"><?php echo $plan->message; ?></div>
             <?php endif; ?>
         <?php endif; ?>
 
@@ -56,18 +56,18 @@ if ($showAudio && $reading) {
         <?php if ($reading) : ?>
             <div class="livingword-today-reading">
                 <p class="lead">
-                    <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bibleversion); ?>
+                    <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>
                 </p>
                 <?php if (CwmscriptureHelper::isLibraryAvailable()) : ?>
                     <div class="livingword-scripture-text mt-3">
-                        <?php echo CwmscriptureHelper::renderReading($reading->reading, $user->bibleversion); ?>
+                        <?php echo CwmscriptureHelper::renderReading($reading->reading, $user->bible_version); ?>
                     </div>
                 <?php endif; ?>
                 <?php if ($showAudio) : ?>
                     <div class="livingword-audio-player mt-2"
                          data-livingword-audio
                          data-reading="<?php echo $this->escape($reading->reading); ?>"
-                         data-version="<?php echo $this->escape($user->bibleversion); ?>"
+                         data-version="<?php echo $this->escape($user->bible_version); ?>"
                          data-audio-url="<?php echo $this->escape($audioUrl); ?>">
                         <button type="button" class="livingword-audio-play"
                                 aria-label="<?php echo Text::_('COM_LIVINGWORD_AUDIO_PLAY'); ?>">

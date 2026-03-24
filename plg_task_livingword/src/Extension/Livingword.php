@@ -82,8 +82,8 @@ class Livingword extends CMSPlugin implements SubscriberInterface
         // Get all users subscribed to email
         $query = $db->getQuery(true)
             ->select('a.*, u.name, u.email AS user_email')
-            ->from($db->quoteName('#__livingword', 'a'))
-            ->join('INNER', $db->quoteName('#__users', 'u') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('a.userid'))
+            ->from($db->quoteName('#__livingword_users', 'a'))
+            ->join('INNER', $db->quoteName('#__users', 'u') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('a.user_id'))
             ->where($db->quoteName('a.email') . ' = 1')
             ->where($db->quoteName('u.block') . ' = 0');
 
@@ -94,18 +94,17 @@ class Livingword extends CMSPlugin implements SubscriberInterface
             return Status::OK;
         }
 
-        $defaultPlan    = $params->get('config_bible_plan', 'comp');
-        $defaultVersion = $params->get('config_bible_version', 'NLT');
+        $defaultVersion = $params->get('config_bible_version', 'kjv');
         $siteName       = $this->getApplication()->get('sitename');
         $sent           = 0;
 
         foreach ($subscribers as $sub) {
-            $plan    = $sub->bibleplan ?: $defaultPlan;
-            $version = $sub->bibleversion ?: $defaultVersion;
+            $planId  = (int) $sub->plan_id;
+            $version = $sub->bible_version ?: $defaultVersion;
 
-            $totalDays  = CwmreadingHelper::getPlanTotalDays($db, $plan);
-            $currentDay = CwmreadingHelper::getCurrentReadingDay($sub->startdate ?? date('Y-01-01'), (int) $sub->dateoffset, $totalDays ?: 365);
-            $reading    = CwmreadingHelper::getReadingForDay($db, $plan, $currentDay);
+            $totalDays  = CwmreadingHelper::getPlanTotalDays($db, $planId);
+            $currentDay = CwmreadingHelper::getCurrentReadingDay($sub->start_date ?? date('Y-01-01'), (int) $sub->date_offset, $totalDays ?: 365);
+            $reading    = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
 
             if (!$reading) {
                 continue;
@@ -124,7 +123,7 @@ class Livingword extends CMSPlugin implements SubscriberInterface
                 $mailer->send();
                 $sent++;
             } catch (\Exception $e) {
-                $this->getApplication()->getLogger()->error('LivingWord email failed for user ' . $sub->userid . ': ' . $e->getMessage());
+                $this->getApplication()->getLogger()->error('LivingWord email failed for user ' . $sub->user_id . ': ' . $e->getMessage());
             }
         }
 

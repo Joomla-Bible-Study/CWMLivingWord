@@ -52,7 +52,7 @@ class CwmsettingsModel extends BaseDatabaseModel
     {
         $db    = $this->getDatabase();
         $query = $db->getQuery(true)
-            ->select($db->quoteName(['name', 'description', 'audio', 'newtest']))
+            ->select($db->quoteName(['id', 'alias', 'title', 'description', 'audio', 'testament']))
             ->from($db->quoteName('#__livingword_plans'))
             ->where($db->quoteName('published') . ' = 1')
             ->order($db->quoteName('ordering') . ' ASC');
@@ -82,15 +82,13 @@ class CwmsettingsModel extends BaseDatabaseModel
         }
 
         $settings = (object) [
-            'userid'       => $userId,
-            'bibleplan'    => $data['bibleplan'] ?? 'comp',
-            'bibleversion' => $data['bibleversion'] ?? 'NLT',
-            'pbversion'    => $data['pbversion'] ?? '',
-            'audioversion' => $data['audioversion'] ?? '',
-            'email'        => (int) ($data['email'] ?? 0),
-            'planview'     => (int) ($data['planview'] ?? 0),
-            'startdate'    => $data['startdate'] ?? date('Y-m-d'),
-            'dateoffset'   => (int) ($data['dateoffset'] ?? 0),
+            'user_id'       => $userId,
+            'plan_id'       => (int) ($data['plan_id'] ?? 0),
+            'bible_version' => $data['bible_version'] ?? 'kjv',
+            'email'         => (int) ($data['email'] ?? 0),
+            'plan_view'     => (int) ($data['plan_view'] ?? 0),
+            'start_date'    => $data['start_date'] ?? date('Y-m-d'),
+            'date_offset'   => (int) ($data['date_offset'] ?? 0),
         ];
 
         return CwmuserHelper::saveUserData($db, $settings);

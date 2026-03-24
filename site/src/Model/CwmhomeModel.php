@@ -40,11 +40,12 @@ class CwmhomeModel extends BaseDatabaseModel
         $userId = (int) Factory::getApplication()->getIdentity()->id;
 
         $userData = CwmuserHelper::getUserData($db, $userId);
+        $planId   = (int) $userData->plan_id;
 
-        $totalDays    = CwmreadingHelper::getPlanTotalDays($db, $userData->bibleplan);
-        $currentDay   = CwmreadingHelper::getCurrentReadingDay($userData->startdate, (int) $userData->dateoffset, $totalDays ?: 365);
-        $todayReading = CwmreadingHelper::getReadingForDay($db, $userData->bibleplan, $currentDay);
-        $planInfo     = CwmreadingHelper::getPlanByName($db, $userData->bibleplan);
+        $totalDays    = CwmreadingHelper::getPlanTotalDays($db, $planId);
+        $currentDay   = CwmreadingHelper::getCurrentReadingDay($userData->start_date ?? '', (int) $userData->date_offset, $totalDays ?: 365);
+        $todayReading = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
+        $planInfo     = CwmreadingHelper::getPlanById($db, $planId);
 
         return (object) [
             'userData'     => $userData,

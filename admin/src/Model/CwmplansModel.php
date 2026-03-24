@@ -37,10 +37,11 @@ class CwmplansModel extends ListModel
         if (empty($config['filter_fields'])) {
             $config['filter_fields'] = [
                 'id', 'a.id',
-                'name', 'a.name',
+                'alias', 'a.alias',
+                'title', 'a.title',
                 'description', 'a.description',
                 'audio', 'a.audio',
-                'newtest', 'a.newtest',
+                'testament', 'a.testament',
                 'published', 'a.published',
                 'ordering', 'a.ordering',
             ];
@@ -97,8 +98,8 @@ class CwmplansModel extends ListModel
             $this->getState(
                 'list.select',
                 implode(', ', $db->quoteName([
-                    'a.id', 'a.name', 'a.description', 'a.message', 'a.audio',
-                    'a.newtest', 'a.published', 'a.checked_out', 'a.checked_out_time', 'a.ordering',
+                    'a.id', 'a.alias', 'a.title', 'a.description', 'a.message', 'a.audio',
+                    'a.testament', 'a.published', 'a.checked_out', 'a.checked_out_time', 'a.ordering',
                 ]))
             )
         );
@@ -115,7 +116,8 @@ class CwmplansModel extends ListModel
                 $query->where($db->quoteName('a.id') . ' = ' . (int) substr($search, 3));
             } else {
                 $search = $db->quote('%' . $db->escape($search, true) . '%');
-                $query->where('(' . $db->quoteName('a.name') . ' LIKE ' . $search
+                $query->where('(' . $db->quoteName('a.alias') . ' LIKE ' . $search
+                    . ' OR ' . $db->quoteName('a.title') . ' LIKE ' . $search
                     . ' OR ' . $db->quoteName('a.description') . ' LIKE ' . $search . ')');
             }
         }

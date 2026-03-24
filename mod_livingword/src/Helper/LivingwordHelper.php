@@ -44,15 +44,16 @@ class LivingwordHelper implements DatabaseAwareInterface
         $db       = $this->getDatabase();
         $userId   = (int) Factory::getApplication()->getIdentity()->id;
         $userData = CwmuserHelper::getUserData($db, $userId);
+        $planId   = (int) $userData->plan_id;
 
-        $totalDays  = CwmreadingHelper::getPlanTotalDays($db, $userData->bibleplan);
-        $currentDay = CwmreadingHelper::getCurrentReadingDay($userData->startdate, (int) $userData->dateoffset, $totalDays ?: 365);
-        $reading    = CwmreadingHelper::getReadingForDay($db, $userData->bibleplan, $currentDay);
-        $plan       = CwmreadingHelper::getPlanByName($db, $userData->bibleplan);
+        $totalDays  = CwmreadingHelper::getPlanTotalDays($db, $planId);
+        $currentDay = CwmreadingHelper::getCurrentReadingDay($userData->start_date ?? '', (int) $userData->date_offset, $totalDays ?: 365);
+        $reading    = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
+        $plan       = CwmreadingHelper::getPlanById($db, $planId);
 
         return (object) [
             'readingText'     => $reading->reading ?? '',
-            'bibleversion'    => $userData->bibleversion,
+            'bible_version'   => $userData->bible_version,
             'planDescription' => $plan->description ?? '',
             'currentDay'      => $currentDay,
             'totalDays'       => $totalDays,

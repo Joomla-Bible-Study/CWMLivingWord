@@ -29,24 +29,24 @@ $plans = $this->plans;
         <div class="row">
             <div class="col-lg-6">
                 <div class="mb-3">
-                    <label for="bibleplan" class="form-label"><?php echo Text::_('COM_LIVINGWORD_SELECT_PLAN'); ?></label>
-                    <select name="bibleplan" id="bibleplan" class="form-select">
+                    <label for="plan_id" class="form-label"><?php echo Text::_('COM_LIVINGWORD_SELECT_PLAN'); ?></label>
+                    <select name="plan_id" id="plan_id" class="form-select">
                         <?php foreach ($plans as $plan) : ?>
-                            <option value="<?php echo $this->escape($plan->name); ?>"<?php echo $user->bibleplan === $plan->name ? ' selected' : ''; ?>>
-                                <?php echo $this->escape(Text::_($plan->description)); ?>
+                            <option value="<?php echo (int) $plan->id; ?>"<?php echo (int) $user->plan_id === (int) $plan->id ? ' selected' : ''; ?>>
+                                <?php echo $this->escape($plan->title); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label for="bibleversion" class="form-label"><?php echo Text::_('COM_LIVINGWORD_SELECT_VERSION'); ?></label>
-                    <input type="text" name="bibleversion" id="bibleversion" class="form-control" value="<?php echo $this->escape($user->bibleversion); ?>">
+                    <label for="bible_version" class="form-label"><?php echo Text::_('COM_LIVINGWORD_SELECT_VERSION'); ?></label>
+                    <input type="text" name="bible_version" id="bible_version" class="form-control" value="<?php echo $this->escape($user->bible_version); ?>">
                 </div>
 
                 <div class="mb-3">
-                    <label for="startdate" class="form-label"><?php echo Text::_('COM_LIVINGWORD_START_DATE'); ?></label>
-                    <input type="date" name="startdate" id="startdate" class="form-control" value="<?php echo $this->escape($user->startdate); ?>">
+                    <label for="start_date" class="form-label"><?php echo Text::_('COM_LIVINGWORD_START_DATE'); ?></label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" value="<?php echo $this->escape($user->start_date); ?>">
                 </div>
 
                 <div class="mb-3 form-check">

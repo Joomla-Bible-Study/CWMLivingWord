@@ -53,7 +53,7 @@ class CwmcpanelModel extends BaseDatabaseModel
 
         $query = $db->getQuery(true)
             ->select('COUNT(*)')
-            ->from($db->quoteName('#__livingword'));
+            ->from($db->quoteName('#__livingword_users'));
         $db->setQuery($query);
         $counts['users'] = (int) $db->loadResult();
 

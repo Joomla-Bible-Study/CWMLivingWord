@@ -39,18 +39,19 @@ class CwmuserHelper
     {
         $params = ComponentHelper::getParams('com_livingword');
 
+        // Resolve default plan_id from config alias
+        $defaultPlanAlias = $params->get('config_bible_plan', 'comp');
+        $defaultPlanId    = self::getPlanIdByAlias($db, $defaultPlanAlias);
+
         $defaults = (object) [
-            'id'           => 0,
-            'userid'       => $userId,
-            'bibleplan'    => $params->get('config_bible_plan', 'comp'),
-            'bibleversion' => $params->get('config_bible_version', 'kjv'),
-            'pbversion'    => '',
-            'audioversion' => '',
-            'email'        => 0,
-            'planview'     => 0,
-            'readstate'    => 0,
-            'startdate'    => $params->get('config_global_startdate', date('Y-m-d')),
-            'dateoffset'   => 0,
+            'id'            => 0,
+            'user_id'       => $userId,
+            'plan_id'       => $defaultPlanId,
+            'bible_version' => $params->get('config_bible_version', 'kjv'),
+            'email'         => 0,
+            'plan_view'     => 0,
+            'start_date'    => $params->get('config_global_startdate', date('Y-m-d')),
+            'date_offset'   => 0,
         ];
 
         if ($userId === 0) {
@@ -59,8 +60,8 @@ class CwmuserHelper
 
         $query = $db->getQuery(true)
             ->select('*')
-            ->from($db->quoteName('#__livingword'))
-            ->where($db->quoteName('userid') . ' = ' . $userId);
+            ->from($db->quoteName('#__livingword_users'))
+            ->where($db->quoteName('user_id') . ' = ' . $userId);
 
         $db->setQuery($query);
         $row = $db->loadObject();
@@ -84,23 +85,22 @@ class CwmuserHelper
      */
     public static function saveUserData(DatabaseInterface $db, object $data): bool
     {
-        if (empty($data->userid)) {
+        if (empty($data->user_id)) {
             return false;
         }
 
-        // Check if user record exists
         $query = $db->getQuery(true)
             ->select('id')
-            ->from($db->quoteName('#__livingword'))
-            ->where($db->quoteName('userid') . ' = ' . (int) $data->userid);
+            ->from($db->quoteName('#__livingword_users'))
+            ->where($db->quoteName('user_id') . ' = ' . (int) $data->user_id);
         $db->setQuery($query);
         $existingId = $db->loadResult();
 
         if ($existingId) {
             $data->id = (int) $existingId;
-            $db->updateObject('#__livingword', $data, 'id');
+            $db->updateObject('#__livingword_users', $data, 'id');
         } else {
-            $db->insertObject('#__livingword', $data, 'id');
+            $db->insertObject('#__livingword_users', $data, 'id');
         }
 
         return true;
@@ -124,5 +124,32 @@ class CwmuserHelper
             : Factory::getApplication()->getIdentity();
 
         return $user->authorise($action, 'com_livingword');
+    }
+
+    /**
+     * Resolve a plan alias to its ID.
+     *
+     * @param   DatabaseInterface  $db     Database instance
+     * @param   string             $alias  Plan alias slug
+     *
+     * @return  int  Plan ID or 0
+     *
+     * @since   5.2.0
+     */
+    public static function getPlanIdByAlias(DatabaseInterface $db, string $alias): int
+    {
+        if (empty($alias)) {
+            return 0;
+        }
+
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('id'))
+            ->from($db->quoteName('#__livingword_plans'))
+            ->where($db->quoteName('alias') . ' = ' . $db->quote($alias))
+            ->where($db->quoteName('published') . ' = 1');
+
+        $db->setQuery($query);
+
+        return (int) $db->loadResult();
     }
 }

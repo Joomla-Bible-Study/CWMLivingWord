@@ -46,7 +46,7 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                     <?php echo HTMLHelper::_('searchtools.sort', 'COM_LIVINGWORD_READING', 'a.reading', $listDirn, $listOrder); ?>
                                 </th>
                                 <th scope="col" class="d-none d-md-table-cell">
-                                    <?php echo Text::_('COM_LIVINGWORD_PLAN_NAME'); ?>
+                                    <?php echo Text::_('COM_LIVINGWORD_PLAN'); ?>
                                 </th>
                                 <th scope="col" class="w-5 text-center">
                                     <?php echo HTMLHelper::_('searchtools.sort', 'JGRID_HEADING_ID', 'a.id', $listDirn, $listOrder); ?>

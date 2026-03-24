@@ -52,7 +52,7 @@ if ($saveOrder && !empty($this->items)) {
                                     <?php echo HTMLHelper::_('searchtools.sort', 'JSTATUS', 'a.published', $listDirn, $listOrder); ?>
                                 </th>
                                 <th scope="col">
-                                    <?php echo HTMLHelper::_('searchtools.sort', 'COM_LIVINGWORD_PLAN_NAME', 'a.name', $listDirn, $listOrder); ?>
+                                    <?php echo HTMLHelper::_('searchtools.sort', 'COM_LIVINGWORD_PLAN_TITLE', 'a.alias', $listDirn, $listOrder); ?>
                                 </th>
                                 <th scope="col" class="d-none d-md-table-cell">
                                     <?php echo Text::_('COM_LIVINGWORD_PLAN_DESCRIPTION'); ?>
@@ -69,7 +69,7 @@ if ($saveOrder && !empty($this->items)) {
                             <?php foreach ($this->items as $i => $item) : ?>
                                 <tr class="row<?php echo $i % 2; ?>" data-draggable-group="0">
                                     <td class="text-center">
-                                        <?php echo HTMLHelper::_('grid.id', $i, $item->id, false, 'cid', 'cb', $item->name); ?>
+                                        <?php echo HTMLHelper::_('grid.id', $i, $item->id, false, 'cid', 'cb', $item->alias); ?>
                                     </td>
                                     <td class="text-center d-none d-md-table-cell">
                                         <?php
@@ -88,12 +88,10 @@ if ($saveOrder && !empty($this->items)) {
                                     </td>
                                     <td>
                                         <a href="<?php echo Route::_('index.php?option=com_livingword&task=cwmplan.edit&id=' . (int) $item->id); ?>">
-                                            <?php echo $this->escape($item->name); ?>
+                                            <?php echo $this->escape($item->title); ?>
                                         </a>
-                                        <div class="small">
-                                            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmplandetails&filter[plan]=' . urlencode($item->name)); ?>">
-                                                <?php echo Text::_('COM_LIVINGWORD_VIEW_READINGS'); ?>
-                                            </a>
+                                        <div class="small text-muted">
+                                            <?php echo $this->escape($item->alias); ?>
                                         </div>
                                     </td>
                                     <td class="d-none d-md-table-cell">
