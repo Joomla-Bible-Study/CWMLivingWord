@@ -68,7 +68,7 @@
         </field>
         <field
             name="ordering"
-            type="ordering"
+            type="number"
             label="JFIELD_ORDERING_LABEL"
         />
     </fieldset>
