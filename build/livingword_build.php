@@ -152,15 +152,17 @@ function getJoomlaPaths(array $props): array
  */
 function getExternalLinks(string $joomlaPath): array
 {
+    $base = realpath(BASE_DIR) ?: BASE_DIR;
+
     return [
-        BASE_DIR . '/media/com_livingword'                                 => "$joomlaPath/media/com_livingword",
-        BASE_DIR . '/admin'                                                => "$joomlaPath/administrator/components/com_livingword",
-        BASE_DIR . '/site'                                                 => "$joomlaPath/components/com_livingword",
-        BASE_DIR . '/mod_livingword'                                       => "$joomlaPath/modules/mod_livingword",
-        BASE_DIR . '/plg_task_livingword'                                  => "$joomlaPath/plugins/task/livingword",
-        BASE_DIR . '/admin/language/en-GB/com_livingword.ini'              => "$joomlaPath/administrator/language/en-GB/com_livingword.ini",
-        BASE_DIR . '/admin/language/en-GB/com_livingword.sys.ini'          => "$joomlaPath/administrator/language/en-GB/com_livingword.sys.ini",
-        BASE_DIR . '/site/language/en-GB/com_livingword.ini'               => "$joomlaPath/language/en-GB/com_livingword.ini",
+        "$base/media/com_livingword"                        => "$joomlaPath/media/com_livingword",
+        "$base/admin"                                       => "$joomlaPath/administrator/components/com_livingword",
+        "$base/site"                                        => "$joomlaPath/components/com_livingword",
+        "$base/mod_livingword"                              => "$joomlaPath/modules/mod_livingword",
+        "$base/plg_task_livingword"                         => "$joomlaPath/plugins/task/livingword",
+        "$base/admin/language/en-GB/com_livingword.ini"     => "$joomlaPath/administrator/language/en-GB/com_livingword.ini",
+        "$base/admin/language/en-GB/com_livingword.sys.ini" => "$joomlaPath/administrator/language/en-GB/com_livingword.sys.ini",
+        "$base/site/language/en-GB/com_livingword.ini"      => "$joomlaPath/language/en-GB/com_livingword.ini",
     ];
 }
 
