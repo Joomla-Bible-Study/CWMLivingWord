@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<metadata>
+    <layout title="COM_LIVINGWORD_MENU_PLANVIEW">
+        <message>
+            <![CDATA[COM_LIVINGWORD_MENU_PLANVIEW_DESC]]>
+        </message>
+    </layout>
+    <fields name="params">
+        <fieldset name="basic" label="COM_LIVINGWORD_MENU_PLANVIEW">
+            <field name="plan_layout" type="list"
+                   label="COM_LIVINGWORD_CONFIG_PLAN_TEMPLATE"
+                   description="COM_LIVINGWORD_CONFIG_PLAN_TEMPLATE_DESC"
+                   default="">
+                <option value="">COM_LIVINGWORD_USE_GLOBAL</option>
+                <option value="default">COM_LIVINGWORD_CONFIG_TEMPLATE_LIST</option>
+                <option value="calendar">COM_LIVINGWORD_CONFIG_TEMPLATE_CALENDAR</option>
+            </field>
+        </fieldset>
+    </fields>
+</metadata>

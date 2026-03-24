@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<metadata>
+    <layout title="COM_LIVINGWORD_MENU_HOME">
+        <message>
+            <![CDATA[COM_LIVINGWORD_MENU_HOME_DESC]]>
+        </message>
+    </layout>
+</metadata>
