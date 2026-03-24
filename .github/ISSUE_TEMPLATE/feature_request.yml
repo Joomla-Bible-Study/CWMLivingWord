@@ -1,0 +1,54 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for CWMLivingWord
+labels: ["type: feature", "needs: review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make CWMLivingWord better for churches and readers? We'd love to hear it.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case or pain point you're experiencing.
+      placeholder: "As a church admin, I find it hard to... / As a reader, I wish I could..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: Describe what you'd like to see built or changed.
+    validations:
+      required: true
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Who benefits most?
+      options:
+        - Site visitors / anonymous readers
+        - Registered church members
+        - Church staff / administrators
+        - Site developers / integrators
+    validations:
+      required: true
+  - type: dropdown
+    id: priority-guess
+    attributes:
+      label: How important is this to you?
+      options:
+        - Nice to have
+        - Important
+        - Blocking our use of LivingWord
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      placeholder: Any other approaches you've considered or tried?
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, mockups, examples from other apps, etc.

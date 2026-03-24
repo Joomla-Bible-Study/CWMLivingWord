@@ -1,0 +1,47 @@
+name: Church Admin Request
+description: A workflow or feature request specific to managing a congregation reading program
+labels: ["type: feature", "priority: medium"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is specifically for church administrators running LivingWord for their congregation.
+        Your real-world experience helps us build the right things.
+  - type: textarea
+    id: church-context
+    attributes:
+      label: About your reading program
+      placeholder: |
+        How many members participate? What plans do you run?
+        Do you run church-wide campaigns or individual plans?
+        Any recurring challenges you face?
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: What would help you?
+      placeholder: Describe the feature, workflow improvement, or admin tool you need.
+    validations:
+      required: true
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does this pain point affect you?
+      options:
+        - Daily
+        - Weekly
+        - Each time we run a reading campaign
+        - Occasionally
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Current workaround (if any)
+      placeholder: How are you handling this today without the feature?
+  - type: input
+    id: church-size
+    attributes:
+      label: Approximate congregation size (optional)
+      placeholder: "e.g. 150 members"
