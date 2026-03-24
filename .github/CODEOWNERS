@@ -1,0 +1,15 @@
+# CWMLivingWord CODEOWNERS
+# These users are automatically requested for review on PRs.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: all files require review from bcordis or tomfuller2
+* @bcordis @tomfuller2
+
+# Database migrations — always reviewed by bcordis (schema authority)
+admin/sql/ @bcordis
+
+# Task plugin touches live email sends — always double-reviewed
+plg_task_livingword/ @bcordis @tomfuller2
+
+# CI/CD and GitHub infra
+.github/ @bcordis
