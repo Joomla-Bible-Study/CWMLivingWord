@@ -16,10 +16,11 @@ use Joomla\CMS\Language\Text;
 
 /** @var \CWM\Component\Livingword\Site\View\Cwmplanview\HtmlView $this */
 
-$data     = $this->planData;
-$readings = $data->readings;
-$plan     = $data->planInfo;
-$user     = $data->userData;
+$data          = $this->planData;
+$readings      = $data->readings;
+$plan          = $data->planInfo;
+$user          = $data->userData;
+$completedDays = array_flip($data->completedDays ?? []);
 ?>
 <div class="com-livingword-planview">
     <?php echo $this->menu; ?>
@@ -34,14 +35,29 @@ $user     = $data->userData;
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th class="w-5 text-center"></th>
                     <th class="w-10"><?php echo Text::_('COM_LIVINGWORD_DAY'); ?></th>
                     <th><?php echo Text::_('COM_LIVINGWORD_READING'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($readings as $i => $reading) : ?>
-                    <?php $dayNum = $i + 1; ?>
-                    <tr<?php echo $dayNum === $data->currentDay ? ' class="table-active fw-bold"' : ''; ?>>
+                    <?php
+                    $dayNum      = $i + 1;
+                    $isCompleted = isset($completedDays[$dayNum]);
+                    $rowClass    = '';
+                    if ($dayNum === $data->currentDay) {
+                        $rowClass = 'table-active fw-bold';
+                    } elseif ($isCompleted) {
+                        $rowClass = 'table-success';
+                    }
+                    ?>
+                    <tr<?php echo $rowClass ? ' class="' . $rowClass . '"' : ''; ?> data-progress-day="<?php echo $dayNum; ?>">
+                        <td class="text-center">
+                            <?php if ($isCompleted) : ?>
+                                <span class="icon-checkmark text-success" aria-label="<?php echo Text::_('COM_LIVINGWORD_COMPLETED'); ?>"></span>
+                            <?php endif; ?>
+                        </td>
                         <td><?php echo $dayNum; ?></td>
                         <td>
                             <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>

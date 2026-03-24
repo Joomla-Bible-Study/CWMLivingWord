@@ -24,6 +24,19 @@ $reading = $data->todayReading;
 $plan    = $data->planInfo;
 $user    = $data->userData;
 
+// Progress tracking
+$isLoggedIn  = (int) ($user->user_id ?? 0) > 0;
+$isCompleted = $data->isCompleted ?? false;
+$progressUrl = Route::_('index.php?option=com_livingword&task=cwmprogress.toggle&format=json', false);
+
+if ($isLoggedIn && $reading) {
+    /** @var \Joomla\CMS\Document\HtmlDocument $doc */
+    $doc = $this->getDocument();
+    $wa  = $doc->getWebAssetManager();
+    $wa->registerAndUseScript('com_livingword.progress', 'media/com_livingword/js/livingword-progress.js', [], ['defer' => true]);
+    $doc->addScriptOptions('csrf.token', Session::getFormToken());
+}
+
 // Audio availability check
 $showAudio = $plan && (int) ($plan->audio ?? 0) === 1 && CwmscriptureHelper::isAudioAvailable();
 
@@ -79,6 +92,23 @@ if ($showAudio && $reading) {
                 <?php endif; ?>
                 <?php if (!empty($reading->descrip)) : ?>
                     <p class="text-muted"><?php echo $this->escape($reading->descrip); ?></p>
+                <?php endif; ?>
+                <?php if ($isLoggedIn) : ?>
+                    <div class="livingword-progress-toggle mt-3"
+                         data-livingword-progress
+                         data-plan-id="<?php echo (int) ($plan->id ?? 0); ?>"
+                         data-day="<?php echo (int) $data->currentDay; ?>"
+                         data-completed="<?php echo $isCompleted ? '1' : '0'; ?>"
+                         data-progress-url="<?php echo $this->escape($progressUrl); ?>">
+                        <button type="button"
+                                class="btn <?php echo $isCompleted ? 'btn-success' : 'btn-outline-secondary'; ?> livingword-mark-read-btn"
+                                data-label-read="<?php echo Text::_('COM_LIVINGWORD_MARK_UNREAD'); ?>"
+                                data-label-unread="<?php echo Text::_('COM_LIVINGWORD_MARK_READ'); ?>"
+                                aria-label="<?php echo $isCompleted ? Text::_('COM_LIVINGWORD_MARK_UNREAD') : Text::_('COM_LIVINGWORD_MARK_READ'); ?>">
+                            <span class="<?php echo $isCompleted ? 'icon-checkmark' : 'icon-checkbox-unchecked'; ?>" aria-hidden="true"></span>
+                            <?php echo $isCompleted ? Text::_('COM_LIVINGWORD_COMPLETED') : Text::_('COM_LIVINGWORD_MARK_READ'); ?>
+                        </button>
+                    </div>
                 <?php endif; ?>
             </div>
         <?php else : ?>

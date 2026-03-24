@@ -20,7 +20,8 @@ $data     = $this->planData;
 $readings = $data->readings;
 $plan     = $data->planInfo;
 $user     = $data->userData;
-$startDate = new \DateTime($user->start_date ?: date('Y-01-01'));
+$startDate     = new \DateTime($user->start_date ?: date('Y-01-01'));
+$completedDays = array_flip($data->completedDays ?? []);
 ?>
 <div class="com-livingword-planview-calendar">
     <?php echo $this->menu; ?>
@@ -62,10 +63,15 @@ $startDate = new \DateTime($user->start_date ?: date('Y-01-01'));
             <h3><?php echo $month['label']; ?></h3>
             <div class="row row-cols-7 g-1 mb-3">
                 <?php foreach ($month['readings'] as $entry) : ?>
+                    <?php $isDayCompleted = isset($completedDays[$entry['day']]); ?>
                     <div class="col">
-                        <div class="card<?php echo $entry['current'] ? ' border-primary' : ''; ?> h-100">
+                        <div class="card<?php echo $entry['current'] ? ' border-primary' : ($isDayCompleted ? ' border-success' : ''); ?> h-100" data-progress-day="<?php echo $entry['day']; ?>">
                             <div class="card-body p-1 small">
-                                <strong><?php echo $entry['date']; ?></strong><br>
+                                <strong><?php echo $entry['date']; ?></strong>
+                                <?php if ($isDayCompleted) : ?>
+                                    <span class="icon-checkmark text-success float-end" aria-hidden="true"></span>
+                                <?php endif; ?>
+                                <br>
                                 <?php
                                 echo CwmscriptureHelper::buildReadingLink($entry['reading']->reading, $user->bible_version);
                                 ?>

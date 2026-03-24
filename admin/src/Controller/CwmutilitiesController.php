@@ -38,6 +38,7 @@ class CwmutilitiesController extends BaseController
         '#__livingword_links',
         '#__livingword_plans',
         '#__livingword_plans_details',
+        '#__livingword_progress',
     ];
 
     /**
