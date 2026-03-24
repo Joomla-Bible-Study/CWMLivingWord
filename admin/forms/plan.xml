@@ -7,20 +7,28 @@
             default="0"
         />
         <field
-            name="name"
+            name="alias"
             type="text"
-            label="COM_LIVINGWORD_PLAN_NAME"
-            description="COM_LIVINGWORD_PLAN_NAME_DESC"
+            label="COM_LIVINGWORD_PLAN_ALIAS"
+            description="COM_LIVINGWORD_PLAN_ALIAS_DESC"
             required="true"
             size="50"
             maxlength="50"
+        />
+        <field
+            name="title"
+            type="text"
+            label="COM_LIVINGWORD_PLAN_TITLE"
+            description="COM_LIVINGWORD_PLAN_TITLE_DESC"
+            required="true"
+            size="100"
+            maxlength="200"
         />
         <field
             name="description"
             type="text"
             label="COM_LIVINGWORD_PLAN_DESCRIPTION"
             description="COM_LIVINGWORD_PLAN_DESCRIPTION_DESC"
-            required="true"
             size="100"
         />
         <field
@@ -53,7 +61,7 @@
             showon="audio:1"
         />
         <field
-            name="newtest"
+            name="testament"
             type="list"
             label="COM_LIVINGWORD_PLAN_TESTAMENT"
             description="COM_LIVINGWORD_PLAN_TESTAMENT_DESC"

@@ -20,7 +20,7 @@ use Joomla\Database\DatabaseInterface;
  * Reading plan calculation helper.
  *
  * Handles date calculations, current reading day determination,
- * and plan data retrieval.
+ * and plan data retrieval. All queries use plan_id (integer FK).
  *
  * @since  5.0.0
  */
@@ -76,19 +76,19 @@ class CwmreadingHelper
     /**
      * Get the total number of readings in a plan.
      *
-     * @param   DatabaseInterface  $db    Database instance
-     * @param   string             $plan  Plan name
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $planId  Plan ID
      *
      * @return  int  Total readings count
      *
      * @since   5.0.0
      */
-    public static function getPlanTotalDays(DatabaseInterface $db, string $plan): int
+    public static function getPlanTotalDays(DatabaseInterface $db, int $planId): int
     {
         $query = $db->getQuery(true)
             ->select('COUNT(*)')
             ->from($db->quoteName('#__livingword_plans_details'))
-            ->where($db->quoteName('plan') . ' = ' . $db->quote($plan));
+            ->where($db->quoteName('plan_id') . ' = ' . $planId);
 
         $db->setQuery($query);
 
@@ -98,20 +98,20 @@ class CwmreadingHelper
     /**
      * Get the reading data for a specific day in a plan.
      *
-     * @param   DatabaseInterface  $db    Database instance
-     * @param   string             $plan  Plan name
-     * @param   int                $day   Day number (1-based, maps to ordering)
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $planId  Plan ID
+     * @param   int                $day     Day number (1-based, maps to ordering)
      *
      * @return  ?object  Reading record or null
      *
      * @since   5.0.0
      */
-    public static function getReadingForDay(DatabaseInterface $db, string $plan, int $day): ?object
+    public static function getReadingForDay(DatabaseInterface $db, int $planId, int $day): ?object
     {
         $query = $db->getQuery(true)
             ->select('*')
             ->from($db->quoteName('#__livingword_plans_details'))
-            ->where($db->quoteName('plan') . ' = ' . $db->quote($plan))
+            ->where($db->quoteName('plan_id') . ' = ' . $planId)
             ->order($db->quoteName('ordering') . ' ASC');
 
         $db->setQuery($query, $day - 1, 1);
@@ -122,19 +122,19 @@ class CwmreadingHelper
     /**
      * Get all readings for a plan, ordered by day.
      *
-     * @param   DatabaseInterface  $db    Database instance
-     * @param   string             $plan  Plan name
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $planId  Plan ID
      *
      * @return  array  Array of reading objects
      *
      * @since   5.0.0
      */
-    public static function getAllReadings(DatabaseInterface $db, string $plan): array
+    public static function getAllReadings(DatabaseInterface $db, int $planId): array
     {
         $query = $db->getQuery(true)
             ->select('*')
             ->from($db->quoteName('#__livingword_plans_details'))
-            ->where($db->quoteName('plan') . ' = ' . $db->quote($plan))
+            ->where($db->quoteName('plan_id') . ' = ' . $planId)
             ->order($db->quoteName('ordering') . ' ASC');
 
         $db->setQuery($query);
@@ -143,21 +143,21 @@ class CwmreadingHelper
     }
 
     /**
-     * Get plan metadata by plan name.
+     * Get plan metadata by plan ID.
      *
-     * @param   DatabaseInterface  $db    Database instance
-     * @param   string             $plan  Plan name
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $planId  Plan ID
      *
      * @return  ?object  Plan record or null
      *
-     * @since   5.0.0
+     * @since   5.2.0
      */
-    public static function getPlanByName(DatabaseInterface $db, string $plan): ?object
+    public static function getPlanById(DatabaseInterface $db, int $planId): ?object
     {
         $query = $db->getQuery(true)
             ->select('*')
             ->from($db->quoteName('#__livingword_plans'))
-            ->where($db->quoteName('name') . ' = ' . $db->quote($plan))
+            ->where($db->quoteName('id') . ' = ' . $planId)
             ->where($db->quoteName('published') . ' = 1');
 
         $db->setQuery($query);

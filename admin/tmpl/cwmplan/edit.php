@@ -27,7 +27,8 @@ $isNew = ((int) $this->item->id === 0);
         <?php echo HTMLHelper::_('uitab.addTab', 'planTab', 'details', Text::_('COM_LIVINGWORD_TAB_DETAILS')); ?>
         <div class="row">
             <div class="col-lg-9">
-                <?php echo $this->form->renderField('name'); ?>
+                <?php echo $this->form->renderField('alias'); ?>
+                <?php echo $this->form->renderField('title'); ?>
                 <?php echo $this->form->renderField('description'); ?>
                 <?php echo $this->form->renderField('message'); ?>
             </div>
@@ -35,7 +36,7 @@ $isNew = ((int) $this->item->id === 0);
                 <?php echo $this->form->renderField('published'); ?>
                 <?php echo $this->form->renderField('audio'); ?>
                 <?php echo $this->form->renderField('audio_version'); ?>
-                <?php echo $this->form->renderField('newtest'); ?>
+                <?php echo $this->form->renderField('testament'); ?>
                 <?php echo $this->form->renderField('ordering'); ?>
                 <?php echo $this->form->renderField('id'); ?>
             </div>

@@ -28,32 +28,23 @@ class CwmplandetailTable extends Table
     /** @var int|null @since 5.0.0 */
     public ?int $id = 0;
 
-    /** @var string|null Plan name slug (FK to plans.name) @since 5.0.0 */
-    public ?string $plan = '';
+    /** @var int|null FK to plans.id @since 5.2.0 */
+    public ?int $plan_id = 0;
 
-    /** @var string|null Human-readable passage reference (e.g. "Genesis 1-3; Psalm 23") @since 5.1.0 */
+    /** @var int|null Day number within the plan @since 5.0.0 */
+    public ?int $ordering = 0;
+
+    /** @var string|null Human-readable passage reference @since 5.1.0 */
     public ?string $reading = '';
 
-    /** @var string|null Optional audio reference @since 5.0.0 */
+    /** @var string|null Optional audio URL override @since 5.1.0 */
     public ?string $audio = '';
 
     /** @var string|null Description text @since 5.0.0 */
     public ?string $descrip = '';
 
-    /** @var string|null @since 5.0.0 */
-    public ?string $checked_out_time = null;
-
-    /** @var int|null @since 5.0.0 */
-    public ?int $checked_out = null;
-
-    /** @var int|null Day number within the plan @since 5.0.0 */
-    public ?int $ordering = 0;
-
     /**
-     * Constructor
-     *
      * @param   DatabaseInterface  $db  Database connector object
-     *
      * @since  5.0.0
      */
     public function __construct(&$db)
@@ -62,16 +53,13 @@ class CwmplandetailTable extends Table
     }
 
     /**
-     * Validate before store.
-     *
-     * @return  bool  True if valid
-     *
+     * @return  bool
      * @since   5.1.0
      */
     #[\Override]
     public function check(): bool
     {
-        if (empty($this->plan)) {
+        if (empty($this->plan_id)) {
             $this->setError(Text::_('COM_LIVINGWORD_ERROR_READING_PLAN_REQUIRED'));
 
             return false;
@@ -89,15 +77,13 @@ class CwmplandetailTable extends Table
     /**
      * @param   array|object  $src     An associative array or object to bind.
      * @param   array|string  $ignore  Properties to ignore while binding.
-     *
      * @return  bool
-     *
      * @since   5.0.0
      */
     #[\Override]
     public function bind($src, $ignore = ''): bool
     {
-        foreach (['id', 'checked_out', 'ordering'] as $field) {
+        foreach (['id', 'plan_id', 'ordering'] as $field) {
             if (isset($src[$field])) {
                 $src[$field] = $src[$field] !== '' ? (int) $src[$field] : null;
             }

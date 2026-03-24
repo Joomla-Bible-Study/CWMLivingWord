@@ -22,7 +22,7 @@ use Joomla\CMS\Language\Text;
             <strong><?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $reading->currentDay, $reading->totalDays); ?></strong>
         </p>
         <p class="mod-livingword-reading">
-            <?php echo CwmscriptureHelper::buildReadingLink($reading->readingText, $reading->bibleversion ?? 'kjv'); ?>
+            <?php echo CwmscriptureHelper::buildReadingLink($reading->readingText, $reading->bible_version ?? 'kjv'); ?>
         </p>
     <?php else : ?>
         <p><?php echo Text::_('COM_LIVINGWORD_NO_READING_TODAY'); ?></p>

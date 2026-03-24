@@ -48,7 +48,7 @@ class HtmlView extends BaseHtmlView
         $this->menu     = CwmmenuHelper::buildMenu();
 
         // Determine layout from user preference or config
-        $planView = (int) ($this->planData->userData->planview ?? 0);
+        $planView = (int) ($this->planData->userData->plan_view ?? 0);
 
         if ($planView === 2) {
             $this->setLayout('calendar');

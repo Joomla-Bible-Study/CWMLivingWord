@@ -20,7 +20,7 @@ $data     = $this->planData;
 $readings = $data->readings;
 $plan     = $data->planInfo;
 $user     = $data->userData;
-$startDate = new \DateTime($user->startdate ?: date('Y-01-01'));
+$startDate = new \DateTime($user->start_date ?: date('Y-01-01'));
 ?>
 <div class="com-livingword-planview-calendar">
     <?php echo $this->menu; ?>
@@ -67,7 +67,7 @@ $startDate = new \DateTime($user->startdate ?: date('Y-01-01'));
                             <div class="card-body p-1 small">
                                 <strong><?php echo $entry['date']; ?></strong><br>
                                 <?php
-                                echo CwmscriptureHelper::buildReadingLink($entry['reading']->reading, $user->bibleversion);
+                                echo CwmscriptureHelper::buildReadingLink($entry['reading']->reading, $user->bible_version);
                                 ?>
                             </div>
                         </div>

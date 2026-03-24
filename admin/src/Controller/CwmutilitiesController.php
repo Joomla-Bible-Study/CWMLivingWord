@@ -34,7 +34,7 @@ class CwmutilitiesController extends BaseController
      * @since 5.0.0
      */
     private const TABLES = [
-        '#__livingword',
+        '#__livingword_users',
         '#__livingword_links',
         '#__livingword_plans',
         '#__livingword_plans_details',

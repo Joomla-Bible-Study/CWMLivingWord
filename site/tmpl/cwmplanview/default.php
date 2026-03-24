@@ -44,7 +44,7 @@ $user     = $data->userData;
                     <tr<?php echo $dayNum === $data->currentDay ? ' class="table-active fw-bold"' : ''; ?>>
                         <td><?php echo $dayNum; ?></td>
                         <td>
-                            <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bibleversion); ?>
+                            <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

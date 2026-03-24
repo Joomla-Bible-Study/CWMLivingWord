@@ -83,8 +83,8 @@ class CwmplanModel extends AdminModel
             $data = $this->getItem();
         }
 
-        if (\is_object($data) && !empty($data->name)) {
-            $data->readings = $this->getReadingsForPlan($data->name);
+        if (\is_object($data) && !empty($data->id)) {
+            $data->readings = $this->getReadingsForPlan((int) $data->id);
         }
 
         return $data;
@@ -105,21 +105,13 @@ class CwmplanModel extends AdminModel
         $readings = $data['readings'] ?? [];
         unset($data['readings']);
 
-        // Get old plan name before save (for FK update if name changed)
-        $oldName = '';
-
-        if (!empty($data['id'])) {
-            $existing = $this->getItem($data['id']);
-            $oldName  = $existing->name ?? '';
-        }
-
         if (!parent::save($data)) {
             return false;
         }
 
-        $planName = $data['name'];
+        $planId = (int) $this->getState($this->getName() . '.id');
 
-        $this->syncReadings($oldName ?: $planName, $planName, $readings);
+        $this->syncReadings($planId, $readings);
 
         return true;
     }
@@ -127,15 +119,15 @@ class CwmplanModel extends AdminModel
     /**
      * Load all readings for a plan as an array suitable for the subform field.
      *
-     * @param   string  $planName  Plan name slug
+     * @param   int  $planId  Plan ID
      *
      * @return  array  Array of reading row arrays
      *
      * @since   5.1.0
      */
-    public function getReadingsForPlan(string $planName): array
+    public function getReadingsForPlan(int $planId): array
     {
-        if (empty($planName)) {
+        if ($planId <= 0) {
             return [];
         }
 
@@ -143,7 +135,7 @@ class CwmplanModel extends AdminModel
         $query = $db->getQuery(true)
             ->select($db->quoteName(['reading', 'audio', 'descrip']))
             ->from($db->quoteName('#__livingword_plans_details'))
-            ->where($db->quoteName('plan') . ' = ' . $db->quote($planName))
+            ->where($db->quoteName('plan_id') . ' = ' . $planId)
             ->order($db->quoteName('ordering') . ' ASC');
 
         $db->setQuery($query);
@@ -154,32 +146,25 @@ class CwmplanModel extends AdminModel
     /**
      * Sync readings from the subform data to the plans_details table.
      *
-     * Deletes all existing readings for the old plan name, then inserts
-     * the new readings with ordering derived from array position.
-     *
-     * @param   string  $oldPlanName  Previous plan name (for deletion)
-     * @param   string  $newPlanName  Current plan name (for insertion)
-     * @param   array   $readings     Array of reading row data from subform
+     * @param   int    $planId    Plan ID
+     * @param   array  $readings  Array of reading row data from subform
      *
      * @return  void
      *
      * @since   5.1.0
      */
-    private function syncReadings(string $oldPlanName, string $newPlanName, array $readings): void
+    private function syncReadings(int $planId, array $readings): void
     {
         $db = $this->getDatabase();
 
         // Delete existing readings
-        if (!empty($oldPlanName)) {
-            $query = $db->getQuery(true)
-                ->delete($db->quoteName('#__livingword_plans_details'))
-                ->where($db->quoteName('plan') . ' = ' . $db->quote($oldPlanName));
+        $query = $db->getQuery(true)
+            ->delete($db->quoteName('#__livingword_plans_details'))
+            ->where($db->quoteName('plan_id') . ' = ' . $planId);
 
-            $db->setQuery($query);
-            $db->execute();
-        }
+        $db->setQuery($query);
+        $db->execute();
 
-        // Insert new readings
         if (empty($readings)) {
             return;
         }
@@ -194,11 +179,11 @@ class CwmplanModel extends AdminModel
             }
 
             $record = (object) [
-                'plan'     => $newPlanName,
+                'plan_id'  => $planId,
+                'ordering' => $ordering,
                 'reading'  => $reading,
                 'audio'    => trim($row['audio'] ?? ''),
                 'descrip'  => trim($row['descrip'] ?? ''),
-                'ordering' => $ordering,
             ];
 
             $db->insertObject('#__livingword_plans_details', $record);

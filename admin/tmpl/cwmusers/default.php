@@ -63,16 +63,16 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                         <?php echo $this->escape($item->username ?? Text::_('COM_LIVINGWORD_USER_UNKNOWN')); ?>
                                     </td>
                                     <td>
-                                        <?php echo $this->escape($item->bibleplan); ?>
+                                        <?php echo $this->escape($item->plan_alias ?? ''); ?>
                                     </td>
                                     <td>
-                                        <?php echo $this->escape($item->bibleversion); ?>
+                                        <?php echo $this->escape($item->bible_version); ?>
                                     </td>
                                     <td class="text-center">
                                         <?php echo $item->email ? '<span class="icon-publish" aria-hidden="true"></span>' : '<span class="icon-unpublish" aria-hidden="true"></span>'; ?>
                                     </td>
                                     <td class="d-none d-md-table-cell">
-                                        <?php echo $this->escape($item->startdate); ?>
+                                        <?php echo $this->escape($item->start_date); ?>
                                     </td>
                                     <td class="text-center">
                                         <?php echo (int) $item->id; ?>
