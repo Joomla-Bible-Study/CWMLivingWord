@@ -22,6 +22,9 @@ try {
         case 'link':
             doLink(verbose: $verbose);
             break;
+        case 'check':
+            doCheckLinks($verbose);
+            break;
         case 'clean':
             doClean($verbose);
             break;
@@ -63,6 +66,7 @@ function showHelp(): void
     echo "Commands:\n";
     echo "  setup           Interactive setup wizard for build.properties\n";
     echo "  link            Setup symbolic links to local Joomla installation(s)\n";
+    echo "  check           Validate all symlinks are healthy\n";
     echo "  clean           Remove symbolic links (clean dev state)\n";
     echo "  build           Build component package (zip)\n";
     echo "  install-joomla  Download and install Joomla\n";
@@ -431,6 +435,101 @@ function symlink_force(string $target, string $link, bool $quiet = false): void
             echo '  Details: ' . $e['message'] . "\n";
         }
     }
+}
+
+/**
+ * Validates all symlinks are healthy across configured Joomla installations.
+ *
+ * Reports: MISSING (not created), STALE (real file instead of symlink),
+ * WRONG (points to wrong target), BROKEN (target doesn't exist), or OK.
+ *
+ * @param   bool  $verbose  Show healthy links too
+ *
+ * @return  void
+ *
+ * @since  5.2.0
+ */
+function doCheckLinks(bool $verbose = false): void
+{
+    $props       = getProperties();
+    $joomlaPaths = getJoomlaPaths($props);
+
+    if (\count($joomlaPaths) === 0) {
+        throw new \RuntimeException('No Joomla paths configured. Run \'composer setup\' first.');
+    }
+
+    $issues = 0;
+
+    foreach ($joomlaPaths as $joomlaPath) {
+        echo "\nJoomla: $joomlaPath\n";
+
+        if (!is_dir($joomlaPath)) {
+            echo "  MISSING: Joomla path does not exist\n";
+            $issues++;
+            continue;
+        }
+
+        foreach (getExternalLinks($joomlaPath) as $target => $link) {
+            $issues += checkOneLink($target, $link, $verbose);
+        }
+    }
+
+    echo "\n" . ($issues === 0
+        ? "All symlinks are healthy.\n"
+        : "$issues issue(s) found. Run 'composer symlink' to fix.\n");
+
+    if ($issues > 0) {
+        exit(1);
+    }
+}
+
+/**
+ * Checks a single symlink and reports its status.
+ *
+ * @param   string  $target   Expected target path
+ * @param   string  $link     Symlink path to check
+ * @param   bool    $verbose  Show healthy links too
+ *
+ * @return  int  Number of issues (0 or 1)
+ *
+ * @since  5.2.0
+ */
+function checkOneLink(string $target, string $link, bool $verbose): int
+{
+    clearstatcache(true, $link);
+
+    if (!is_link($link)) {
+        if (file_exists($link)) {
+            echo "  STALE:   $link (real file/dir, not a symlink)\n";
+        } else {
+            echo "  MISSING: $link\n";
+        }
+
+        return 1;
+    }
+
+    $actual = readlink($link);
+
+    $resolvedActual = realpath($actual) ?: $actual;
+    $resolvedTarget = realpath($target) ?: $target;
+
+    if ($resolvedActual !== $resolvedTarget) {
+        echo "  WRONG:   $link -> $actual (expected $target)\n";
+
+        return 1;
+    }
+
+    if (!file_exists($link)) {
+        echo "  BROKEN:  $link -> $target (target does not exist)\n";
+
+        return 1;
+    }
+
+    if ($verbose) {
+        echo "  OK:      $link\n";
+    }
+
+    return 0;
 }
 
 /**

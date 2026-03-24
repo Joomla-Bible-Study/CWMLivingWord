@@ -80,6 +80,7 @@
     "joomla-install": "php build/livingword_build.php install-joomla",
     "joomla-latest": "php build/livingword_build.php joomla-latest",
     "symlink": "php build/livingword_build.php link",
+    "symlink:check": "php build/livingword_build.php check",
     "verify": "php build/livingword_build.php verify",
     "clean": "php build/livingword_build.php clean",
     "build": "php build/livingword_build.php build",
