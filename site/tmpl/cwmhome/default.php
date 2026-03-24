@@ -77,7 +77,17 @@ if ($showAudio && $reading) {
                      aria-label="<?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_PERCENT', $data->progressPercent); ?>">
                     <div class="progress-bar bg-success" style="width: <?php echo $data->progressPercent; ?>%"></div>
                 </div>
-                <small class="text-muted"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_DAYS', $data->completedCount, $data->totalDays); ?></small>
+                <div class="d-flex justify-content-between align-items-center mt-1">
+                    <small class="text-muted"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_DAYS', $data->completedCount, $data->totalDays); ?></small>
+                    <?php if ((int) ($user->streak_current ?? 0) > 0) : ?>
+                        <small class="text-muted">
+                            <?php echo Text::sprintf('COM_LIVINGWORD_STREAK_CURRENT', (int) $user->streak_current); ?>
+                            <?php if ((int) ($user->streak_best ?? 0) > (int) ($user->streak_current ?? 0)) : ?>
+                                &middot; <?php echo Text::sprintf('COM_LIVINGWORD_STREAK_BEST', (int) $user->streak_best); ?>
+                            <?php endif; ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
         </div>
 
