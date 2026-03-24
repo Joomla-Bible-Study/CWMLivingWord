@@ -9,7 +9,7 @@
         <field
             name="plan"
             type="sql"
-            label="COM_LIVINGWORD_PLAN_NAME"
+            label="COM_LIVINGWORD_PLAN"
             description="COM_LIVINGWORD_READING_PLAN_DESC"
             required="true"
             sql_select="name"
