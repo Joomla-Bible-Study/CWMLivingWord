@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Site\Model;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Factory;
@@ -47,12 +48,17 @@ class CwmhomeModel extends BaseDatabaseModel
         $todayReading = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
         $planInfo     = CwmreadingHelper::getPlanById($db, $planId);
 
+        $isCompleted = ($userId > 0)
+            ? CwmprogressHelper::isCompleted($db, $userId, $planId, $currentDay)
+            : false;
+
         return (object) [
             'userData'     => $userData,
             'todayReading' => $todayReading,
             'planInfo'     => $planInfo,
             'currentDay'   => $currentDay,
             'totalDays'    => $totalDays,
+            'isCompleted'  => $isCompleted,
         ];
     }
 }
