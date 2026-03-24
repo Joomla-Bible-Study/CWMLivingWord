@@ -47,11 +47,11 @@ class CwmhomeModel extends BaseDatabaseModel
         $planInfo     = CwmreadingHelper::getPlanByName($db, $userData->bibleplan);
 
         return (object) [
-            'userData'      => $userData,
-            'todayReading'  => $todayReading,
-            'planInfo'      => $planInfo,
-            'currentDay'    => $currentDay,
-            'totalDays'     => $totalDays,
+            'userData'     => $userData,
+            'todayReading' => $todayReading,
+            'planInfo'     => $planInfo,
+            'currentDay'   => $currentDay,
+            'totalDays'    => $totalDays,
         ];
     }
 }

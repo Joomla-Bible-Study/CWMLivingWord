@@ -45,7 +45,7 @@ class CwmresourcesModel extends BaseDatabaseModel
         $grouped = [];
 
         foreach ($rows as $row) {
-            $cat = $row->category ?: 'Uncategorized';
+            $cat             = $row->category ?: 'Uncategorized';
             $grouped[$cat][] = $row;
         }
 

@@ -39,10 +39,10 @@ class CwmplanviewModel extends BaseDatabaseModel
         $db     = $this->getDatabase();
         $userId = (int) Factory::getApplication()->getIdentity()->id;
 
-        $userData  = CwmuserHelper::getUserData($db, $userId);
-        $planInfo  = CwmreadingHelper::getPlanByName($db, $userData->bibleplan);
-        $readings  = CwmreadingHelper::getAllReadings($db, $userData->bibleplan);
-        $totalDays = \count($readings);
+        $userData   = CwmuserHelper::getUserData($db, $userId);
+        $planInfo   = CwmreadingHelper::getPlanByName($db, $userData->bibleplan);
+        $readings   = CwmreadingHelper::getAllReadings($db, $userData->bibleplan);
+        $totalDays  = \count($readings);
         $currentDay = CwmreadingHelper::getCurrentReadingDay(
             $userData->startdate,
             (int) $userData->dateoffset,
