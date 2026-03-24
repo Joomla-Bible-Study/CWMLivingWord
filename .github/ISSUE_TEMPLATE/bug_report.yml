@@ -1,0 +1,51 @@
+name: Bug Report
+description: Something isn't working correctly in CWMLivingWord
+labels: ["type: bug", "needs: review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as possible.
+  - type: input
+    id: joomla-version
+    attributes:
+      label: Joomla version
+      placeholder: "e.g. 6.0.1"
+    validations:
+      required: true
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP version
+      placeholder: "e.g. 8.3.4"
+    validations:
+      required: true
+  - type: input
+    id: component-version
+    attributes:
+      label: LivingWord component version
+      placeholder: "e.g. 5.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      placeholder: What happened? What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to...
+        2. Click...
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, error logs, Joomla system info, etc.
