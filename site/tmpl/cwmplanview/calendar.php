@@ -30,6 +30,19 @@ $completedDays = array_flip($data->completedDays ?? []);
         <h2><?php echo $this->escape($plan->description); ?></h2>
     <?php endif; ?>
 
+    <?php if ($data->totalDays > 0 && ($data->completedCount ?? 0) > 0) : ?>
+        <div class="livingword-progress-info mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_DAYS', $data->completedCount, $data->totalDays); ?></span>
+                <span class="badge bg-primary"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_PERCENT', $data->progressPercent); ?></span>
+            </div>
+            <div class="progress" style="height: 8px;" role="progressbar"
+                 aria-valuenow="<?php echo $data->progressPercent; ?>" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar bg-success" style="width: <?php echo $data->progressPercent; ?>%"></div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <?php if (empty($readings)) : ?>
         <div class="alert alert-info"><?php echo Text::_('COM_LIVINGWORD_NO_READINGS'); ?></div>
     <?php else : ?>

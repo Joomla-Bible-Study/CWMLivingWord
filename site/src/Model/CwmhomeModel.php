@@ -48,17 +48,25 @@ class CwmhomeModel extends BaseDatabaseModel
         $todayReading = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
         $planInfo     = CwmreadingHelper::getPlanById($db, $planId);
 
-        $isCompleted = ($userId > 0)
-            ? CwmprogressHelper::isCompleted($db, $userId, $planId, $currentDay)
-            : false;
+        $isCompleted    = false;
+        $completedCount = 0;
+
+        if ($userId > 0) {
+            $isCompleted    = CwmprogressHelper::isCompleted($db, $userId, $planId, $currentDay);
+            $completedCount = CwmprogressHelper::getCompletedCount($db, $userId, $planId);
+        }
+
+        $progressPercent = ($totalDays > 0) ? round(($completedCount / $totalDays) * 100) : 0;
 
         return (object) [
-            'userData'     => $userData,
-            'todayReading' => $todayReading,
-            'planInfo'     => $planInfo,
-            'currentDay'   => $currentDay,
-            'totalDays'    => $totalDays,
-            'isCompleted'  => $isCompleted,
+            'userData'        => $userData,
+            'todayReading'    => $todayReading,
+            'planInfo'        => $planInfo,
+            'currentDay'      => $currentDay,
+            'totalDays'       => $totalDays,
+            'isCompleted'     => $isCompleted,
+            'completedCount'  => $completedCount,
+            'progressPercent' => $progressPercent,
         ];
     }
 }
