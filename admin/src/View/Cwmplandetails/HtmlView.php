@@ -58,6 +58,7 @@ class HtmlView extends BaseHtmlView
     public function display($tpl = null): void
     {
         $model = $this->getModel();
+        $model->setUseExceptions(true);
 
         $this->items         = $model->getItems();
         $this->pagination    = $model->getPagination();

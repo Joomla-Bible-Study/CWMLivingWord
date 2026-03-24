@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Administrator\Controller;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
@@ -86,7 +87,7 @@ class CwmutilitiesController extends BaseController
     public function backup(): void
     {
         $app = $this->app;
-        $db  = $app->getContainer()->get(DatabaseInterface::class);
+        $db  = Factory::getContainer()->get(DatabaseInterface::class);
 
         $output   = "-- LivingWord Database Backup\n";
         $output  .= "-- Date: " . date('Y-m-d H:i:s') . "\n\n";
@@ -143,7 +144,7 @@ class CwmutilitiesController extends BaseController
     private function runTableCommand(string $command, string $msgKey): void
     {
         $app = $this->app;
-        $db  = $app->getContainer()->get(DatabaseInterface::class);
+        $db  = Factory::getContainer()->get(DatabaseInterface::class);
 
         $tableList = [];
 
@@ -151,8 +152,8 @@ class CwmutilitiesController extends BaseController
             $tableList[] = $db->quoteName(str_replace('#__', $app->get('dbprefix'), $table));
         }
 
-        $db->setQuery($command . ' ' . implode(', ', $tableList));
-        $db->execute();
+        // Maintenance commands cannot use prepared statements
+        $db->getConnection()->query($command . ' ' . implode(', ', $tableList));
 
         $app->enqueueMessage(Text::_($msgKey));
         $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmutilities', false));

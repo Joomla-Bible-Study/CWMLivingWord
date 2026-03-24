@@ -593,16 +593,238 @@ function doVerifyExtensions(bool $verbose = false): void
                     echo "  ADDED:  $name (plugin/$folder)\n";
                     $fixed++;
                 } elseif ($type === 'component') {
-                    echo "  MISS:   $name (component) — install LivingWord via Extension Manager first\n";
-                    $errors++;
+                    registerComponent($pdo, $prefix, $hasNamespace, $joomlaPath, $verbose);
+                    $fixed++;
                 }
             }
         }
+
+        // Always ensure namespace map is up to date
+        updateNamespaceMap($joomlaPath, $verbose);
 
         echo "  Summary: $ok OK, $fixed fixed, $errors errors\n";
     }
 
     echo "\nDone.\n";
+}
+
+/**
+ * Registers the com_livingword component in a Joomla database.
+ *
+ * Creates the extensions row, asset record, admin menu items,
+ * schema version entry, and runs the install SQL to create tables.
+ *
+ * @param   PDO     $pdo           Database connection
+ * @param   string  $prefix        Table prefix
+ * @param   bool    $hasNamespace  Whether the extensions table has a namespace column
+ * @param   string  $joomlaPath    Path to the Joomla installation
+ * @param   bool    $verbose       Show detailed output
+ *
+ * @return  void
+ *
+ * @since  5.0.0
+ */
+function registerComponent(PDO $pdo, string $prefix, bool $hasNamespace, string $joomlaPath, bool $verbose = false): void
+{
+    try {
+        // 1. Insert into #__extensions
+        $columns = 'name, type, element, folder, client_id, enabled, access, locked, manifest_cache, params, custom_data';
+        $values  = "?, 'component', 'com_livingword', '', 1, 1, 1, 0, '{}', '{}', ''";
+
+        if ($hasNamespace) {
+            $columns .= ', namespace';
+            $values  .= ', ?';
+            $stmt = $pdo->prepare("INSERT INTO {$prefix}extensions ($columns) VALUES ($values)");
+            $stmt->execute(['com_livingword', 'CWM\\Component\\Livingword']);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO {$prefix}extensions ($columns) VALUES ($values)");
+            $stmt->execute(['com_livingword']);
+        }
+
+        $extensionId = (int) $pdo->lastInsertId();
+
+        if ($verbose) {
+            echo "    extensions row: ID $extensionId\n";
+        }
+
+        // 2. Insert into #__assets
+        $stmt = $pdo->prepare(
+            "INSERT INTO {$prefix}assets (parent_id, lft, rgt, level, name, title, rules) "
+            . "VALUES (1, 0, 0, 1, 'com_livingword', 'com_livingword', '{}')"
+        );
+        $stmt->execute();
+        $assetId = (int) $pdo->lastInsertId();
+
+        // Rebuild lft/rgt: place after last existing asset
+        $maxRgt = (int) $pdo->query("SELECT MAX(rgt) FROM {$prefix}assets")->fetchColumn();
+        $pdo->exec("UPDATE {$prefix}assets SET lft = " . ($maxRgt + 1) . ", rgt = " . ($maxRgt + 2) . " WHERE id = $assetId");
+
+        if ($verbose) {
+            echo "    asset row: ID $assetId\n";
+        }
+
+        // 3. Create admin menu items from manifest
+        $menuData = [
+            ['title' => 'COM_LIVINGWORD', 'link' => 'index.php?option=com_livingword', 'alias' => 'com-livingword', 'level' => 1, 'parent' => 1, 'img' => 'class:component'],
+            ['title' => 'COM_LIVINGWORD_CPANEL', 'link' => 'index.php?option=com_livingword&view=cwmcpanel', 'alias' => 'com-livingword-cpanel', 'level' => 2],
+            ['title' => 'COM_LIVINGWORD_MANAGE_PLANS', 'link' => 'index.php?option=com_livingword&view=cwmplans', 'alias' => 'com-livingword-plans', 'level' => 2],
+            ['title' => 'COM_LIVINGWORD_MANAGE_LINKS', 'link' => 'index.php?option=com_livingword&view=cwmlinks', 'alias' => 'com-livingword-links', 'level' => 2],
+            ['title' => 'COM_LIVINGWORD_MANAGE_SUBSCRIBERS', 'link' => 'index.php?option=com_livingword&view=cwmusers', 'alias' => 'com-livingword-users', 'level' => 2],
+        ];
+
+        $parentMenuId = 0;
+        $menuCount    = 0;
+
+        foreach ($menuData as $item) {
+            $parentId = ($item['level'] === 1) ? 1 : $parentMenuId;
+            $img      = $item['img'] ?? '';
+
+            $stmt = $pdo->prepare(
+                "INSERT INTO {$prefix}menu "
+                . "(menutype, title, alias, link, type, published, parent_id, level, component_id, client_id, img, path, access, params, language) "
+                . "VALUES ('main', ?, ?, ?, 'component', 1, ?, ?, ?, 1, ?, ?, 1, '', '*')"
+            );
+            $stmt->execute([
+                $item['title'],
+                $item['alias'],
+                $item['link'],
+                $parentId,
+                $item['level'],
+                $extensionId,
+                $img,
+                $item['alias'],
+            ]);
+
+            $menuId = (int) $pdo->lastInsertId();
+
+            if ($item['level'] === 1) {
+                $parentMenuId = $menuId;
+            } else {
+                $pdo->exec("UPDATE {$prefix}menu SET path = 'com-livingword/{$item['alias']}' WHERE id = $menuId");
+            }
+
+            $menuCount++;
+        }
+
+        if ($verbose) {
+            echo "    menu items: $menuCount created\n";
+        }
+
+        // 4. Run install SQL to create tables (DDL auto-commits, so no transaction)
+        $sqlFile = BASE_DIR . '/admin/sql/install.mysql.utf8.sql';
+
+        if (file_exists($sqlFile)) {
+            $sql = file_get_contents($sqlFile);
+            $sql = str_replace('#__', $prefix, $sql);
+
+            $statements = array_filter(
+                array_map('trim', explode(';', $sql)),
+                fn(string $s): bool => $s !== ''
+            );
+
+            $tableCount = 0;
+            foreach ($statements as $statement) {
+                $pdo->exec($statement);
+                $tableCount++;
+            }
+
+            if ($verbose) {
+                echo "    tables: $tableCount statements executed\n";
+            }
+        }
+
+        // 5. Insert schema version
+        $schemaVersion = '5.0.0';
+        $xmlFile       = BASE_DIR . '/livingword.xml';
+
+        if (file_exists($xmlFile)) {
+            $xml = simplexml_load_string(file_get_contents($xmlFile));
+            if ($xml && isset($xml->version)) {
+                $schemaVersion = (string) $xml->version;
+            }
+        }
+
+        $stmt = $pdo->prepare(
+            "INSERT INTO {$prefix}schemas (extension_id, version_id) VALUES (?, ?)"
+        );
+        $stmt->execute([$extensionId, $schemaVersion]);
+
+        if ($verbose) {
+            echo "    schema version: $schemaVersion\n";
+        }
+
+        // 6. Register PSR-4 namespace in autoload cache
+        updateNamespaceMap($joomlaPath, $verbose);
+
+        echo "  ADDED:  com_livingword (component) — registered with menu, tables, and schema\n";
+    } catch (\Exception $e) {
+        echo "  ERROR:  com_livingword (component) — registration failed: " . $e->getMessage() . "\n";
+    }
+}
+
+/**
+ * Adds LivingWord PSR-4 namespace entries to Joomla's autoload cache.
+ *
+ * Joomla generates administrator/cache/autoload_psr4.php via the
+ * NamespaceMap plugin. For symlinked dev installs, we inject our
+ * entries directly so the component can be loaded without triggering
+ * a full cache rebuild.
+ *
+ * @param   string  $joomlaPath  Path to the Joomla installation
+ * @param   bool    $verbose     Show detailed output
+ *
+ * @return  void
+ *
+ * @since  5.0.0
+ */
+function updateNamespaceMap(string $joomlaPath, bool $verbose = false): void
+{
+    $mapFile = $joomlaPath . '/administrator/cache/autoload_psr4.php';
+
+    $entries = [
+        "'CWM\\\\Component\\\\Livingword\\\\Administrator\\\\'" => "[JPATH_ADMINISTRATOR . '/components/com_livingword/src']",
+        "'CWM\\\\Component\\\\Livingword\\\\Site\\\\'"          => "[JPATH_SITE . '/components/com_livingword/src']",
+    ];
+
+    if (!file_exists($mapFile)) {
+        // Create the file from scratch
+        $lines = "<?php\ndefined('_JEXEC') or die;\nreturn [\n";
+        foreach ($entries as $ns => $path) {
+            $lines .= "\t$ns => $path,\n";
+        }
+        $lines .= "];\n";
+        file_put_contents($mapFile, $lines);
+
+        if ($verbose) {
+            echo "    namespace map: created with " . \count($entries) . " entries\n";
+        }
+
+        return;
+    }
+
+    $content = file_get_contents($mapFile);
+
+    // Check if already registered
+    if (str_contains($content, 'Livingword')) {
+        if ($verbose) {
+            echo "    namespace map: already registered\n";
+        }
+
+        return;
+    }
+
+    // Insert entries before the closing "];"
+    $insertBlock = '';
+    foreach ($entries as $ns => $path) {
+        $insertBlock .= "\t$ns => $path,\n";
+    }
+
+    $content = str_replace('];', $insertBlock . '];', $content);
+    file_put_contents($mapFile, $content);
+
+    if ($verbose) {
+        echo "    namespace map: added " . \count($entries) . " entries\n";
+    }
 }
 
 /**

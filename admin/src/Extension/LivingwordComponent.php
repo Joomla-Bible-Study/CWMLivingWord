@@ -18,6 +18,8 @@ use Joomla\CMS\Component\Router\RouterServiceInterface;
 use Joomla\CMS\Component\Router\RouterServiceTrait;
 use Joomla\CMS\Extension\BootableExtensionInterface;
 use Joomla\CMS\Extension\MVCComponent;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -32,6 +34,27 @@ class LivingwordComponent extends MVCComponent implements
     use RouterServiceTrait;
 
     /**
+     * Minimum PHP version ID required (8.3.0 = 80300).
+     *
+     * @since 5.0.0
+     */
+    public const int MIN_PHP_VERSION_ID = 80300;
+
+    /**
+     * Minimum PHP version as a display string for error messages.
+     *
+     * @since 5.0.0
+     */
+    public const string MIN_PHP_VERSION = '8.3.0';
+
+    /**
+     * Minimum Joomla version required.
+     *
+     * @since 5.0.0
+     */
+    public const string MIN_JOOMLA_VERSION = '5.0.0';
+
+    /**
      * Booting the extension.
      *
      * @param   ContainerInterface  $container  The container
@@ -42,5 +65,26 @@ class LivingwordComponent extends MVCComponent implements
      */
     public function boot(ContainerInterface $container): void
     {
+        if (PHP_VERSION_ID < self::MIN_PHP_VERSION_ID) {
+            Factory::getApplication()->enqueueMessage(
+                Text::sprintf(
+                    'COM_LIVINGWORD_ERROR_PHP_VERSION',
+                    self::MIN_PHP_VERSION,
+                    PHP_VERSION
+                ),
+                'error'
+            );
+        }
+
+        if (version_compare(JVERSION, self::MIN_JOOMLA_VERSION, '<')) {
+            Factory::getApplication()->enqueueMessage(
+                Text::sprintf(
+                    'COM_LIVINGWORD_ERROR_JOOMLA_VERSION',
+                    self::MIN_JOOMLA_VERSION,
+                    JVERSION
+                ),
+                'error'
+            );
+        }
     }
 }

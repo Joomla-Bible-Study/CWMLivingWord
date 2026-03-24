@@ -3,11 +3,7 @@
     <fieldset>
         <field
             name="id"
-            type="text"
-            label="JGLOBAL_FIELD_ID_LABEL"
-            class="readonly"
-            readonly="true"
-            size="10"
+            type="hidden"
             default="0"
         />
         <field
@@ -54,9 +50,8 @@
         />
         <field
             name="ordering"
-            type="text"
+            type="ordering"
             label="JFIELD_ORDERING_LABEL"
-            size="6"
         />
     </fieldset>
 </form>

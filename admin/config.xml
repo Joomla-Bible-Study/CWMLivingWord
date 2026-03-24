@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-    <fieldset name="general_settings" label="COM_LIVINGWORD_CONFIG_GENERAL" description="">
-        <field name="config_global_startdate" type="calendar" default="NOW" filter="server_utc" size="22" format="%Y-%m-%d"
+    <fieldset name="general_settings" label="COM_LIVINGWORD_CONFIG_GENERAL">
+        <field name="config_global_startdate" type="calendar" default="NOW" filter="server_utc" format="%Y-%m-%d"
                label="COM_LIVINGWORD_CONFIG_STARTDATE" description="COM_LIVINGWORD_CONFIG_STARTDATE_DESC" />
         <field name="config_bible_version" type="text" default="NLT"
                label="COM_LIVINGWORD_CONFIG_VERSION" description="COM_LIVINGWORD_CONFIG_VERSION_DESC" />
         <field name="config_parallel_bible_version" type="text" default=""
                label="COM_LIVINGWORD_CONFIG_PARALLEL" description="COM_LIVINGWORD_CONFIG_PARALLEL_DESC" />
-        <field name="config_show_audio" type="radio" class="btn-group" default="1"
+        <field name="config_show_audio" type="radio" layout="joomla.form.field.radio.switcher" default="1"
                label="COM_LIVINGWORD_CONFIG_SHOW_AUDIO" description="COM_LIVINGWORD_CONFIG_SHOW_AUDIO_DESC">
             <option value="0">JNO</option>
             <option value="1">JYES</option>
@@ -16,51 +16,36 @@
                label="COM_LIVINGWORD_CONFIG_ALT_AUDIO" description="COM_LIVINGWORD_CONFIG_ALT_AUDIO_DESC" />
         <field name="config_bible_plan" type="text" default="comp"
                label="COM_LIVINGWORD_CONFIG_PLAN" description="COM_LIVINGWORD_CONFIG_PLAN_DESC" />
-        <field name="config_plan_template" type="list" default="calendar"
+        <field name="config_plan_template" type="list" default="calendar" validate="options"
                label="COM_LIVINGWORD_CONFIG_PLAN_TEMPLATE" description="COM_LIVINGWORD_CONFIG_PLAN_TEMPLATE_DESC">
             <option value="default">COM_LIVINGWORD_CONFIG_TEMPLATE_LIST</option>
             <option value="calendar">COM_LIVINGWORD_CONFIG_TEMPLATE_CALENDAR</option>
         </field>
-        <field name="config_enable_email" type="radio" class="btn-group" default="1"
+        <field name="config_enable_email" type="radio" layout="joomla.form.field.radio.switcher" default="1"
                label="COM_LIVINGWORD_CONFIG_ENABLE_EMAIL" description="COM_LIVINGWORD_CONFIG_ENABLE_EMAIL_DESC">
             <option value="0">JNO</option>
             <option value="1">JYES</option>
         </field>
-        <field name="config_show_print" type="radio" class="btn-group" default="1"
-               label="COM_LIVINGWORD_CONFIG_SHOW_PRINT" description="">
+        <field name="config_show_print" type="radio" layout="joomla.form.field.radio.switcher" default="1"
+               label="COM_LIVINGWORD_CONFIG_SHOW_PRINT">
             <option value="0">JNO</option>
             <option value="1">JYES</option>
         </field>
-        <field name="config_show_credit" type="radio" class="btn-group" default="1"
-               label="COM_LIVINGWORD_CONFIG_SHOW_CREDIT" description="">
-            <option value="0">JNO</option>
-            <option value="1">JYES</option>
-        </field>
-    </fieldset>
-    <fieldset name="menu_settings" label="COM_LIVINGWORD_CONFIG_MENU" description="">
-        <field name="config_show_menu" type="radio" class="btn-group" default="1"
-               label="COM_LIVINGWORD_CONFIG_SHOW_MENU" description="">
+        <field name="config_show_credit" type="radio" layout="joomla.form.field.radio.switcher" default="1"
+               label="COM_LIVINGWORD_CONFIG_SHOW_CREDIT">
             <option value="0">JNO</option>
             <option value="1">JYES</option>
         </field>
     </fieldset>
-    <fieldset name="integration" label="COM_LIVINGWORD_CONFIG_INTEGRATION" description="COM_LIVINGWORD_CONFIG_INTEGRATION_DESC">
-        <field name="config_enable_twitter" type="radio" class="btn-group" default="0"
-               label="COM_LIVINGWORD_CONFIG_TWITTER" description="COM_LIVINGWORD_CONFIG_TWITTER_DESC">
+    <fieldset name="menu_settings" label="COM_LIVINGWORD_CONFIG_MENU">
+        <field name="config_show_menu" type="radio" layout="joomla.form.field.radio.switcher" default="1"
+               label="COM_LIVINGWORD_CONFIG_SHOW_MENU">
             <option value="0">JNO</option>
             <option value="1">JYES</option>
         </field>
-        <field name="config_twitter_ck" type="text" size="50" default=""
-               label="COM_LIVINGWORD_CONFIG_TWITTER_CK" description="" />
-        <field name="config_twitter_cs" type="text" size="50" default=""
-               label="COM_LIVINGWORD_CONFIG_TWITTER_CS" description="" />
-        <field name="config_twitter_at" type="text" size="50" default=""
-               label="COM_LIVINGWORD_CONFIG_TWITTER_AT" description="" />
-        <field name="config_twitter_as" type="text" size="50" default=""
-               label="COM_LIVINGWORD_CONFIG_TWITTER_AS" description="" />
     </fieldset>
     <fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL">
-        <field name="rules" type="rules" label="JCONFIG_PERMISSIONS_LABEL" class="inputbox"
+        <field name="rules" type="rules" label="JCONFIG_PERMISSIONS_LABEL"
                validate="rules" filter="rules" component="com_livingword" section="component" />
     </fieldset>
 </config>

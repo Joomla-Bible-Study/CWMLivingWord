@@ -16,6 +16,7 @@ namespace CWM\Component\Livingword\Administrator\View\Cwmcpanel;
 
 use CWM\Component\Livingword\Administrator\Model\CwmcpanelModel;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\MVC\View\GenericDataException;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 use Joomla\Component\Content\Administrator\Helper\ContentHelper;
@@ -45,9 +46,15 @@ class HtmlView extends BaseHtmlView
     public function display($tpl = null): void
     {
         /** @var CwmcpanelModel $model */
-        $model        = $this->getModel();
+        $model = $this->getModel();
+        $model->setUseExceptions(true);
+
         $this->counts = $model->getCounts();
         $this->canDo  = ContentHelper::getActions('com_livingword');
+
+        if (\count($errors = $model->getErrors())) {
+            throw new GenericDataException(implode("\n", $errors), 500);
+        }
 
         $this->addToolbar();
 

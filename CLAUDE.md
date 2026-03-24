@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LivingWord is a **Joomla 5+ component** (`com_livingword`) that provides Bible reading plans and resources. The component includes an admin panel, a frontend site component, a Joomla module (`mod_livingword`), and a task plugin (`plg_task_livingword`) for scheduled email delivery.
+LivingWord is a **Joomla 5/6 component** (`com_livingword`) that provides Bible reading plans and resources. The component includes an admin panel, a frontend site component, a Joomla module (`mod_livingword`), and a task plugin (`plg_task_livingword`) for scheduled email delivery.
 
 **Version:** 5.0.0 | **License:** GPL-2.0-or-later | **Maintained by:** CWM Team (Christian Web Ministries)
 
@@ -12,53 +12,64 @@ Originally created by Mike Leeper (MLWebTechnologies) as a Joomla 3.x component,
 
 ## Architecture
 
-This follows the standard **Joomla 5 MVC component pattern** with namespaced classes under `CWM\Component\Livingword`.
+This follows the standard **Joomla 5/6 MVC component pattern** with namespaced classes under `CWM\Component\Livingword`.
 
 ### Top-level Layout
 
-- `livingword.xml` — Joomla extension manifest (defines files, SQL scripts, menus, update server)
-- `script.php` — Install/update/uninstall script
+- `livingword.xml` — Joomla extension manifest (Joomla 5+6 compatibility, PHP 8.3+)
+- `script.php` — Install/update/uninstall script with version checks
 - `admin/` — Administrator component (controllers, models, views, templates, forms, SQL, language)
 - `site/` — Frontend component (controllers, models, views, templates, language)
 - `mod_livingword/` — Joomla module for displaying daily Bible reading
 - `plg_task_livingword/` — Task plugin for scheduled email delivery
-- `media/com_livingword/` — Media assets and `joomla.asset.json`
 - `build/` — Build tools and scripts
 - `tests/` — PHPUnit test suites (unit + integration)
 
 ### Component Structure (MVC)
 
 **Admin side** (`admin/src/`):
-- `Controller/` — Admin controllers (Cwmcpanel, Cwmplans, Cwmplan, Cwmlinks, Cwmlink, Cwmplandetails, Cwmplandetail, Cwmusers, Cwmutilities)
-- `Model/` — Admin models for CRUD operations on plans, links, plan details, users
-- `View/` — Admin HTML views
-- `Table/` — Joomla table classes for DB access
-- `Helper/` — Admin helper classes
-- `Extension/` — Component extension/boot class
-- `Field/` — Custom form field types
+- `Extension/LivingwordComponent.php` — Boot class with runtime PHP/Joomla version verification
+- `Controller/` — 10 controllers: DisplayController, Cwmcpanel, Cwmplans, Cwmplan, Cwmlinks, Cwmlink, Cwmplandetails, Cwmplandetail, Cwmusers, Cwmutilities
+- `Model/` — 8 models: CwmcpanelModel, CwmplansModel, CwmplanModel, CwmlinksModel, CwmlinkModel, CwmplandetailsModel, CwmplandetailModel, CwmusersModel
+- `View/` — 9 views: Cwmcpanel, Cwmplans, Cwmplan, Cwmlinks, Cwmlink, Cwmplandetails, Cwmplandetail, Cwmusers, Cwmutilities
+- `Table/` — 4 table classes: CwmplanTable, CwmlinkTable, CwmplandetailTable, CwmuserTable
+- `Helper/CwmlivingwordHelper.php` — ACL helper
+- `Dispatcher/` — Admin request dispatcher
 
 **Site (frontend) side** (`site/src/`):
-- `Controller/` — Site display controller
-- `Model/` — Site models
-- `View/` — Site HTML views
-- `Helper/` — `CwmreadingHelper` (reading plan date calculations)
+- `Controller/DisplayController.php` — Routes to views, enables caching for guests
+- `Model/` — 5 models: CwmhomeModel, CwmplanviewModel, CwmresourcesModel, CwmsettingsModel, CwmtoolsModel
+- `View/` — 5 views with `prepareDocument()` for page titles: Cwmhome, Cwmplanview, Cwmresources, Cwmsettings, Cwmtools
+- `Helper/` — 4 helpers: CwmreadingHelper (date math), CwmbiblegatewayHelper (URLs), CwmuserHelper (prefs), CwmmenuHelper (nav)
+- `Service/Router.php` — URL routing
+- `Dispatcher/` — Site request dispatcher
 
 ### Namespace Structure
 
 ```
 CWM\Component\Livingword\Administrator\  → admin/src/
 CWM\Component\Livingword\Site\           → site/src/
-CWM\Component\Livingword\Tests\          → tests/unit/
+CWM\Module\Livingword\Site\              → mod_livingword/src/
+CWM\Plugin\Task\Livingword\              → plg_task_livingword/src/
 ```
 
 ### Database Tables (MySQL, prefixed with `#__`)
 
 | Table | Purpose |
 |-------|---------|
-| `#__livingword` | User settings (selected plan, version, audio pref, start date, plan view) |
-| `#__livingword_links` | Curated Bible resource links with categories |
-| `#__livingword_plans` | Reading plan definitions (name, description, audio/NT flags) |
-| `#__livingword_plans_details` | Individual daily readings per plan (reading text, audio ref, description) |
+| `#__livingword` | User settings (userid, bibleplan, bibleversion, startdate, email subscription, planview) |
+| `#__livingword_links` | Curated Bible resource links (name, url, category, target, published, ordering) |
+| `#__livingword_plans` | Reading plan definitions (name slug, description, message, audio, newtest flags) |
+| `#__livingword_plans_details` | Individual daily readings per plan (plan FK, reading ref, audio, ordering) |
+
+### Key Patterns
+
+- **Admin list views** use `GenericDataException` for error handling with `$model->setUseExceptions(true)`
+- **Admin edit views** use `GenericDataException`, set layout to 'edit', hide main menu
+- **Site views** use `prepareDocument()` to set document title respecting Joomla's `sitename_pagetitles` config
+- **Filter forms** must be named `filter_cwm{viewname}.xml` (Joomla auto-derives from model class name)
+- **DB maintenance commands** (OPTIMIZE/CHECK/REPAIR) use `$db->getConnection()->query()` since prepared statements don't support DDL
+- **Container access** uses `Factory::getContainer()` (not `$app->getContainer()` which is protected in J6)
 
 ## Development Setup
 
@@ -80,9 +91,20 @@ composer setup
 # Create symlinks to your local Joomla installation(s)
 composer symlink
 
-# Verify extensions are registered in Joomla's database
+# Register extensions in Joomla database (creates tables, menus, namespace map)
 composer verify
 ```
+
+After `symlink + verify`, the component is fully installed. No browser-based installation needed.
+
+### What `composer verify` Does
+
+1. Inserts `#__extensions` row for component and plugin
+2. Creates `#__assets` ACL record
+3. Creates admin menu items (dashboard, plans, links, subscribers)
+4. Runs `install.mysql.utf8.sql` to create all 4 database tables
+5. Inserts `#__schemas` version record
+6. Adds PSR-4 namespace entries to `administrator/cache/autoload_psr4.php`
 
 ### Build & Test Commands
 
@@ -99,7 +121,7 @@ composer verify
 | `composer setup` | Interactive dev environment setup |
 | `composer symlink` | Create symlinks to Joomla |
 | `composer clean` | Remove symlinks |
-| `composer verify` | Verify extensions in Joomla DB |
+| `composer verify` | Verify/register extensions in Joomla DB |
 | `composer joomla-install` | Download and install Joomla |
 | `composer joomla-latest` | Show latest Joomla version |
 
@@ -124,6 +146,8 @@ The `build.dist.properties` file is the template. Copy to `build.properties` (gi
 
 This project follows Proclaim coding standards:
 - PSR-12 with CWM customizations
-- PHP 8.3+ features (named arguments, match expressions, enums, readonly properties)
-- Joomla 5 namespaced MVC pattern
+- PHP 8.3+ features (named arguments, match expressions, enums, readonly properties, typed constants)
+- Joomla 5/6 namespaced MVC pattern
+- `#[\Override]` attribute on all overridden methods
 - ACL defined in `admin/access.xml`
+- Use `Factory::getContainer()->get(DatabaseInterface::class)` for DB access (Joomla 6 compatible)

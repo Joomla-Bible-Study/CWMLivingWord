@@ -15,6 +15,8 @@ namespace CWM\Component\Livingword\Site\View\Cwmtools;
 // phpcs:enable PSR1.Files.SideEffects
 
 use CWM\Component\Livingword\Site\Helper\CwmmenuHelper;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 
 /**
@@ -40,6 +42,33 @@ class HtmlView extends BaseHtmlView
     {
         $this->menu = CwmmenuHelper::buildMenu();
 
+        $this->prepareDocument();
+
         parent::display($tpl);
+    }
+
+    /**
+     * Prepares the document title and metadata.
+     *
+     * @return  void
+     *
+     * @throws  \Exception
+     * @since   5.0.0
+     */
+    protected function prepareDocument(): void
+    {
+        $app   = Factory::getApplication();
+        $menus = $app->getMenu();
+        $menu  = $menus->getActive();
+
+        $title = $menu ? $menu->title : Text::_('COM_LIVINGWORD_TOOLS');
+
+        if ($app->get('sitename_pagetitles', 0) === 1) {
+            $title = Text::sprintf('JPAGETITLE', $app->get('sitename'), $title);
+        } elseif ($app->get('sitename_pagetitles', 0) === 2) {
+            $title = Text::sprintf('JPAGETITLE', $title, $app->get('sitename'));
+        }
+
+        $this->getDocument()->setTitle($title);
     }
 }

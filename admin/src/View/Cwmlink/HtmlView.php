@@ -17,6 +17,7 @@ namespace CWM\Component\Livingword\Administrator\View\Cwmlink;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\MVC\View\GenericDataException;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 
@@ -51,6 +52,7 @@ class HtmlView extends BaseHtmlView
     public function display($tpl = null): void
     {
         $model = $this->getModel();
+        $model->setUseExceptions(true);
 
         $this->form  = $model->getForm();
         $this->item  = $model->getItem();
@@ -58,7 +60,7 @@ class HtmlView extends BaseHtmlView
         $this->canDo = ContentHelper::getActions('com_livingword');
 
         if (\count($errors = $model->getErrors())) {
-            throw new \RuntimeException(implode("\n", $errors), 500);
+            throw new GenericDataException(implode("\n", $errors), 500);
         }
 
         $this->setLayout('edit');
@@ -77,7 +79,7 @@ class HtmlView extends BaseHtmlView
     {
         Factory::getApplication()->getInput()->set('hidemainmenu', true);
         $isNew = ((int) $this->item->id === 0);
-        $title = $isNew ? Text::_('JNEW') : Text::_('JACTION_EDIT');
+        $title = $isNew ? Text::_('COM_LIVINGWORD_NEW') : Text::_('COM_LIVINGWORD_EDIT');
 
         ToolbarHelper::title(Text::_('COM_LIVINGWORD_LINK') . ': ' . $title, 'link');
 

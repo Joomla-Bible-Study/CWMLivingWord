@@ -11,6 +11,14 @@
     <description>COM_LIVINGWORD_XML_DESCRIPTION</description>
     <namespace path="src">CWM\Component\Livingword</namespace>
 
+    <compatibility>
+        <cms>
+            <targetplatform name="joomla" version="5[.0-9]" />
+            <targetplatform name="joomla" version="6[.0-9]" />
+        </cms>
+        <php minimum="8.3.0" />
+    </compatibility>
+
     <scriptfile>script.php</scriptfile>
 
     <languages folder="admin">
