@@ -15,6 +15,7 @@ namespace CWM\Plugin\Task\Livingword\Extension;
 
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
+use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Mail\MailerFactoryInterface;
 use Joomla\CMS\Plugin\CMSPlugin;
@@ -110,9 +111,17 @@ class Livingword extends CMSPlugin implements SubscriberInterface
                 continue;
             }
 
+            // Ensure unsubscribe token exists
+            $token = CwmuserHelper::ensureUnsubscribeToken($db, (int) $sub->user_id);
+            $unsubscribeUrl = CwmuserHelper::getUnsubscribeUrl($token);
+
             $body = '<p>Today\'s reading (Day ' . $currentDay . '):</p>'
                   . CwmscriptureHelper::buildEmailContent($reading->reading, $version)
-                  . '<p>From ' . htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8') . '</p>';
+                  . '<p>From ' . htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8') . '</p>'
+                  . '<hr style="margin-top:20px;border:none;border-top:1px solid #ccc;">'
+                  . '<p style="font-size:0.85em;color:#666;">'
+                  . '<a href="' . htmlspecialchars($unsubscribeUrl, ENT_QUOTES, 'UTF-8') . '">'
+                  . 'Unsubscribe from daily reading emails</a></p>';
 
             try {
                 $mailer = $this->getApplication()->getContainer()->get(MailerFactoryInterface::class)->createMailer();
@@ -120,6 +129,11 @@ class Livingword extends CMSPlugin implements SubscriberInterface
                 $mailer->setSubject($siteName . ' - Daily Bible Reading');
                 $mailer->setBody($body);
                 $mailer->isHtml(true);
+
+                // RFC 8058: List-Unsubscribe header for one-click in email clients
+                $mailer->addCustomHeader('List-Unsubscribe', '<' . $unsubscribeUrl . '>');
+                $mailer->addCustomHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+
                 $mailer->send();
                 $sent++;
             } catch (\Exception $e) {

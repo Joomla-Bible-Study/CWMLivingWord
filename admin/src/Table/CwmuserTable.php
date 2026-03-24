@@ -39,6 +39,9 @@ class CwmuserTable extends Table
     /** @var int|null Email subscription flag (0/1) @since 5.0.0 */
     public ?int $email = 0;
 
+    /** @var string|null One-click unsubscribe token @since 5.2.0 */
+    public ?string $unsubscribe_token = null;
+
     /** @var int|null Plan view preference (0=default, 1=list, 2=calendar) @since 5.2.0 */
     public ?int $plan_view = 0;
 

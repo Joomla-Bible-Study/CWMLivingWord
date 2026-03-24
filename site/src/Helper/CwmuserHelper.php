@@ -16,6 +16,7 @@ namespace CWM\Component\Livingword\Site\Helper;
 
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
 
 /**
@@ -96,6 +97,11 @@ class CwmuserHelper
         $db->setQuery($query);
         $existingId = $db->loadResult();
 
+        // Auto-generate unsubscribe token for new records
+        if (empty($data->unsubscribe_token ?? null)) {
+            $data->unsubscribe_token = self::generateUnsubscribeToken();
+        }
+
         if ($existingId) {
             $data->id = (int) $existingId;
             $db->updateObject('#__livingword_users', $data, 'id');
@@ -124,6 +130,97 @@ class CwmuserHelper
             : Factory::getApplication()->getIdentity();
 
         return $user->authorise($action, 'com_livingword');
+    }
+
+    /**
+     * Generate a random unsubscribe token.
+     *
+     * @return  string  64-character hex token
+     *
+     * @since   5.2.0
+     */
+    public static function generateUnsubscribeToken(): string
+    {
+        return bin2hex(random_bytes(32));
+    }
+
+    /**
+     * Build the full unsubscribe URL for a given token.
+     *
+     * @param   string  $token  The unsubscribe token
+     *
+     * @return  string  Absolute URL
+     *
+     * @since   5.2.0
+     */
+    public static function getUnsubscribeUrl(string $token): string
+    {
+        return Uri::root() . 'index.php?option=com_livingword&task=cwmunsubscribe.unsubscribe&token=' . urlencode($token);
+    }
+
+    /**
+     * Unsubscribe a user by their token. No login required.
+     *
+     * @param   DatabaseInterface  $db     Database instance
+     * @param   string             $token  The unsubscribe token
+     *
+     * @return  bool  True if a matching user was found and unsubscribed
+     *
+     * @since   5.2.0
+     */
+    public static function unsubscribeByToken(DatabaseInterface $db, string $token): bool
+    {
+        if (empty($token) || \strlen($token) !== 64) {
+            return false;
+        }
+
+        $query = $db->getQuery(true)
+            ->update($db->quoteName('#__livingword_users'))
+            ->set($db->quoteName('email') . ' = 0')
+            ->where($db->quoteName('unsubscribe_token') . ' = ' . $db->quote($token))
+            ->where($db->quoteName('email') . ' = 1');
+
+        $db->setQuery($query);
+        $db->execute();
+
+        return $db->getAffectedRows() > 0;
+    }
+
+    /**
+     * Ensure a user has an unsubscribe token, generating one if missing.
+     *
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $userId  Joomla user ID
+     *
+     * @return  string  The unsubscribe token
+     *
+     * @since   5.2.0
+     */
+    public static function ensureUnsubscribeToken(DatabaseInterface $db, int $userId): string
+    {
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('unsubscribe_token'))
+            ->from($db->quoteName('#__livingword_users'))
+            ->where($db->quoteName('user_id') . ' = ' . $userId);
+
+        $db->setQuery($query);
+        $token = $db->loadResult();
+
+        if (!empty($token)) {
+            return $token;
+        }
+
+        $token = self::generateUnsubscribeToken();
+
+        $query = $db->getQuery(true)
+            ->update($db->quoteName('#__livingword_users'))
+            ->set($db->quoteName('unsubscribe_token') . ' = ' . $db->quote($token))
+            ->where($db->quoteName('user_id') . ' = ' . $userId);
+
+        $db->setQuery($query);
+        $db->execute();
+
+        return $token;
     }
 
     /**

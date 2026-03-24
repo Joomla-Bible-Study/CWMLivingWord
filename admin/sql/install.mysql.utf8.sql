@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `#__livingword_users` (
   `plan_id` int UNSIGNED NOT NULL DEFAULT 0 COMMENT 'FK to plans.id',
   `bible_version` varchar(20) NOT NULL DEFAULT '' COMMENT 'Translation code (e.g. kjv)',
   `email` tinyint NOT NULL DEFAULT 0 COMMENT 'Receive daily reading email (0/1)',
+  `unsubscribe_token` varchar(64) DEFAULT NULL COMMENT 'One-click email unsubscribe token',
   `plan_view` tinyint NOT NULL DEFAULT 0 COMMENT '0=default, 1=list, 2=calendar',
   `start_date` date DEFAULT NULL COMMENT 'Reading plan start date',
   `date_offset` int NOT NULL DEFAULT 0 COMMENT 'Day offset adjustment',
