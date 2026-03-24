@@ -33,7 +33,7 @@ $plans = $this->plans;
                     <select name="plan_id" id="plan_id" class="form-select">
                         <?php foreach ($plans as $plan) : ?>
                             <option value="<?php echo (int) $plan->id; ?>"<?php echo (int) $user->plan_id === (int) $plan->id ? ' selected' : ''; ?>>
-                                <?php echo $this->escape(Text::_($plan->title)); ?>
+                                <?php echo $this->escape($plan->title); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

@@ -65,14 +65,14 @@ CREATE TABLE IF NOT EXISTS `#__livingword_links` (
 -- LivingWord Seed Data (v5.2.0 schema)
 
 INSERT INTO `#__livingword_plans` (`id`, `alias`, `title`, `description`, `message`, `audio`, `testament`, `published`, `ordering`) VALUES
-(4, 'newtest', 'NEWTESTPLAN', 'NEWTESTPLAN', 'NEWTESTMSG', 1, 1, 1, 4),
-(3, 'comp', 'COMPPLAN', 'COMPPLAN', 'COMPMSG', 1, 0, 1, 3),
-(8, 'ttb', 'THRUPLAN', 'THRUPLAN', 'THRUMSG', 1, 0, 1, 8),
-(1, 'bio', 'BIOPLAN', 'BIOPLAN', 'BIOMSG', 0, 0, 1, 1),
-(7, 'surv', 'SURVPLAN', 'SURVPLAN', 'SURVMSG', 0, 0, 1, 7),
-(2, 'chron', 'CHRONPLAN', 'CHRONPLAN', 'CHRONMSG', 0, 0, 1, 2),
-(6, 'ontp', 'ONTPPLAN', 'ONTPPLAN', 'ONTPMSG', 1, 0, 1, 6),
-(5, 'oldtest', 'OLDTESTPLAN', 'OLDTESTPLAN', 'OLDTESTMSG', 1, 2, 1, 5);
+(1, 'bio', 'Biographical', 'Follow the lives of key Bible figures from Genesis to Revelation.', '<p>This plan guides you through Scripture by focusing on the people whose stories shaped biblical history.</p>', 0, 0, 1, 1),
+(2, 'chron', 'Chronological', 'Read the Bible in the order events occurred.', '<p>Experience Scripture as an unfolding story, with books and passages arranged by historical timeline.</p>', 0, 0, 1, 2),
+(3, 'comp', 'Comprehensive', 'Read through the entire Bible in one year.', '<p>A complete journey through every book of the Bible, Old and New Testament, in 365 daily readings.</p>', 1, 0, 1, 3),
+(4, 'newtest', 'New Testament', 'Read through the New Testament in one year.', '<p>Focus on the Gospels, Acts, the Epistles, and Revelation with daily readings through the New Testament.</p>', 1, 1, 1, 4),
+(5, 'oldtest', 'Old Testament', 'Read through the Old Testament in one year.', '<p>Journey through the Law, the Prophets, the Psalms, and the Writings of the Old Testament.</p>', 1, 2, 1, 5),
+(6, 'ontp', 'New Testament & Psalms', 'Read the New Testament and Psalms in one year.', '<p>Combine daily New Testament readings with the Psalms for a year of worship and teaching.</p>', 1, 0, 1, 6),
+(7, 'surv', 'Survey', 'A survey of the major themes and books of the Bible.', '<p>Sample key chapters from every major section of Scripture for a broad overview of the Bible''s message.</p>', 0, 0, 1, 7),
+(8, 'ttb', 'Thru the Bible', 'Read through the Bible from Genesis to Revelation.', '<p>A straight-through reading from the first verse of Genesis to the last verse of Revelation.</p>', 1, 0, 1, 8);
 
 INSERT INTO `#__livingword_plans_details` (`plan_id`, `ordering`, `reading`, `audio`) VALUES
 (6, 256, 'Ecclesiastes 1-3; John 12', ''),

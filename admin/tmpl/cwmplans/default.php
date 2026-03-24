@@ -88,14 +88,14 @@ if ($saveOrder && !empty($this->items)) {
                                     </td>
                                     <td>
                                         <a href="<?php echo Route::_('index.php?option=com_livingword&task=cwmplan.edit&id=' . (int) $item->id); ?>">
-                                            <?php echo $this->escape(Text::_($item->title)); ?>
+                                            <?php echo $this->escape($item->title); ?>
                                         </a>
                                         <div class="small text-muted">
                                             <?php echo $this->escape($item->alias); ?>
                                         </div>
                                     </td>
                                     <td class="d-none d-md-table-cell">
-                                        <?php echo $this->escape(Text::_($item->description)); ?>
+                                        <?php echo $this->escape($item->description); ?>
                                     </td>
                                     <td class="text-center d-none d-md-table-cell">
                                         <?php echo $item->audio ? Text::_('JYES') : Text::_('JNO'); ?>

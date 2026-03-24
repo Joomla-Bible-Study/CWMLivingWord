@@ -25,7 +25,7 @@ $user     = $data->userData;
     <?php echo $this->menu; ?>
 
     <?php if ($plan) : ?>
-        <h2><?php echo $this->escape(Text::_($plan->description)); ?></h2>
+        <h2><?php echo $this->escape($plan->description); ?></h2>
     <?php endif; ?>
 
     <?php if (empty($readings)) : ?>

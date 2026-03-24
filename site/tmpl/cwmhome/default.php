@@ -45,9 +45,9 @@ if ($showAudio && $reading) {
 
     <div class="livingword-reading mt-3">
         <?php if ($plan) : ?>
-            <h2><?php echo $this->escape(Text::_($plan->description)); ?></h2>
+            <h2><?php echo $this->escape($plan->description); ?></h2>
             <?php if (!empty($plan->message)) : ?>
-                <div class="livingword-plan-message mb-3"><?php echo Text::_($plan->message); ?></div>
+                <div class="livingword-plan-message mb-3"><?php echo $plan->message; ?></div>
             <?php endif; ?>
         <?php endif; ?>
 
