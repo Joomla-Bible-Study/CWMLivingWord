@@ -1,12 +1,16 @@
 -- LivingWord 5.1.0 Migration
 -- Converts LWBIBLEBOOK reading format to human-readable passage references
--- Drops unused figure column, widens reading column
+-- Drops unused figure column, clears legacy audio data, widens reading column
 
 -- Widen reading column to accommodate longer human-readable references
 ALTER TABLE `#__livingword_plans_details` MODIFY `reading` varchar(255) NOT NULL DEFAULT '';
 
 -- Drop figure column (no longer used)
 ALTER TABLE `#__livingword_plans_details` DROP COLUMN IF EXISTS `figure`;
+
+-- Clear legacy audio data (old comma-separated LWBIBLEBOOK triplets)
+-- Audio is now derived from the reading field by BibleBrain provider
+UPDATE `#__livingword_plans_details` SET `audio` = '' WHERE `audio` != '';
 
 -- Convert LWBIBLEBOOK references to human-readable book names
 -- This handles the 73-book numbering used by the original Joomla 3 component

@@ -1,0 +1,57 @@
+/**
+ * LivingWord Audio Player Styles
+ *
+ * @package  Livingword
+ * @since    5.2.0
+ */
+
+/* Audio player container */
+.livingword-audio-player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.livingword-audio-player audio {
+  flex: 1;
+  max-width: 400px;
+  height: 36px;
+}
+
+.livingword-audio-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: transparent;
+  color: var(--bs-primary, #0d6efd);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.livingword-audio-play:hover {
+  background: var(--bs-primary, #0d6efd);
+  color: #fff;
+}
+
+.livingword-audio-play:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.livingword-audio-status {
+  font-size: 0.85rem;
+  color: var(--bs-secondary, #6c757d);
+}
+
+/* Verse sync highlighting */
+.livingword-scripture-text .verse-active {
+  background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.12);
+  border-radius: 2px;
+  transition: background-color 0.3s ease;
+}

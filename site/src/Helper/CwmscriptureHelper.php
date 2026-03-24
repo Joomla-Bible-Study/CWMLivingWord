@@ -161,6 +161,148 @@ class CwmscriptureHelper
     }
 
     /**
+     * Get audio data for a reading reference using Bible Brain.
+     *
+     * Parses the first passage from a semicolon-separated reading reference,
+     * resolves the USFM book code and chapter, and returns audio URLs
+     * via BibleBrainProvider.
+     *
+     * @param   string  $reading   The human-readable reading reference (e.g. "Genesis 1-3; Psalm 23")
+     * @param   string  $version   Bible translation code (e.g. "kjv", "esv")
+     *
+     * @return  ?object  Object with audioUrl, book, chapter, verseTiming, copyright, or null
+     *
+     * @since   5.2.0
+     */
+    public static function getAudioForReading(string $reading, string $version): ?object
+    {
+        if (!self::isLibraryAvailable() || empty($reading)) {
+            return null;
+        }
+
+        if (!class_exists('CWM\\Library\\Scripture\\Bible\\AudioProviderInterface')) {
+            return null;
+        }
+
+        $params   = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
+        $bbEnabled = (int) $params->get('provider_biblebrain', 0) === 1;
+        $bbKey     = (string) $params->get('biblebrain_api_key', '');
+
+        if (!$bbEnabled || empty($bbKey)) {
+            return null;
+        }
+
+        $provider = \CWM\Library\Scripture\Bible\BibleProviderFactory::getProvider('biblebrain', $bbKey);
+
+        if (!($provider instanceof \CWM\Library\Scripture\Bible\AudioProviderInterface)) {
+            return null;
+        }
+
+        // Parse the first passage to get book and chapter
+        $passages = array_map('trim', explode(';', $reading));
+        $firstPassage = $passages[0] ?? '';
+
+        if (empty($firstPassage)) {
+            return null;
+        }
+
+        $parsed = self::parsePassageReference($firstPassage);
+
+        if ($parsed === null) {
+            return null;
+        }
+
+        $result = $provider->getAudio($parsed['book'], $parsed['chapter'], $version);
+
+        if (!$result->hasAudio()) {
+            return null;
+        }
+
+        return (object) [
+            'audioUrl'    => $result->getPrimaryUrl(),
+            'audioFiles'  => $result->audioFiles,
+            'book'        => $result->book,
+            'chapter'     => $result->chapter,
+            'verseTiming' => $result->verseTiming,
+            'copyright'   => $result->copyright,
+        ];
+    }
+
+    /**
+     * Check if audio Bible is available for the current configuration.
+     *
+     * @return  bool
+     *
+     * @since   5.2.0
+     */
+    public static function isAudioAvailable(): bool
+    {
+        if (!self::isLibraryAvailable()) {
+            return false;
+        }
+
+        if (!class_exists('CWM\\Library\\Scripture\\Bible\\AudioProviderInterface')) {
+            return false;
+        }
+
+        $params = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
+
+        return (int) $params->get('provider_biblebrain', 0) === 1
+            && !empty($params->get('biblebrain_api_key', ''));
+    }
+
+    /**
+     * Parse a passage reference string into book USFM code and chapter.
+     *
+     * Handles formats like "Genesis 1", "Genesis 1-3", "John 3:16-18",
+     * "1 Samuel 2:1-10".
+     *
+     * @param   string  $reference  Human-readable passage reference
+     *
+     * @return  ?array{book: string, chapter: int}  Parsed result or null
+     *
+     * @since   5.2.0
+     */
+    private static function parsePassageReference(string $reference): ?array
+    {
+        $ref = trim($reference);
+
+        // Match "BookName Chapter" with optional verse range
+        if (!preg_match('/^(.+?)\s+(\d+)(?:[:\-].*)?$/i', $ref, $m)) {
+            return null;
+        }
+
+        $bookName = trim($m[1]);
+        $chapter  = (int) $m[2];
+
+        // Use BibleBrainProvider's USFM code mapping
+        $usfmCodes = \CWM\Library\Scripture\Bible\Provider\BibleBrainProvider::getUsfmCodes();
+        $bookNames = \CWM\Library\Scripture\Bible\AbstractBibleProvider::BOOK_NAMES ?? [];
+
+        // Try reflection to access BOOK_NAMES constant
+        try {
+            $reflection = new \ReflectionClass(\CWM\Library\Scripture\Bible\AbstractBibleProvider::class);
+            $bookNames  = $reflection->getConstant('BOOK_NAMES') ?: [];
+        } catch (\ReflectionException) {
+            return null;
+        }
+
+        $normalized = strtolower($bookName);
+
+        foreach ($bookNames as $num => $name) {
+            if (strtolower($name) === $normalized || str_starts_with(strtolower($name), $normalized)) {
+                $usfmCode = $usfmCodes[$num] ?? '';
+
+                if (!empty($usfmCode)) {
+                    return ['book' => $usfmCode, 'chapter' => $chapter];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Build passage text for email (plain HTML, no JS dependencies).
      *
      * @param   string  $reading  The human-readable reading reference
