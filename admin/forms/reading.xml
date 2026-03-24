@@ -8,21 +8,29 @@
         />
         <field
             name="plan"
-            type="text"
+            type="sql"
             label="COM_LIVINGWORD_PLAN_NAME"
             description="COM_LIVINGWORD_READING_PLAN_DESC"
             required="true"
-            size="50"
-            maxlength="50"
+            sql_select="name"
+            sql_value="name"
+            sql_from="#__livingword_plans"
+            sql_filter="name"
+            sql_order="ordering ASC"
+            key_field="name"
+            value_field="name"
+            header="COM_LIVINGWORD_SELECT_PLAN"
+            query="SELECT name AS value, name AS text FROM #__livingword_plans WHERE published = 1 ORDER BY ordering"
         />
         <field
             name="reading"
             type="text"
             label="COM_LIVINGWORD_READING"
             description="COM_LIVINGWORD_READING_DESC"
+            hint="COM_LIVINGWORD_READING_HINT"
             required="true"
             size="80"
-            maxlength="100"
+            maxlength="255"
         />
         <field
             name="audio"
@@ -31,14 +39,6 @@
             description="COM_LIVINGWORD_READING_AUDIO_DESC"
             size="50"
             maxlength="50"
-        />
-        <field
-            name="figure"
-            type="text"
-            label="COM_LIVINGWORD_READING_FIGURE"
-            description="COM_LIVINGWORD_READING_FIGURE_DESC"
-            size="80"
-            maxlength="100"
         />
         <field
             name="descrip"

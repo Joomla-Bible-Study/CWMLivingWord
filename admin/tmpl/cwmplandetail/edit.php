@@ -22,9 +22,8 @@ use Joomla\CMS\Router\Route;
             <div class="col-lg-9">
                 <?php echo $this->form->renderField('plan'); ?>
                 <?php echo $this->form->renderField('reading'); ?>
-                <?php echo $this->form->renderField('audio'); ?>
-                <?php echo $this->form->renderField('figure'); ?>
                 <?php echo $this->form->renderField('descrip'); ?>
+                <?php echo $this->form->renderField('audio'); ?>
             </div>
             <div class="col-lg-3">
                 <?php echo $this->form->renderField('ordering'); ?>

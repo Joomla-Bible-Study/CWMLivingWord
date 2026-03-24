@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Administrator\Table;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\Table\Table;
 use Joomla\Database\DatabaseInterface;
 
@@ -27,17 +28,14 @@ class CwmplandetailTable extends Table
     /** @var int|null @since 5.0.0 */
     public ?int $id = 0;
 
-    /** @var string|null Plan name (FK to plans.name) @since 5.0.0 */
+    /** @var string|null Plan name slug (FK to plans.name) @since 5.0.0 */
     public ?string $plan = '';
 
-    /** @var string|null Reading references (e.g. "LWBIBLEBOOK25 1-3;LWBIBLEBOOK50 12") @since 5.0.0 */
+    /** @var string|null Human-readable passage reference (e.g. "Genesis 1-3; Psalm 23") @since 5.1.0 */
     public ?string $reading = '';
 
-    /** @var string|null Audio reference IDs @since 5.0.0 */
+    /** @var string|null Optional audio reference @since 5.0.0 */
     public ?string $audio = '';
-
-    /** @var string|null Book/chapter code figures @since 5.0.0 */
-    public ?string $figure = '';
 
     /** @var string|null Description text @since 5.0.0 */
     public ?string $descrip = '';
@@ -48,7 +46,7 @@ class CwmplandetailTable extends Table
     /** @var int|null @since 5.0.0 */
     public ?int $checked_out = null;
 
-    /** @var int|null @since 5.0.0 */
+    /** @var int|null Day number within the plan @since 5.0.0 */
     public ?int $ordering = 0;
 
     /**
@@ -61,6 +59,31 @@ class CwmplandetailTable extends Table
     public function __construct(&$db)
     {
         parent::__construct('#__livingword_plans_details', 'id', $db);
+    }
+
+    /**
+     * Validate before store.
+     *
+     * @return  bool  True if valid
+     *
+     * @since   5.1.0
+     */
+    #[\Override]
+    public function check(): bool
+    {
+        if (empty($this->plan)) {
+            $this->setError(Text::_('COM_LIVINGWORD_ERROR_READING_PLAN_REQUIRED'));
+
+            return false;
+        }
+
+        if (empty($this->reading)) {
+            $this->setError(Text::_('COM_LIVINGWORD_ERROR_READING_REQUIRED'));
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
