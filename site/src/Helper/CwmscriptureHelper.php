@@ -127,16 +127,17 @@ class CwmscriptureHelper
                 . '</span>';
         }
 
-        $renderer = new \CWM\Library\Scripture\Renderer\ScriptureRenderer();
-        $passageResult = new \CWM\Library\Scripture\Bible\BiblePassageResult(
-            text: $result->text,
-            reference: $result->reference,
-            translation: $version,
-            copyright: $result->copyright,
-            isHtml: true
-        );
+        $html = '<div class="livingword-scripture-container">'
+            . $result->text;
 
-        return $renderer->renderTextPassage($passageResult, $mode);
+        if (!empty($result->copyright)) {
+            $html .= '<p class="livingword-scripture-copyright text-muted small mt-2">'
+                . htmlspecialchars($result->copyright, ENT_QUOTES, 'UTF-8') . '</p>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
     }
 
     /**
