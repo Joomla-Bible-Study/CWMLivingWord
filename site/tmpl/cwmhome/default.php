@@ -64,7 +64,22 @@ if ($showAudio && $reading) {
             <?php endif; ?>
         <?php endif; ?>
 
-        <h3><?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?></h3>
+        <div class="livingword-progress-info mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h3 class="mb-0"><?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?></h3>
+                <?php if ($isLoggedIn && $data->totalDays > 0) : ?>
+                    <span class="badge bg-primary"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_PERCENT', $data->progressPercent); ?></span>
+                <?php endif; ?>
+            </div>
+            <?php if ($isLoggedIn && $data->totalDays > 0) : ?>
+                <div class="progress" style="height: 8px;" role="progressbar"
+                     aria-valuenow="<?php echo $data->progressPercent; ?>" aria-valuemin="0" aria-valuemax="100"
+                     aria-label="<?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_PERCENT', $data->progressPercent); ?>">
+                    <div class="progress-bar bg-success" style="width: <?php echo $data->progressPercent; ?>%"></div>
+                </div>
+                <small class="text-muted"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_DAYS', $data->completedCount, $data->totalDays); ?></small>
+            <?php endif; ?>
+        </div>
 
         <?php if ($reading) : ?>
             <div class="livingword-today-reading">
