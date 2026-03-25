@@ -32,6 +32,9 @@ class HtmlView extends BaseHtmlView
     /** @var array @since 5.0.0 */
     protected array $plans = [];
 
+    /** @var array @since 5.6.0 */
+    protected array $availablePartners = [];
+
     /** @var string @since 5.0.0 */
     protected string $menu = '';
 
@@ -48,9 +51,10 @@ class HtmlView extends BaseHtmlView
     {
         $model = $this->getModel();
 
-        $this->userSettings = $model->getUserSettings();
-        $this->plans        = $model->getAvailablePlans();
-        $this->menu         = CwmmenuHelper::buildMenu();
+        $this->userSettings      = $model->getUserSettings();
+        $this->plans             = $model->getAvailablePlans();
+        $this->availablePartners = $model->getAvailablePartners();
+        $this->menu              = CwmmenuHelper::buildMenu();
 
         $this->prepareDocument();
 

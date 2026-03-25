@@ -18,8 +18,9 @@ use Joomla\CMS\Router\Route;
 
 /** @var \CWM\Component\Livingword\Site\View\Cwmsettings\HtmlView $this */
 
-$user  = $this->userSettings;
-$plans = $this->plans;
+$user     = $this->userSettings;
+$plans    = $this->plans;
+$partners = $this->availablePartners;
 
 // Calculate current position for display
 $planId   = (int) ($user->plan_id ?? 0);
@@ -115,6 +116,30 @@ if ($planId > 0) {
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_PARTNER'); ?></h5>
+                        <p class="text-muted small"><?php echo Text::_('COM_LIVINGWORD_PARTNER_DESC'); ?></p>
+
+                        <div class="mb-3">
+                            <label for="accountability_partner_id" class="form-label"><?php echo Text::_('COM_LIVINGWORD_PARTNER_SELECT'); ?></label>
+                            <select name="accountability_partner_id" id="accountability_partner_id" class="form-select">
+                                <option value=""><?php echo Text::_('COM_LIVINGWORD_PARTNER_NONE'); ?></option>
+                                <?php foreach ($partners as $partner) : ?>
+                                    <option value="<?php echo (int) $partner->id; ?>"<?php echo (int) ($user->accountability_partner_id ?? 0) === (int) $partner->id ? ' selected' : ''; ?>>
+                                        <?php echo $this->escape($partner->name); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-0 form-check">
+                            <input type="checkbox" name="share_progress" id="share_progress" class="form-check-input" value="1"<?php echo (int) ($user->share_progress ?? 0) ? ' checked' : ''; ?>>
+                            <label for="share_progress" class="form-check-label"><?php echo Text::_('COM_LIVINGWORD_PARTNER_SHARE'); ?></label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

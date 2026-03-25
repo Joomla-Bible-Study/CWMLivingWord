@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Site\Model;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmpartnerHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Factory;
@@ -40,6 +41,21 @@ class CwmsettingsModel extends BaseDatabaseModel
         $userId = (int) Factory::getApplication()->getIdentity()->id;
 
         return CwmuserHelper::getUserData($db, $userId);
+    }
+
+    /**
+     * Get available accountability partners for dropdown.
+     *
+     * @return  array  Array of user objects with id and name
+     *
+     * @since   5.6.0
+     */
+    public function getAvailablePartners(): array
+    {
+        $db     = $this->getDatabase();
+        $userId = (int) Factory::getApplication()->getIdentity()->id;
+
+        return CwmpartnerHelper::getAvailablePartners($db, $userId);
     }
 
     /**
@@ -107,14 +123,20 @@ class CwmsettingsModel extends BaseDatabaseModel
             }
         }
 
+        $partnerId = !empty($data['accountability_partner_id'])
+            ? (int) $data['accountability_partner_id']
+            : null;
+
         $settings = (object) [
-            'user_id'       => $userId,
-            'plan_id'       => $planId,
-            'bible_version' => $data['bible_version'] ?? 'kjv',
-            'email'         => (int) ($data['email'] ?? 0),
-            'plan_view'     => (int) ($data['plan_view'] ?? 0),
-            'start_date'    => $startDate,
-            'date_offset'   => $dateOffset,
+            'user_id'                   => $userId,
+            'plan_id'                   => $planId,
+            'bible_version'             => $data['bible_version'] ?? 'kjv',
+            'email'                     => (int) ($data['email'] ?? 0),
+            'plan_view'                 => (int) ($data['plan_view'] ?? 0),
+            'start_date'                => $startDate,
+            'date_offset'               => $dateOffset,
+            'accountability_partner_id' => $partnerId,
+            'share_progress'            => (int) ($data['share_progress'] ?? 0),
         ];
 
         return CwmuserHelper::saveUserData($db, $settings);

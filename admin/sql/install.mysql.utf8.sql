@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS `#__livingword_users` (
   `streak_current` int NOT NULL DEFAULT 0 COMMENT 'Current consecutive days read',
   `streak_best` int NOT NULL DEFAULT 0 COMMENT 'Best streak ever achieved',
   `streak_last_date` date DEFAULT NULL COMMENT 'Last date a reading was completed',
+  `accountability_partner_id` int DEFAULT NULL COMMENT 'FK to #__users.id — paired partner',
+  `share_progress` tinyint NOT NULL DEFAULT 0 COMMENT 'Share progress with partner (0/1)',
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

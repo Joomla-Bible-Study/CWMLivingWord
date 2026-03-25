@@ -13,6 +13,8 @@ namespace CWM\Plugin\Task\Livingword\Extension;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmpartnerHelper;
+use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
@@ -44,6 +46,10 @@ class Livingword extends CMSPlugin implements SubscriberInterface
         'livingword.email_notifications' => [
             'langConstPrefix' => 'PLG_TASK_LIVINGWORD_EMAIL',
             'method'          => 'sendEmailNotifications',
+        ],
+        'livingword.partner_digest' => [
+            'langConstPrefix' => 'PLG_TASK_LIVINGWORD_PARTNER_DIGEST',
+            'method'          => 'sendPartnerDigest',
         ],
     ];
 
@@ -142,6 +148,92 @@ class Livingword extends CMSPlugin implements SubscriberInterface
         }
 
         $this->logTask('Sent ' . $sent . ' email notifications.');
+
+        return Status::OK;
+    }
+
+    /**
+     * Send weekly partner progress digest emails.
+     *
+     * For each user who has a mutual accountability partner and email enabled,
+     * sends a summary of the partner's reading progress.
+     *
+     * @param   ExecuteTaskEvent  $event  The task event
+     *
+     * @return  int  Task status code
+     *
+     * @since   5.6.0
+     */
+    private function sendPartnerDigest(ExecuteTaskEvent $event): int
+    {
+        $db       = $this->getDatabase();
+        $siteName = $this->getApplication()->get('sitename');
+        $pairs    = CwmpartnerHelper::getPartnerPairsForEmail($db);
+        $sent     = 0;
+
+        foreach ($pairs as $userRow) {
+            $userId    = (int) $userRow->user_id;
+            $partnerId = (int) $userRow->accountability_partner_id;
+
+            // Only send if mutual partnership
+            if (!CwmpartnerHelper::isMutualPartnership($db, $userId, $partnerId)) {
+                continue;
+            }
+
+            // Get partner's progress
+            $partnerProgress = CwmpartnerHelper::getPartnerProgress($db, $userId);
+
+            if (!$partnerProgress || !$partnerProgress->shares_progress) {
+                continue;
+            }
+
+            // Build email body
+            $body = '<h2>Your Accountability Partner\'s Progress</h2>'
+                  . '<p><strong>' . htmlspecialchars($partnerProgress->partner_name, ENT_QUOTES, 'UTF-8') . '</strong></p>'
+                  . '<table style="border-collapse:collapse;margin:10px 0;">'
+                  . '<tr><td style="padding:4px 12px 4px 0;">Plan:</td>'
+                  . '<td>' . htmlspecialchars($partnerProgress->plan_name, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+                  . '<tr><td style="padding:4px 12px 4px 0;">Progress:</td>'
+                  . '<td>' . $partnerProgress->completed_count . ' of ' . $partnerProgress->total_days
+                  . ' readings (' . $partnerProgress->progress_percent . '%)</td></tr>'
+                  . '<tr><td style="padding:4px 12px 4px 0;">Current Day:</td>'
+                  . '<td>Day ' . $partnerProgress->current_day . '</td></tr>'
+                  . '<tr><td style="padding:4px 12px 4px 0;">Current Streak:</td>'
+                  . '<td>' . $partnerProgress->streak_current . ' days</td></tr>'
+                  . '<tr><td style="padding:4px 12px 4px 0;">Best Streak:</td>'
+                  . '<td>' . $partnerProgress->streak_best . ' days</td></tr>'
+                  . '</table>'
+                  . '<p>From ' . htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8') . '</p>';
+
+            // Add unsubscribe footer
+            $token = CwmuserHelper::ensureUnsubscribeToken($db, $userId);
+            $unsubscribeUrl = CwmuserHelper::getUnsubscribeUrl($token);
+
+            $body .= '<hr style="margin-top:20px;border:none;border-top:1px solid #ccc;">'
+                   . '<p style="font-size:0.85em;color:#666;">'
+                   . '<a href="' . htmlspecialchars($unsubscribeUrl, ENT_QUOTES, 'UTF-8') . '">'
+                   . 'Unsubscribe from emails</a></p>';
+
+            try {
+                $mailer = $this->getApplication()->getContainer()->get(MailerFactoryInterface::class)->createMailer();
+                $mailer->addRecipient($userRow->user_email, $userRow->name);
+                $mailer->setSubject($siteName . ' - Your Partner\'s Reading Progress');
+                $mailer->setBody($body);
+                $mailer->isHtml(true);
+
+                $mailer->addCustomHeader('List-Unsubscribe', '<' . $unsubscribeUrl . '>');
+                $mailer->addCustomHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+
+                $mailer->send();
+                $sent++;
+            } catch (\Exception $e) {
+                $this->getApplication()->getLogger()->error(
+                    'LivingWord partner digest failed for user ' . $userId . ': ' . $e->getMessage()
+                );
+            }
+        }
+
+        $this->logTask('Sent ' . $sent . ' partner digest emails.');
 
         return Status::OK;
     }
