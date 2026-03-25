@@ -7,7 +7,7 @@
                label="COM_LIVINGWORD_CONFIG_VERSION" description="COM_LIVINGWORD_CONFIG_VERSION_DESC" />
         <field name="config_bible_plan" type="sql" default="comp"
                label="COM_LIVINGWORD_CONFIG_PLAN" description="COM_LIVINGWORD_CONFIG_PLAN_DESC"
-               query="SELECT name AS value, description AS text FROM #__livingword_plans WHERE published = 1 ORDER BY ordering" />
+               query="SELECT alias AS value, title AS text FROM #__livingword_plans WHERE published = 1 ORDER BY ordering" />
         <field name="config_plan_template" type="list" default="calendar" validate="options"
                label="COM_LIVINGWORD_CONFIG_PLAN_TEMPLATE" description="COM_LIVINGWORD_CONFIG_PLAN_TEMPLATE_DESC">
             <option value="default">COM_LIVINGWORD_CONFIG_TEMPLATE_LIST</option>
