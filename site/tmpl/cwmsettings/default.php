@@ -73,6 +73,30 @@ if ($planId > 0) {
                     <input type="checkbox" name="email" id="email" class="form-check-input" value="1"<?php echo $user->email ? ' checked' : ''; ?>>
                     <label for="email" class="form-check-label"><?php echo Text::_('COM_LIVINGWORD_EMAIL_SUBSCRIBE'); ?></label>
                 </div>
+
+                <div class="mb-3">
+                    <label for="email_hour" class="form-label"><?php echo Text::_('COM_LIVINGWORD_EMAIL_HOUR'); ?></label>
+                    <select name="email_hour" id="email_hour" class="form-select">
+                        <?php for ($h = 0; $h < 24; $h++) : ?>
+                            <?php $label = ($h === 0) ? '12:00 AM' : (($h < 12) ? $h . ':00 AM' : (($h === 12) ? '12:00 PM' : ($h - 12) . ':00 PM')); ?>
+                            <option value="<?php echo $h; ?>"<?php echo (int) ($user->email_hour ?? 6) === $h ? ' selected' : ''; ?>>
+                                <?php echo $label; ?>
+                            </option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="timezone" class="form-label"><?php echo Text::_('COM_LIVINGWORD_TIMEZONE'); ?></label>
+                    <select name="timezone" id="timezone" class="form-select">
+                        <option value=""><?php echo Text::_('COM_LIVINGWORD_TIMEZONE_DEFAULT'); ?></option>
+                        <?php foreach (\DateTimeZone::listIdentifiers() as $tz) : ?>
+                            <option value="<?php echo $tz; ?>"<?php echo ($user->timezone ?? '') === $tz ? ' selected' : ''; ?>>
+                                <?php echo str_replace(['/', '_'], [' / ', ' '], $tz); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
 
             <div class="col-lg-6">
