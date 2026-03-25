@@ -202,41 +202,46 @@ class CwmutilitiesController extends BaseController
         $errors   = 0;
         $lineNum  = 0;
 
-        while (($row = fgetcsv($handle)) !== false) {
-            $lineNum++;
+        try {
+            $db->transactionStart();
 
-            // Skip header row if present
-            if ($lineNum === 1 && isset($row[0]) && strtolower(trim($row[0])) === 'day_number') {
-                continue;
-            }
+            while (($row = fgetcsv($handle)) !== false) {
+                $lineNum++;
 
-            // Minimum: reading reference in column index 1 (or 0 if no day_number)
-            $reading = trim($row[1] ?? $row[0] ?? '');
+                // Skip header row if present
+                if ($lineNum === 1 && isset($row[0]) && strtolower(trim($row[0])) === 'day_number') {
+                    continue;
+                }
 
-            if (empty($reading)) {
-                $errors++;
+                // Minimum: reading reference in column index 1 (or 0 if no day_number)
+                $reading = trim($row[1] ?? $row[0] ?? '');
 
-                continue;
-            }
+                if (empty($reading)) {
+                    $errors++;
 
-            $audio   = trim($row[2] ?? '');
-            $descrip = trim($row[3] ?? '');
+                    continue;
+                }
 
-            $record = (object) [
-                'plan_id'  => $planId,
-                'ordering' => $ordering,
-                'reading'  => $reading,
-                'audio'    => $audio,
-                'descrip'  => $descrip,
-            ];
+                $audio   = trim($row[2] ?? '');
+                $descrip = trim($row[3] ?? '');
 
-            try {
+                $record = (object) [
+                    'plan_id'  => $planId,
+                    'ordering' => $ordering,
+                    'reading'  => $reading,
+                    'audio'    => $audio,
+                    'descrip'  => $descrip,
+                ];
+
                 $db->insertObject('#__livingword_plans_details', $record);
                 $imported++;
                 $ordering++;
-            } catch (\RuntimeException $e) {
-                $errors++;
             }
+
+            $db->transactionCommit();
+        } catch (\RuntimeException $e) {
+            $db->transactionRollback();
+            $errors++;
         }
 
         fclose($handle);
