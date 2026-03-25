@@ -14,6 +14,8 @@ namespace CWM\Component\Livingword\Site\Helper;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Component\ComponentHelper;
+
 /**
  * Scripture helper — bridges LivingWord with lib_cwmscripture.
  *
@@ -114,20 +116,47 @@ class CwmscriptureHelper
     public static function renderReading(string $reading, string $version, int $mode = 2): string
     {
         if (!self::isLibraryAvailable()) {
-            return '<span class="livingword-reading-ref">'
-                . htmlspecialchars($reading, ENT_QUOTES, 'UTF-8')
-                . '</span>';
+            return self::buildBibleGatewayLink($reading, $version);
+        }
+
+        // Respect config display mode if mode not explicitly overridden
+        if ($mode === 2) {
+            $configMode = self::getScriptureDisplayMode();
+            $mode       = match ($configMode) {
+                'toggle' => 1,
+                'link'   => 0,
+                default  => 2,
+            };
+        }
+
+        // Link-only mode — just show BibleGateway link, no scripture text
+        if ($mode === 0) {
+            return self::buildBibleGatewayLink($reading, $version);
         }
 
         $result = self::getPassageText($reading, $version);
 
         if ($result === null) {
-            return '<span class="livingword-reading-ref">'
-                . htmlspecialchars($reading, ENT_QUOTES, 'UTF-8')
-                . '</span>';
+            return self::buildBibleGatewayLink($reading, $version);
         }
 
-        $html = '<div class="livingword-scripture-container">'
+        $html = '';
+
+        // Toggle mode — collapsed by default with show/hide button
+        if ($mode === 1) {
+            $collapseId = 'scripture-' . md5($reading);
+            $html .= '<div class="livingword-scripture-toggle mb-2">'
+                . '<button class="btn btn-sm btn-outline-secondary" type="button"'
+                . ' data-bs-toggle="collapse" data-bs-target="#' . $collapseId . '"'
+                . ' aria-expanded="false" aria-controls="' . $collapseId . '">'
+                . '<span class="icon-eye" aria-hidden="true"></span> '
+                . htmlspecialchars('Show Scripture Text', ENT_QUOTES, 'UTF-8')
+                . '</button></div>'
+                . '<div class="collapse" id="' . $collapseId . '">';
+        }
+
+        $html .= '<div class="livingword-scripture-container"'
+            . ' style="font-family: Georgia, \'Times New Roman\', serif; line-height: 1.8;">'
             . $result->text;
 
         if (!empty($result->copyright)) {
@@ -137,7 +166,25 @@ class CwmscriptureHelper
 
         $html .= '</div>';
 
+        if ($mode === 1) {
+            $html .= '</div>';
+        }
+
         return $html;
+    }
+
+    /**
+     * Get the scripture display mode from component config.
+     *
+     * @return  string  'inline', 'toggle', or 'link'
+     *
+     * @since   5.7.0
+     */
+    public static function getScriptureDisplayMode(): string
+    {
+        $params = ComponentHelper::getParams('com_livingword');
+
+        return $params->get('config_scripture_display', 'inline');
     }
 
     /**
@@ -155,10 +202,54 @@ class CwmscriptureHelper
      */
     public static function buildReadingLink(string $reading, string $version): string
     {
-        return '<span class="livingword-reading-ref" data-version="'
+        $url = self::getBibleGatewayUrl($reading, $version);
+
+        return '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener"'
+            . ' class="livingword-reading-ref" data-version="'
             . htmlspecialchars($version, ENT_QUOTES, 'UTF-8') . '">'
             . htmlspecialchars($reading, ENT_QUOTES, 'UTF-8')
-            . '</span>';
+            . '</a>';
+    }
+
+    /**
+     * Build a BibleGateway link for a passage reference.
+     *
+     * Used as fallback when lib_cwmscripture is not available or scripture
+     * display mode is set to 'link'.
+     *
+     * @param   string  $reading  The human-readable reading reference
+     * @param   string  $version  Bible translation code
+     *
+     * @return  string  HTML link to BibleGateway
+     *
+     * @since   5.7.0
+     */
+    public static function buildBibleGatewayLink(string $reading, string $version): string
+    {
+        $url = self::getBibleGatewayUrl($reading, $version);
+
+        return '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener"'
+            . ' class="livingword-reading-ref livingword-external-link">'
+            . htmlspecialchars($reading, ENT_QUOTES, 'UTF-8')
+            . ' <span class="icon-out-2 small" aria-hidden="true"></span></a>';
+    }
+
+    /**
+     * Get BibleGateway URL for a passage reference.
+     *
+     * @param   string  $reading  The passage reference
+     * @param   string  $version  Bible version code
+     *
+     * @return  string  BibleGateway URL
+     *
+     * @since   5.7.0
+     */
+    public static function getBibleGatewayUrl(string $reading, string $version): string
+    {
+        $passage = urlencode($reading);
+        $ver     = urlencode(strtoupper($version));
+
+        return "https://www.biblegateway.com/passage/?search={$passage}&version={$ver}";
     }
 
     /**
@@ -199,33 +290,55 @@ class CwmscriptureHelper
             return null;
         }
 
-        // Parse the first passage to get book and chapter
-        $passages     = array_map('trim', explode(';', $reading));
-        $firstPassage = $passages[0] ?? '';
+        // Parse all passages to support multi-chapter audio
+        $passages  = array_map('trim', explode(';', $reading));
+        $audioList = [];
+        $copyright = '';
 
-        if (empty($firstPassage)) {
-            return null;
+        foreach ($passages as $passage) {
+            if (empty($passage)) {
+                continue;
+            }
+
+            $parsed = self::parsePassageReference($passage);
+
+            if ($parsed === null) {
+                continue;
+            }
+
+            // Handle chapter ranges (e.g. "Genesis 1-3" → chapters 1, 2, 3)
+            $chapters = self::expandChapterRange($passage, $parsed['chapter']);
+
+            foreach ($chapters as $chapter) {
+                $result = $provider->getAudio($parsed['book'], $chapter, $version);
+
+                if ($result->hasAudio()) {
+                    $audioList[] = (object) [
+                        'audioUrl'    => $result->getPrimaryUrl(),
+                        'book'        => $result->book,
+                        'chapter'     => $result->chapter,
+                        'verseTiming' => $result->verseTiming,
+                    ];
+
+                    if (empty($copyright) && !empty($result->copyright)) {
+                        $copyright = $result->copyright;
+                    }
+                }
+            }
         }
 
-        $parsed = self::parsePassageReference($firstPassage);
-
-        if ($parsed === null) {
-            return null;
-        }
-
-        $result = $provider->getAudio($parsed['book'], $parsed['chapter'], $version);
-
-        if (!$result->hasAudio()) {
+        if (empty($audioList)) {
             return null;
         }
 
         return (object) [
-            'audioUrl'    => $result->getPrimaryUrl(),
-            'audioFiles'  => $result->audioFiles,
-            'book'        => $result->book,
-            'chapter'     => $result->chapter,
-            'verseTiming' => $result->verseTiming,
-            'copyright'   => $result->copyright,
+            'audioUrl'    => $audioList[0]->audioUrl,
+            'audioFiles'  => $audioList,
+            'book'        => $audioList[0]->book,
+            'chapter'     => $audioList[0]->chapter,
+            'verseTiming' => $audioList[0]->verseTiming,
+            'copyright'   => $copyright,
+            'isPlaylist'  => \count($audioList) > 1,
         ];
     }
 
@@ -250,6 +363,31 @@ class CwmscriptureHelper
 
         return (int) $params->get('provider_biblebrain', 0) === 1
             && !empty($params->get('biblebrain_api_key', ''));
+    }
+
+    /**
+     * Expand a chapter range from a reference like "Genesis 1-3" into [1, 2, 3].
+     *
+     * @param   string  $reference    The full passage reference
+     * @param   int     $startChapter The first chapter (already parsed)
+     *
+     * @return  array  Array of chapter numbers
+     *
+     * @since   5.7.0
+     */
+    private static function expandChapterRange(string $reference, int $startChapter): array
+    {
+        // Match patterns like "Genesis 1-3" or "Psalm 119-120"
+        if (preg_match('/\s+(\d+)\s*-\s*(\d+)\s*$/', $reference, $m)) {
+            $start = (int) $m[1];
+            $end   = (int) $m[2];
+
+            if ($end > $start && ($end - $start) < 50) {
+                return range($start, $end);
+            }
+        }
+
+        return [$startChapter];
     }
 
     /**

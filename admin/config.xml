@@ -23,6 +23,17 @@
             <option value="0">JNO</option>
             <option value="1">JYES</option>
         </field>
+        <field name="config_scripture_display" type="list" default="inline" validate="options"
+               label="COM_LIVINGWORD_CONFIG_SCRIPTURE_DISPLAY" description="COM_LIVINGWORD_CONFIG_SCRIPTURE_DISPLAY_DESC">
+            <option value="inline">COM_LIVINGWORD_CONFIG_SCRIPTURE_INLINE</option>
+            <option value="toggle">COM_LIVINGWORD_CONFIG_SCRIPTURE_TOGGLE</option>
+            <option value="link">COM_LIVINGWORD_CONFIG_SCRIPTURE_LINK</option>
+        </field>
+        <field name="config_show_audio" type="radio" layout="joomla.form.field.radio.switcher" default="1"
+               label="COM_LIVINGWORD_CONFIG_SHOW_AUDIO" description="COM_LIVINGWORD_CONFIG_SHOW_AUDIO_DESC">
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
     </fieldset>
     <fieldset name="menu_settings" label="COM_LIVINGWORD_CONFIG_MENU">
         <field name="config_show_menu" type="radio" layout="joomla.form.field.radio.switcher" default="1"
