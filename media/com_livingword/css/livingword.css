@@ -1,0 +1,259 @@
+/**
+ * LivingWord Frontend Styles
+ *
+ * Mobile-first responsive design for daily Bible reading experience.
+ *
+ * @package  Livingword
+ * @since    5.7.0
+ */
+
+/* ── Base typography ── */
+.com-livingword-home,
+.com-livingword-planview,
+.com-livingword-planview-calendar {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ── Navigation menu ── */
+.livingword-menu {
+  margin-bottom: 1.5rem;
+}
+
+/* ── Today's Reading Card ── */
+.livingword-reading-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.livingword-reading-card .card-body {
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .livingword-reading-card .card-body {
+    padding: 2rem;
+  }
+}
+
+/* ── Plan header ── */
+.livingword-plan-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.livingword-plan-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.livingword-plan-header .livingword-plan-message {
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+/* ── Day indicator ── */
+.livingword-day-indicator {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-primary, #0d6efd);
+}
+
+/* ── Scripture text ── */
+.livingword-scripture-container {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
+  line-height: 1.9;
+  color: var(--bs-body-color, #212529);
+}
+
+.livingword-scripture-container .scripture-passage h4 {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.livingword-scripture-container .scripture-passage:first-child h4 {
+  margin-top: 0;
+}
+
+/* ── Reading reference link ── */
+.livingword-reading-ref {
+  font-weight: 600;
+  color: var(--bs-primary, #0d6efd);
+  text-decoration: none;
+}
+
+.livingword-reading-ref:hover {
+  text-decoration: underline;
+}
+
+/* ── Passage checkmarks (multi-passage) ── */
+.livingword-passage-item {
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+
+.livingword-passage-item:hover {
+  background-color: var(--bs-light, #f8f9fa);
+}
+
+.livingword-passage-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Mark as Read button ── */
+.livingword-mark-read-btn {
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+/* ── Progress bar ── */
+.livingword-progress-info .progress {
+  border-radius: 4px;
+}
+
+/* ── Devotional card ── */
+.livingword-devotional-card {
+  border: none;
+  border-left: 4px solid var(--bs-primary, #0d6efd);
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 0 8px 8px 0;
+}
+
+.livingword-devotional {
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+/* ── Partner card ── */
+.livingword-partner-card {
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 8px;
+}
+
+/* ── Actions row ── */
+.livingword-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── Plan List View ── */
+.livingword-plan-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.livingword-plan-table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-secondary-color, #6c757d);
+  border-bottom: 2px solid var(--bs-border-color, #dee2e6);
+  padding: 0.5rem 0.75rem;
+}
+
+.livingword-plan-table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.05));
+}
+
+.livingword-plan-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Touch-friendly checkmarks */
+.livingword-plan-table .livingword-check-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.livingword-plan-table .livingword-day-cell {
+  width: 50px;
+  font-weight: 600;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+/* Current day highlight */
+.livingword-plan-table .livingword-current-row {
+  background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
+  border-radius: 8px;
+}
+
+.livingword-plan-table .livingword-current-row td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.livingword-plan-table .livingword-current-row td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Calendar View ── */
+.livingword-calendar-grid {
+  gap: 4px;
+}
+
+@media (max-width: 575.98px) {
+  .livingword-calendar-grid {
+    --bs-columns: 4;
+  }
+
+  .livingword-calendar-card .card-body {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+.livingword-calendar-card {
+  border-radius: 8px;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.livingword-calendar-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.livingword-calendar-card .card-body {
+  padding: 0.35rem;
+}
+
+.livingword-calendar-current {
+  border-width: 2px;
+  box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb, 13, 110, 253), 0.25);
+}
+
+/* ── Audio player refinements ── */
+.livingword-audio-section {
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
