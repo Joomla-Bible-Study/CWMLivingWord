@@ -101,12 +101,31 @@ if ($scriptureAvailable) {
     </div>
 
     <?php // ── Scripture System Status ── ?>
+    <?php $canAdmin = $this->canDo->get('core.admin'); ?>
     <div class="card mb-4 <?php echo $scriptureAvailable ? ($audioAvailable ? 'border-success' : 'border-info') : 'border-warning'; ?>">
         <div class="card-body">
-            <h5 class="card-title mb-3">
-                <span class="icon-book" aria-hidden="true"></span>
-                <?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_STATUS'); ?>
-            </h5>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="card-title mb-0">
+                    <span class="icon-book" aria-hidden="true"></span>
+                    <?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_STATUS'); ?>
+                </h5>
+                <?php if ($canAdmin) : ?>
+                    <div class="d-flex gap-2">
+                        <a href="<?php echo Route::_('index.php?option=com_config&view=component&component=com_livingword'); ?>"
+                           class="btn btn-sm btn-outline-secondary">
+                            <span class="icon-options" aria-hidden="true"></span>
+                            <?php echo Text::_('COM_LIVINGWORD_CONFIGURE'); ?>
+                        </a>
+                        <?php if ($scriptureAvailable) : ?>
+                            <a href="<?php echo Route::_('index.php?option=com_plugins&view=plugins&filter[search]=cwmscripture'); ?>"
+                               class="btn btn-sm btn-outline-secondary">
+                                <span class="icon-puzzle-piece" aria-hidden="true"></span>
+                                <?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_SETTINGS'); ?>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="d-flex align-items-start gap-2">
