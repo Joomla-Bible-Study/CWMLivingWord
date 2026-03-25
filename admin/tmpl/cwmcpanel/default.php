@@ -110,10 +110,11 @@ if ($scriptureAvailable) {
                     <?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_STATUS'); ?>
                 </h5>
                 <?php if ($canAdmin) : ?>
-                    <a href="<?php echo Route::_('index.php?option=com_config&view=component&component=com_livingword'); ?>"
+                    <a href="<?php echo Route::_('index.php?option=com_plugins&view=plugins&filter[search]=cwmscripture'); ?>"
+                       target="_blank" rel="noopener"
                        class="btn btn-sm btn-outline-secondary">
-                        <span class="icon-options" aria-hidden="true"></span>
-                        <?php echo Text::_('JOPTIONS'); ?>
+                        <span class="icon-puzzle-piece" aria-hidden="true"></span>
+                        <?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_SETTINGS'); ?>
                     </a>
                 <?php endif; ?>
             </div>
