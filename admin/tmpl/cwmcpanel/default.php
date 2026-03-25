@@ -15,51 +15,220 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
 $counts = $this->counts;
+$stats  = $this->stats;
 ?>
-<div class="row">
-    <div class="col-lg-9">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card text-center mb-3">
-                    <div class="card-body">
-                        <h3 class="card-title"><?php echo $counts['plans'] ?? 0; ?></h3>
-                        <p class="card-text"><?php echo Text::_('COM_LIVINGWORD_MANAGE_PLANS'); ?></p>
-                        <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmplans'); ?>" class="btn btn-primary">
-                            <?php echo Text::_('COM_LIVINGWORD_MANAGE_PLANS'); ?>
-                        </a>
-                    </div>
+<div class="com-livingword-cpanel">
+
+    <?php // ── Quick Icon Navigation ── ?>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-5 g-3 mb-4">
+        <div class="col">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmplans'); ?>" class="card text-center text-decoration-none h-100">
+                <div class="card-body">
+                    <span class="icon-book fa-2x text-primary mb-2 d-block" aria-hidden="true"></span>
+                    <h4 class="mb-0"><?php echo $counts['plans'] ?? 0; ?></h4>
+                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_PLANS'); ?></small>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center mb-3">
-                    <div class="card-body">
-                        <h3 class="card-title"><?php echo $counts['links'] ?? 0; ?></h3>
-                        <p class="card-text"><?php echo Text::_('COM_LIVINGWORD_MANAGE_LINKS'); ?></p>
-                        <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmlinks'); ?>" class="btn btn-primary">
-                            <?php echo Text::_('COM_LIVINGWORD_MANAGE_LINKS'); ?>
-                        </a>
-                    </div>
+            </a>
+        </div>
+        <div class="col">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmgroups'); ?>" class="card text-center text-decoration-none h-100">
+                <div class="card-body">
+                    <span class="icon-users fa-2x text-info mb-2 d-block" aria-hidden="true"></span>
+                    <h4 class="mb-0"><?php echo $counts['groups'] ?? 0; ?></h4>
+                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_GROUPS'); ?></small>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center mb-3">
-                    <div class="card-body">
-                        <h3 class="card-title"><?php echo $counts['users'] ?? 0; ?></h3>
-                        <p class="card-text"><?php echo Text::_('COM_LIVINGWORD_MANAGE_SUBSCRIBERS'); ?></p>
-                        <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmusers'); ?>" class="btn btn-primary">
-                            <?php echo Text::_('COM_LIVINGWORD_MANAGE_SUBSCRIBERS'); ?>
-                        </a>
+            </a>
+        </div>
+        <div class="col">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmusers'); ?>" class="card text-center text-decoration-none h-100">
+                <div class="card-body">
+                    <span class="icon-user fa-2x text-success mb-2 d-block" aria-hidden="true"></span>
+                    <h4 class="mb-0"><?php echo $counts['users'] ?? 0; ?></h4>
+                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_SUBSCRIBERS'); ?></small>
+                </div>
+            </a>
+        </div>
+        <div class="col">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmlinks'); ?>" class="card text-center text-decoration-none h-100">
+                <div class="card-body">
+                    <span class="icon-link fa-2x text-warning mb-2 d-block" aria-hidden="true"></span>
+                    <h4 class="mb-0"><?php echo $counts['links'] ?? 0; ?></h4>
+                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_LINKS'); ?></small>
+                </div>
+            </a>
+        </div>
+        <div class="col">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmutilities'); ?>" class="card text-center text-decoration-none h-100">
+                <div class="card-body">
+                    <span class="icon-wrench fa-2x text-secondary mb-2 d-block" aria-hidden="true"></span>
+                    <h4 class="mb-0">&nbsp;</h4>
+                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_UTILITIES'); ?></small>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <?php // ── Congregation Health ── ?>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_STATS_SUBSCRIBERS'); ?></h5>
+                    <div class="d-flex justify-content-around text-center mt-3">
+                        <div>
+                            <span class="fs-2 fw-bold text-primary"><?php echo $stats->totalSubscribers; ?></span>
+                            <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_TOTAL'); ?></small>
+                        </div>
+                        <div>
+                            <span class="fs-2 fw-bold text-success"><?php echo $stats->activeUsers; ?></span>
+                            <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_ACTIVE_7D'); ?></small>
+                        </div>
+                        <div>
+                            <span class="fs-2 fw-bold <?php echo $stats->inactiveUsers > 0 ? 'text-warning' : 'text-muted'; ?>"><?php echo $stats->inactiveUsers; ?></span>
+                            <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE'); ?></small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmutilities'); ?>" class="btn btn-outline-secondary w-100">
-                    <span class="icon-wrench" aria-hidden="true"></span>
-                    <?php echo Text::_('COM_LIVINGWORD_UTILITIES'); ?>
-                </a>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_STATS_PLAN_ENROLLMENT'); ?></h5>
+                    <?php if (empty($stats->planEnrollment)) : ?>
+                        <p class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_NO_DATA'); ?></p>
+                    <?php else : ?>
+                        <table class="table table-sm mt-2 mb-0">
+                            <tbody>
+                                <?php foreach ($stats->planEnrollment as $row) : ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($row->title ?: 'Unknown', ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td class="text-end fw-bold"><?php echo (int) $row->user_count; ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_STATS_AVG_PROGRESS'); ?></h5>
+                    <?php if (empty($stats->planProgress)) : ?>
+                        <p class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_NO_DATA'); ?></p>
+                    <?php else : ?>
+                        <?php foreach ($stats->planProgress as $plan) : ?>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span><?php echo htmlspecialchars($plan->title, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="fw-bold"><?php echo $plan->avg_percent; ?>%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <?php
+                                    $barClass = 'bg-success';
+
+                                    if ($plan->avg_percent < 25) {
+                                        $barClass = 'bg-danger';
+                                    } elseif ($plan->avg_percent < 50) {
+                                        $barClass = 'bg-warning';
+                                    } elseif ($plan->avg_percent < 75) {
+                                        $barClass = 'bg-info';
+                                    }
+                                    ?>
+                                    <div class="progress-bar <?php echo $barClass; ?>" style="width: <?php echo $plan->avg_percent; ?>%"></div>
+                                </div>
+                                <small class="text-muted"><?php echo $plan->user_count; ?> <?php echo Text::_('COM_LIVINGWORD_STATS_READERS'); ?></small>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
+
+    <?php // ── Group Summaries ── ?>
+    <?php if (!empty($stats->groups)) : ?>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_STATS_GROUP_SUMMARIES'); ?></h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm mt-2 mb-0">
+                        <thead>
+                            <tr>
+                                <th><?php echo Text::_('COM_LIVINGWORD_GROUP_NAME'); ?></th>
+                                <th><?php echo Text::_('COM_LIVINGWORD_GROUP_PLAN'); ?></th>
+                                <th class="text-center"><?php echo Text::_('COM_LIVINGWORD_GROUP_MEMBER_COUNT'); ?></th>
+                                <th><?php echo Text::_('COM_LIVINGWORD_STATS_AVG_PROGRESS'); ?></th>
+                                <th class="text-center"><?php echo Text::_('COM_LIVINGWORD_STATS_AVG_STREAK'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($stats->groups as $group) : ?>
+                                <tr>
+                                    <td>
+                                        <a href="<?php echo Route::_('index.php?option=com_livingword&task=cwmgroup.edit&id=' . (int) $group->id); ?>">
+                                            <?php echo htmlspecialchars($group->name, ENT_QUOTES, 'UTF-8'); ?>
+                                        </a>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($group->plan_title ?: '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td class="text-center"><?php echo (int) $group->member_count; ?></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-info" style="width: <?php echo $group->avg_progress; ?>%"></div>
+                                            </div>
+                                            <small class="fw-bold"><?php echo $group->avg_progress; ?>%</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center"><?php echo $group->avg_streak; ?> <?php echo Text::_('COM_LIVINGWORD_STATS_DAYS'); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php // ── Inactive Users ── ?>
+    <?php if (!empty($stats->inactiveList)) : ?>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <span class="icon-warning text-warning" aria-hidden="true"></span>
+                    <?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE_USERS'); ?>
+                </h5>
+                <p class="text-muted small"><?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE_DESC'); ?></p>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th><?php echo Text::_('COM_LIVINGWORD_USER_NAME'); ?></th>
+                                <th><?php echo Text::_('COM_LIVINGWORD_STATS_LAST_READ'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($stats->inactiveList as $user) : ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td>
+                                        <?php if ($user->streak_last_date) : ?>
+                                            <?php echo htmlspecialchars($user->streak_last_date, ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php else : ?>
+                                            <span class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_NEVER'); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
 </div>
