@@ -211,5 +211,45 @@ if ($showAudio && $reading) {
                 <?php echo Text::_('COM_LIVINGWORD_VIEW_FULL_PLAN'); ?>
             </a>
         </div>
+
+        <?php
+        $partner = $data->partnerProgress ?? null;
+        if ($partner && $partner->shares_progress && $partner->is_mutual) : ?>
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title"><?php echo Text::sprintf('COM_LIVINGWORD_PARTNER_PROGRESS_TITLE', $this->escape($partner->partner_name)); ?></h5>
+                    <p class="mb-1">
+                        <?php echo $this->escape($partner->plan_name); ?>
+                        &mdash; <?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $partner->current_day, $partner->total_days); ?>
+                    </p>
+                    <?php if ($partner->total_days > 0) : ?>
+                        <div class="progress mb-2" style="height: 8px;" role="progressbar"
+                             aria-valuenow="<?php echo $partner->progress_percent; ?>" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bg-info" style="width: <?php echo $partner->progress_percent; ?>%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">
+                                <?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_DAYS', $partner->completed_count, $partner->total_days); ?>
+                                (<?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_PERCENT', $partner->progress_percent); ?>)
+                            </small>
+                            <?php if ($partner->streak_current > 0) : ?>
+                                <small class="text-muted">
+                                    <?php echo Text::sprintf('COM_LIVINGWORD_STREAK_CURRENT', $partner->streak_current); ?>
+                                </small>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php elseif ($partner && !$partner->shares_progress) : ?>
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_PARTNER'); ?></h5>
+                    <p class="text-muted mb-0">
+                        <?php echo Text::sprintf('COM_LIVINGWORD_PARTNER_NOT_SHARING', $this->escape($partner->partner_name)); ?>
+                    </p>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>

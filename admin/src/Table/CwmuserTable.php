@@ -60,6 +60,12 @@ class CwmuserTable extends Table
     /** @var string|null Last date a reading was completed @since 5.4.0 */
     public ?string $streak_last_date = null;
 
+    /** @var int|null FK to #__users.id — accountability partner @since 5.6.0 */
+    public ?int $accountability_partner_id = null;
+
+    /** @var int|null Share progress with partner (0/1) @since 5.6.0 */
+    public ?int $share_progress = 0;
+
     /** @var string|null @since 5.2.0 */
     public ?string $created = null;
 
@@ -98,7 +104,7 @@ class CwmuserTable extends Table
     #[\Override]
     public function bind($src, $ignore = ''): bool
     {
-        foreach (['id', 'user_id', 'plan_id', 'email', 'plan_view', 'date_offset'] as $field) {
+        foreach (['id', 'user_id', 'plan_id', 'email', 'plan_view', 'date_offset', 'accountability_partner_id', 'share_progress'] as $field) {
             if (isset($src[$field])) {
                 $src[$field] = $src[$field] !== '' ? (int) $src[$field] : null;
             }
