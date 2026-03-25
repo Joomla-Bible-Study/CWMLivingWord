@@ -257,3 +257,50 @@
   align-items: center;
   gap: 0.75rem;
 }
+
+/* ── Resource / Tool Cards ── */
+.livingword-resource-card {
+  border-radius: 10px;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.livingword-resource-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--bs-primary, #0d6efd);
+}
+
+.livingword-resource-card .card-title {
+  color: var(--bs-body-color, #212529);
+}
+
+.livingword-resource-card:hover .card-title {
+  color: var(--bs-primary, #0d6efd);
+}
+
+/* ── Settings sections ── */
+.com-livingword-settings .card-title .icon-book,
+.com-livingword-settings .card-title .icon-mail,
+.com-livingword-settings .card-title .icon-compass,
+.com-livingword-settings .card-title .icon-fire,
+.com-livingword-settings .card-title .icon-users {
+  color: var(--bs-primary, #0d6efd);
+}
+
+/* ── Groups ── */
+.com-livingword-groups .livingword-plan-header,
+.com-livingword-groupdetail .livingword-plan-header {
+  margin-bottom: 1rem;
+}
+
+/* ── Max width for all views ── */
+.com-livingword-resources,
+.com-livingword-tools,
+.com-livingword-settings,
+.com-livingword-groups,
+.com-livingword-groupdetail {
+  max-width: 800px;
+  margin: 0 auto;
+}
