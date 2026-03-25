@@ -22,7 +22,7 @@ use Joomla\CMS\Toolbar\ToolbarHelper;
 use Joomla\Component\Content\Administrator\Helper\ContentHelper;
 
 /**
- * Dashboard view
+ * Dashboard view with congregation stats.
  *
  * @since  5.0.0
  */
@@ -30,6 +30,9 @@ class HtmlView extends BaseHtmlView
 {
     /** @var ?array @since 5.0.0 */
     protected ?array $counts = null;
+
+    /** @var ?object @since 5.7.0 */
+    protected ?object $stats = null;
 
     /** @var ?object @since 5.0.0 */
     protected ?object $canDo = null;
@@ -50,6 +53,7 @@ class HtmlView extends BaseHtmlView
         $model->setUseExceptions(true);
 
         $this->counts = $model->getCounts();
+        $this->stats  = $model->getStats();
         $this->canDo  = ContentHelper::getActions('com_livingword');
 
         if (\count($errors = $model->getErrors())) {
