@@ -133,6 +133,8 @@ class CwmsettingsModel extends BaseDatabaseModel
             'bible_version'             => $data['bible_version'] ?? 'kjv',
             'audio_version'             => $data['audio_version'] ?? '',
             'email'                     => (int) ($data['email'] ?? 0),
+            'email_hour'                => (int) ($data['email_hour'] ?? 6),
+            'timezone'                  => $data['timezone'] ?? '',
             'plan_view'                 => (int) ($data['plan_view'] ?? 0),
             'start_date'                => $startDate,
             'date_offset'               => $dateOffset,

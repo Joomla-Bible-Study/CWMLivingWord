@@ -63,6 +63,12 @@ class CwmuserTable extends Table
     /** @var string|null Last date a reading was completed @since 5.4.0 */
     public ?string $streak_last_date = null;
 
+    /** @var int|null Preferred email hour (0-23) @since 5.8.0 */
+    public ?int $email_hour = 6;
+
+    /** @var string|null User timezone @since 5.8.0 */
+    public ?string $timezone = '';
+
     /** @var int|null FK to #__users.id — accountability partner @since 5.6.0 */
     public ?int $accountability_partner_id = null;
 
@@ -107,7 +113,7 @@ class CwmuserTable extends Table
     #[\Override]
     public function bind($src, $ignore = ''): bool
     {
-        foreach (['id', 'user_id', 'plan_id', 'email', 'plan_view', 'date_offset', 'accountability_partner_id', 'share_progress'] as $field) {
+        foreach (['id', 'user_id', 'plan_id', 'email', 'plan_view', 'date_offset', 'email_hour', 'accountability_partner_id', 'share_progress'] as $field) {
             if (isset($src[$field])) {
                 $src[$field] = $src[$field] !== '' ? (int) $src[$field] : null;
             }

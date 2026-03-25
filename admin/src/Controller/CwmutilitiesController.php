@@ -18,6 +18,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Session\Session;
 use Joomla\Database\DatabaseInterface;
 
 /**
@@ -39,6 +40,8 @@ class CwmutilitiesController extends BaseController
         '#__livingword_plans',
         '#__livingword_plans_details',
         '#__livingword_progress',
+        '#__livingword_groups',
+        '#__livingword_group_members',
     ];
 
     /**
@@ -130,6 +133,116 @@ class CwmutilitiesController extends BaseController
         echo $output;
 
         $app->close();
+    }
+
+    /**
+     * Import reading plan details from CSV upload.
+     *
+     * CSV format: day_number, reading, audio_url, description
+     * Supports both replace and append modes.
+     *
+     * @return  void
+     *
+     * @since   5.8.0
+     */
+    public function csvimport(): void
+    {
+        Session::checkToken() or die(Text::_('JINVALID_TOKEN'));
+
+        $app    = $this->app;
+        $db     = Factory::getContainer()->get(DatabaseInterface::class);
+        $planId = $this->input->getInt('plan_id', 0);
+        $mode   = $this->input->getCmd('import_mode', 'append');
+
+        if ($planId <= 0) {
+            $app->enqueueMessage(Text::_('COM_LIVINGWORD_CSV_NO_PLAN'), 'error');
+            $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmutilities', false));
+
+            return;
+        }
+
+        $file = $this->input->files->get('csv_file');
+
+        if (empty($file) || empty($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) {
+            $app->enqueueMessage(Text::_('COM_LIVINGWORD_CSV_NO_FILE'), 'error');
+            $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmutilities', false));
+
+            return;
+        }
+
+        $handle = fopen($file['tmp_name'], 'r');
+
+        if (!$handle) {
+            $app->enqueueMessage(Text::_('COM_LIVINGWORD_CSV_READ_ERROR'), 'error');
+            $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmutilities', false));
+
+            return;
+        }
+
+        // If replace mode, delete existing readings
+        if ($mode === 'replace') {
+            $query = $db->getQuery(true)
+                ->delete($db->quoteName('#__livingword_plans_details'))
+                ->where($db->quoteName('plan_id') . ' = ' . $planId);
+            $db->setQuery($query);
+            $db->execute();
+
+            $ordering = 1;
+        } else {
+            // Append: start after the last existing ordering
+            $query = $db->getQuery(true)
+                ->select('MAX(' . $db->quoteName('ordering') . ')')
+                ->from($db->quoteName('#__livingword_plans_details'))
+                ->where($db->quoteName('plan_id') . ' = ' . $planId);
+            $db->setQuery($query);
+            $ordering = (int) $db->loadResult() + 1;
+        }
+
+        $imported = 0;
+        $errors   = 0;
+        $lineNum  = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $lineNum++;
+
+            // Skip header row if present
+            if ($lineNum === 1 && isset($row[0]) && strtolower(trim($row[0])) === 'day_number') {
+                continue;
+            }
+
+            // Minimum: reading reference in column index 1 (or 0 if no day_number)
+            $reading = trim($row[1] ?? $row[0] ?? '');
+
+            if (empty($reading)) {
+                $errors++;
+
+                continue;
+            }
+
+            $audio   = trim($row[2] ?? '');
+            $descrip = trim($row[3] ?? '');
+
+            $record = (object) [
+                'plan_id'  => $planId,
+                'ordering' => $ordering,
+                'reading'  => $reading,
+                'audio'    => $audio,
+                'descrip'  => $descrip,
+            ];
+
+            try {
+                $db->insertObject('#__livingword_plans_details', $record);
+                $imported++;
+                $ordering++;
+            } catch (\RuntimeException $e) {
+                $errors++;
+            }
+        }
+
+        fclose($handle);
+
+        $app->enqueueMessage(Text::sprintf('COM_LIVINGWORD_CSV_RESULT', $imported, $errors));
+        $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmutilities', false));
     }
 
     /**
