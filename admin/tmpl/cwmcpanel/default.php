@@ -110,7 +110,7 @@ if ($scriptureAvailable) {
                     <?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_STATUS'); ?>
                 </h5>
                 <?php if ($canAdmin) : ?>
-                    <a href="<?php echo Route::_('index.php?option=com_plugins&view=plugins&filter[search]=cwmscripture'); ?>"
+                    <a href="<?php echo Route::_('index.php?option=com_plugins&view=plugins&filter[search]=ScriptureLinks'); ?>"
                        target="_blank" rel="noopener"
                        class="btn btn-sm btn-outline-secondary">
                         <span class="icon-puzzle-piece" aria-hidden="true"></span>
