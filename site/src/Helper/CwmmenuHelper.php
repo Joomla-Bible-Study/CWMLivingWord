@@ -52,33 +52,33 @@ class CwmmenuHelper
 
         if ($user->authorise('livingword.home', 'com_livingword')) {
             $links[] = [
-                'url'   => Route::_('index.php?option=com_livingword&view=cwmhome&Itemid=' . $itemId),
-                'text'  => Text::_('COM_LIVINGWORD_HOME'),
-                'view'  => 'cwmhome',
+                'url'  => Route::_('index.php?option=com_livingword&view=cwmhome&Itemid=' . $itemId),
+                'text' => Text::_('COM_LIVINGWORD_HOME'),
+                'view' => 'cwmhome',
             ];
         }
 
         if ($user->authorise('livingword.links', 'com_livingword')) {
             $links[] = [
-                'url'   => Route::_('index.php?option=com_livingword&view=cwmresources&Itemid=' . $itemId),
-                'text'  => Text::_('COM_LIVINGWORD_RESOURCES'),
-                'view'  => 'cwmresources',
+                'url'  => Route::_('index.php?option=com_livingword&view=cwmresources&Itemid=' . $itemId),
+                'text' => Text::_('COM_LIVINGWORD_RESOURCES'),
+                'view' => 'cwmresources',
             ];
         }
 
         if ($user->authorise('livingword.settings', 'com_livingword')) {
             $links[] = [
-                'url'   => Route::_('index.php?option=com_livingword&view=cwmsettings&Itemid=' . $itemId),
-                'text'  => Text::_('COM_LIVINGWORD_SETTINGS'),
-                'view'  => 'cwmsettings',
+                'url'  => Route::_('index.php?option=com_livingword&view=cwmsettings&Itemid=' . $itemId),
+                'text' => Text::_('COM_LIVINGWORD_SETTINGS'),
+                'view' => 'cwmsettings',
             ];
         }
 
         if ($user->authorise('livingword.tools', 'com_livingword')) {
             $links[] = [
-                'url'   => Route::_('index.php?option=com_livingword&view=cwmtools&Itemid=' . $itemId),
-                'text'  => Text::_('COM_LIVINGWORD_TOOLS'),
-                'view'  => 'cwmtools',
+                'url'  => Route::_('index.php?option=com_livingword&view=cwmtools&Itemid=' . $itemId),
+                'text' => Text::_('COM_LIVINGWORD_TOOLS'),
+                'view' => 'cwmtools',
             ];
         }
 
@@ -92,9 +92,9 @@ class CwmmenuHelper
 
         foreach ($links as $link) {
             $active = ($link['view'] === $currentView) ? ' active' : '';
-            $html  .= '<li class="nav-item">';
-            $html  .= '<a class="nav-link' . $active . '" href="' . $link['url'] . '">' . $link['text'] . '</a>';
-            $html  .= '</li>';
+            $html .= '<li class="nav-item">';
+            $html .= '<a class="nav-link' . $active . '" href="' . $link['url'] . '">' . $link['text'] . '</a>';
+            $html .= '</li>';
         }
 
         $html .= '</ul></nav>';

@@ -38,7 +38,7 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
-        $app = Factory::getApplication();
+        $app           = Factory::getApplication();
         $this->success = (bool) $app->getUserState('com_livingword.unsubscribe.success', false);
 
         // Clear the state so refreshing doesn't re-show success

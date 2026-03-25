@@ -15,7 +15,6 @@ namespace CWM\Component\Livingword\Administrator\Model;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
-use Joomla\Database\DatabaseInterface;
 
 /**
  * Dashboard/control panel model

@@ -62,8 +62,8 @@ class CwmscriptureHelper
         $params   = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
         $provider = \CWM\Library\Scripture\Bible\BibleProviderFactory::getProviderForTranslation($version, $params);
 
-        $passages = array_map('trim', explode(';', $reading));
-        $allText  = [];
+        $passages  = array_map('trim', explode(';', $reading));
+        $allText   = [];
         $copyright = '';
 
         foreach ($passages as $passage) {
@@ -185,7 +185,7 @@ class CwmscriptureHelper
             return null;
         }
 
-        $params   = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
+        $params    = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
         $bbEnabled = (int) $params->get('provider_biblebrain', 0) === 1;
         $bbKey     = (string) $params->get('biblebrain_api_key', '');
 
@@ -200,7 +200,7 @@ class CwmscriptureHelper
         }
 
         // Parse the first passage to get book and chapter
-        $passages = array_map('trim', explode(';', $reading));
+        $passages     = array_map('trim', explode(';', $reading));
         $firstPassage = $passages[0] ?? '';
 
         if (empty($firstPassage)) {
