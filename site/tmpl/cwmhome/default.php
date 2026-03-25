@@ -198,8 +198,18 @@ if ($showAudio && $reading) {
                         <span class="livingword-audio-status d-none"></span>
                     </div>
                 <?php endif; ?>
-                <?php if (!empty($reading->descrip)) : ?>
-                    <p class="text-muted mt-2"><?php echo $this->escape($reading->descrip); ?></p>
+                <?php if (!empty(trim($reading->descrip ?? ''))) : ?>
+                    <div class="card mt-3 border-start border-4 border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="icon-quote" aria-hidden="true"></span>
+                                <?php echo Text::_('COM_LIVINGWORD_TODAYS_REFLECTION'); ?>
+                            </h5>
+                            <div class="livingword-devotional" style="font-family: Georgia, 'Times New Roman', serif; line-height: 1.8;">
+                                <?php echo $reading->descrip; ?>
+                            </div>
+                        </div>
+                    </div>
                 <?php endif; ?>
             </div>
         <?php else : ?>

@@ -147,6 +147,192 @@ function getJoomlaPaths(array $props): array
 }
 
 /**
+ * Read the admin menu structure from livingword.xml manifest.
+ *
+ * Parses the <administration><menu> and <submenu> elements to build
+ * the menu data array used by registerComponent and syncAdminMenus.
+ *
+ * @return  array  Array of menu item definitions
+ *
+ * @since   5.7.0
+ */
+function getAdminMenuData(): array
+{
+    $xmlFile = BASE_DIR . '/livingword.xml';
+
+    if (!file_exists($xmlFile)) {
+        return [];
+    }
+
+    $xml = simplexml_load_file($xmlFile);
+
+    if (!$xml || !isset($xml->administration->menu)) {
+        return [];
+    }
+
+    $menuData = [];
+
+    // Root menu item
+    $rootMenu = $xml->administration->menu;
+    $rootImg  = (string) ($rootMenu['img'] ?? 'class:component');
+    $menuData[] = [
+        'title'  => trim((string) $rootMenu),
+        'link'   => 'index.php?option=com_livingword',
+        'alias'  => 'com-livingword',
+        'level'  => 1,
+        'parent' => 1,
+        'img'    => $rootImg,
+    ];
+
+    // Submenu items
+    if (isset($xml->administration->submenu->menu)) {
+        foreach ($xml->administration->submenu->menu as $sub) {
+            $link  = str_replace('&amp;', '&', (string) ($sub['link'] ?? ''));
+            $view  = (string) ($sub['view'] ?? '');
+            $title = trim((string) $sub);
+            $alias = 'com-livingword-' . str_replace('cwm', '', $view);
+
+            $menuData[] = [
+                'title' => $title,
+                'link'  => 'index.php?' . $link,
+                'alias' => $alias,
+                'level' => 2,
+            ];
+        }
+    }
+
+    return $menuData;
+}
+
+/**
+ * Sync admin menu items from manifest for an existing component.
+ *
+ * Adds any missing submenu items that are defined in livingword.xml
+ * but don't yet exist in the #__menu table.
+ *
+ * @param   PDO     $pdo          Database connection
+ * @param   string  $prefix       Table prefix
+ * @param   int     $extensionId  The component's extension_id
+ * @param   bool    $verbose      Show detailed output
+ *
+ * @return  void
+ *
+ * @since   5.7.0
+ */
+function syncAdminMenus(PDO $pdo, string $prefix, int $extensionId, bool $verbose = false): void
+{
+    $menuData = getAdminMenuData();
+
+    if (empty($menuData)) {
+        return;
+    }
+
+    // Find existing parent menu item
+    $stmt = $pdo->prepare(
+        "SELECT id FROM {$prefix}menu WHERE menutype = 'main' AND link = ? AND client_id = 1 LIMIT 1"
+    );
+    $stmt->execute(['index.php?option=com_livingword']);
+    $parentMenuId = (int) $stmt->fetchColumn();
+
+    if ($parentMenuId === 0) {
+        return;
+    }
+
+    $added = 0;
+
+    // Collect submenu items in manifest order
+    $subMenus = [];
+
+    foreach ($menuData as $item) {
+        if ($item['level'] === 1) {
+            continue;
+        }
+
+        $subMenus[] = $item;
+    }
+
+    // Get existing submenu items
+    $stmt = $pdo->prepare(
+        "SELECT id, link FROM {$prefix}menu WHERE menutype = 'main' AND parent_id = ? AND client_id = 1"
+    );
+    $stmt->execute([$parentMenuId]);
+    $existingMenus = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $existingByLink = array_column($existingMenus, 'id', 'link');
+
+    // Manifest links for cleanup
+    $manifestLinks = array_map(fn ($item) => $item['link'], $subMenus);
+
+    // Remove stale menu items no longer in manifest
+    foreach ($existingMenus as $existing) {
+        if (!\in_array($existing['link'], $manifestLinks, true)) {
+            $pdo->exec("DELETE FROM {$prefix}menu WHERE id = " . (int) $existing['id']);
+
+            if ($verbose) {
+                echo "    menu removed: {$existing['link']}\n";
+            }
+        }
+    }
+
+    // Insert missing items
+    foreach ($subMenus as $item) {
+        if (isset($existingByLink[$item['link']])) {
+            // Update title to match manifest
+            $pdo->prepare(
+                "UPDATE {$prefix}menu SET title = ? WHERE id = ?"
+            )->execute([$item['title'], (int) $existingByLink[$item['link']]]);
+
+            continue;
+        }
+
+        $stmt = $pdo->prepare(
+            "INSERT INTO {$prefix}menu "
+            . "(menutype, title, alias, link, type, published, parent_id, level, component_id, client_id, img, path, lft, rgt, access, params, language) "
+            . "VALUES ('main', ?, ?, ?, 'component', 1, ?, 2, ?, 1, '', ?, 0, 0, 1, '', '*')"
+        );
+        $stmt->execute([
+            $item['title'],
+            $item['alias'],
+            $item['link'],
+            $parentMenuId,
+            $extensionId,
+            'com-livingword/' . $item['alias'],
+        ]);
+
+        $added++;
+    }
+
+    // Rebuild lft/rgt for submenu items in manifest order
+    $stmt = $pdo->prepare(
+        "SELECT lft FROM {$prefix}menu WHERE id = ?"
+    );
+    $stmt->execute([$parentMenuId]);
+    $parentLft = (int) $stmt->fetchColumn();
+
+    $lft = $parentLft + 1;
+
+    foreach ($subMenus as $item) {
+        $stmt = $pdo->prepare(
+            "SELECT id FROM {$prefix}menu WHERE menutype = 'main' AND link = ? AND client_id = 1 LIMIT 1"
+        );
+        $stmt->execute([$item['link']]);
+        $menuId = (int) $stmt->fetchColumn();
+
+        if ($menuId) {
+            $rgt = $lft + 1;
+            $pdo->prepare("UPDATE {$prefix}menu SET lft = ?, rgt = ? WHERE id = ?")->execute([$lft, $rgt, $menuId]);
+            $lft = $rgt + 1;
+        }
+    }
+
+    // Update parent rgt to encompass all children
+    $pdo->prepare("UPDATE {$prefix}menu SET rgt = ? WHERE id = ?")->execute([$lft, $parentMenuId]);
+
+    if ($added > 0 && $verbose) {
+        echo "    menu items: $added added\n";
+    }
+}
+
+/**
  * Returns the list of external symlink mappings for a given Joomla path.
  *
  * @param   string  $joomlaPath  The resolved Joomla installation path.
@@ -161,6 +347,7 @@ function getExternalLinks(string $joomlaPath): array
     return [
         "$base/media/com_livingword"                        => "$joomlaPath/media/com_livingword",
         "$base/admin"                                       => "$joomlaPath/administrator/components/com_livingword",
+        "$base/livingword.xml"                              => "$base/admin/livingword.xml",
         "$base/site"                                        => "$joomlaPath/components/com_livingword",
         "$base/mod_livingword"                              => "$joomlaPath/modules/mod_livingword",
         "$base/plg_task_livingword"                         => "$joomlaPath/plugins/task/livingword",
@@ -650,6 +837,7 @@ function doVerifyExtensions(bool $verbose = false): void
             if ($row) {
                 $needsUpdate = false;
                 $updates     = [];
+                $updateParams = [];
 
                 if ((int) $row['enabled'] !== $ext['enabled']) {
                     $updates[]   = "enabled = {$ext['enabled']}";
@@ -661,11 +849,61 @@ function doVerifyExtensions(bool $verbose = false): void
                     $needsUpdate = true;
                 }
 
+                // Always refresh manifest_cache and menus for the component
+                if ($type === 'component') {
+                    $manifestFile = BASE_DIR . '/livingword.xml';
+
+                    if (file_exists($manifestFile)) {
+                        $xml = simplexml_load_file($manifestFile);
+
+                        if ($xml) {
+                            $mc = json_encode([
+                                'name'         => (string) ($xml->name ?? 'com_livingword'),
+                                'type'         => 'component',
+                                'creationDate' => (string) ($xml->creationDate ?? ''),
+                                'author'       => (string) ($xml->author ?? ''),
+                                'copyright'    => (string) ($xml->copyright ?? ''),
+                                'authorEmail'  => (string) ($xml->authorEmail ?? ''),
+                                'authorUrl'    => (string) ($xml->authorUrl ?? ''),
+                                'version'      => (string) ($xml->version ?? '5.0.0'),
+                                'description'  => (string) ($xml->description ?? ''),
+                                'group'        => '',
+                            ]);
+                            $updates[]      = 'manifest_cache = ?';
+                            $updateParams[] = $mc;
+                            $needsUpdate    = true;
+                        }
+                    }
+
+                    // Sync admin menu items from manifest
+                    syncAdminMenus($pdo, $prefix, (int) $row['extension_id'], $verbose);
+
+                    // Run install SQL to create any missing tables
+                    $sqlFile = BASE_DIR . '/admin/sql/install.mysql.utf8.sql';
+
+                    if (file_exists($sqlFile)) {
+                        $sqlContent = file_get_contents($sqlFile);
+                        // Only run CREATE TABLE statements (safe with IF NOT EXISTS)
+                        preg_match_all('/CREATE TABLE IF NOT EXISTS[^;]+;/si', $sqlContent, $matches);
+
+                        foreach ($matches[0] as $createSql) {
+                            $createSql = str_replace('#__', $prefix, $createSql);
+
+                            try {
+                                $pdo->exec($createSql);
+                            } catch (PDOException $e) {
+                                // Table already exists or other non-fatal issue
+                            }
+                        }
+                    }
+                }
+
                 if ($needsUpdate) {
                     $updateSql = "UPDATE {$prefix}extensions SET " . implode(', ', $updates)
                         . " WHERE extension_id = " . (int) $row['extension_id'];
-                    $pdo->exec($updateSql);
-                    echo "  FIXED:  $name ($type) — updated " . implode(', ', $updates) . "\n";
+                    $stmt = $pdo->prepare($updateSql);
+                    $stmt->execute($updateParams);
+                    echo "  FIXED:  $name ($type) — updated " . implode(', ', array_map(fn ($u) => explode(' =', $u)[0], $updates)) . "\n";
                     $fixed++;
                 } else {
                     if ($verbose) {
@@ -729,18 +967,41 @@ function doVerifyExtensions(bool $verbose = false): void
 function registerComponent(PDO $pdo, string $prefix, bool $hasNamespace, string $joomlaPath, bool $verbose = false): void
 {
     try {
+        // Build manifest_cache from livingword.xml
+        $manifestFile = BASE_DIR . '/livingword.xml';
+        $manifestCache = '{}';
+
+        if (file_exists($manifestFile)) {
+            $xml = simplexml_load_file($manifestFile);
+
+            if ($xml) {
+                $manifestCache = json_encode([
+                    'name'         => (string) ($xml->name ?? 'com_livingword'),
+                    'type'         => 'component',
+                    'creationDate' => (string) ($xml->creationDate ?? ''),
+                    'author'       => (string) ($xml->author ?? ''),
+                    'copyright'    => (string) ($xml->copyright ?? ''),
+                    'authorEmail'  => (string) ($xml->authorEmail ?? ''),
+                    'authorUrl'    => (string) ($xml->authorUrl ?? ''),
+                    'version'      => (string) ($xml->version ?? '5.0.0'),
+                    'description'  => (string) ($xml->description ?? ''),
+                    'group'        => '',
+                ]);
+            }
+        }
+
         // 1. Insert into #__extensions
         $columns = 'name, type, element, folder, client_id, enabled, access, locked, manifest_cache, params, custom_data';
-        $values  = "?, 'component', 'com_livingword', '', 1, 1, 1, 0, '{}', '{}', ''";
+        $values  = "?, 'component', 'com_livingword', '', 1, 1, 1, 0, ?, '{}', ''";
 
         if ($hasNamespace) {
             $columns .= ', namespace';
             $values  .= ', ?';
             $stmt = $pdo->prepare("INSERT INTO {$prefix}extensions ($columns) VALUES ($values)");
-            $stmt->execute(['com_livingword', 'CWM\\Component\\Livingword']);
+            $stmt->execute(['com_livingword', $manifestCache, 'CWM\\Component\\Livingword']);
         } else {
             $stmt = $pdo->prepare("INSERT INTO {$prefix}extensions ($columns) VALUES ($values)");
-            $stmt->execute(['com_livingword']);
+            $stmt->execute(['com_livingword', $manifestCache]);
         }
 
         $extensionId = (int) $pdo->lastInsertId();
@@ -766,13 +1027,7 @@ function registerComponent(PDO $pdo, string $prefix, bool $hasNamespace, string 
         }
 
         // 3. Create admin menu items from manifest
-        $menuData = [
-            ['title' => 'COM_LIVINGWORD', 'link' => 'index.php?option=com_livingword', 'alias' => 'com-livingword', 'level' => 1, 'parent' => 1, 'img' => 'class:component'],
-            ['title' => 'COM_LIVINGWORD_CPANEL', 'link' => 'index.php?option=com_livingword&view=cwmcpanel', 'alias' => 'com-livingword-cpanel', 'level' => 2],
-            ['title' => 'COM_LIVINGWORD_MANAGE_PLANS', 'link' => 'index.php?option=com_livingword&view=cwmplans', 'alias' => 'com-livingword-plans', 'level' => 2],
-            ['title' => 'COM_LIVINGWORD_MANAGE_LINKS', 'link' => 'index.php?option=com_livingword&view=cwmlinks', 'alias' => 'com-livingword-links', 'level' => 2],
-            ['title' => 'COM_LIVINGWORD_MANAGE_SUBSCRIBERS', 'link' => 'index.php?option=com_livingword&view=cwmusers', 'alias' => 'com-livingword-users', 'level' => 2],
-        ];
+        $menuData = getAdminMenuData();
 
         $parentMenuId = 0;
         $menuCount    = 0;
