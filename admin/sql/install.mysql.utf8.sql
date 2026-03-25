@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS `#__livingword_plans` (
   `audio` tinyint NOT NULL DEFAULT 0 COMMENT 'Enable audio player (0/1)',
   `audio_version` varchar(20) NOT NULL DEFAULT '' COMMENT 'BibleBrain fileset code',
   `testament` tinyint NOT NULL DEFAULT 0 COMMENT '0=full, 1=NT, 2=OT',
+  `duration_type` varchar(20) NOT NULL DEFAULT 'annual' COMMENT 'annual, fixed, or self_paced',
+  `total_days` int DEFAULT NULL COMMENT 'Total days for fixed/self_paced (NULL = auto from readings count)',
   `published` tinyint NOT NULL DEFAULT 0,
   `checked_out` int UNSIGNED DEFAULT NULL,
   `checked_out_time` datetime DEFAULT NULL,

@@ -48,6 +48,12 @@ class CwmplanTable extends Table
     /** @var int|null Testament scope: 0=full, 1=NT, 2=OT @since 5.2.0 */
     public ?int $testament = 0;
 
+    /** @var string|null Duration type: annual, fixed, or self_paced @since 5.7.0 */
+    public ?string $duration_type = 'annual';
+
+    /** @var int|null Total days for fixed/self_paced plans @since 5.7.0 */
+    public ?int $total_days = null;
+
     /** @var int|null Published state @since 5.0.0 */
     public ?int $published = 0;
 

@@ -31,6 +31,8 @@ $passages            = $data->passages ?? [];
 $passageCount        = $data->passageCount ?? 1;
 $completedPassages   = array_flip($data->completedPassages ?? []);
 $isMultiPassage      = $passageCount > 1;
+$durationType        = $data->durationType ?? 'annual';
+$isSelfPaced         = $durationType === 'self_paced';
 $progressUrl         = Route::_('index.php?option=com_livingword&task=cwmprogress.toggle&format=json', false);
 
 if ($isLoggedIn && $reading) {
@@ -70,7 +72,7 @@ if ($showAudio && $reading) {
 
         <div class="livingword-progress-info mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <h3 class="mb-0"><?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?></h3>
+                <h3 class="mb-0"><?php echo Text::sprintf($isSelfPaced ? 'COM_LIVINGWORD_READING_OF' : 'COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?></h3>
                 <?php if ($isLoggedIn && $data->totalDays > 0) : ?>
                     <span class="badge bg-primary"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_PERCENT', $data->progressPercent); ?></span>
                 <?php endif; ?>
