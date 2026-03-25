@@ -87,6 +87,11 @@ $completedPassageCounts = $data->completedPassageCounts ?? [];
                         <td><?php echo $dayNum; ?></td>
                         <td>
                             <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>
+                            <?php if (!empty(trim($reading->descrip ?? ''))) : ?>
+                                <div class="livingword-devotional-preview text-muted small mt-1" style="font-style: italic;">
+                                    <?php echo htmlspecialchars(mb_strimwidth(strip_tags($reading->descrip), 0, 120, '...'), ENT_QUOTES, 'UTF-8'); ?>
+                                </div>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

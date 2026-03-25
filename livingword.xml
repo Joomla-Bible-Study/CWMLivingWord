@@ -44,7 +44,13 @@
         </schemas>
     </update>
 
+    <media destination="com_livingword" folder="media/com_livingword">
+        <folder>css</folder>
+        <folder>js</folder>
+    </media>
+
     <files folder="site">
+        <folder>language</folder>
         <folder>src</folder>
         <folder>tmpl</folder>
     </files>
@@ -66,6 +72,11 @@
                   view="cwmlinks"
                   alt="LivingWord/Links">
                 COM_LIVINGWORD_MANAGE_LINKS
+            </menu>
+            <menu link="option=com_livingword&amp;view=cwmgroups"
+                  view="cwmgroups"
+                  alt="LivingWord/Groups">
+                COM_LIVINGWORD_MANAGE_GROUPS
             </menu>
             <menu link="option=com_livingword&amp;view=cwmusers"
                   view="cwmusers"
