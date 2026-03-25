@@ -14,9 +14,11 @@ namespace CWM\Component\Livingword\Administrator\View\Cwmutilities;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
+use Joomla\Database\DatabaseInterface;
 
 /**
  * Utilities view (database maintenance)
@@ -25,6 +27,9 @@ use Joomla\CMS\Toolbar\ToolbarHelper;
  */
 class HtmlView extends BaseHtmlView
 {
+    /** @var array Available plans for CSV import @since 5.8.0 */
+    protected array $plans = [];
+
     /**
      * @param   string  $tpl  Template name.
      *
@@ -36,6 +41,15 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
+        $db    = Factory::getContainer()->get(DatabaseInterface::class);
+        $query = $db->getQuery(true)
+            ->select($db->quoteName(['id', 'title']))
+            ->from($db->quoteName('#__livingword_plans'))
+            ->where($db->quoteName('published') . ' = 1')
+            ->order($db->quoteName('ordering') . ' ASC');
+        $db->setQuery($query);
+        $this->plans = $db->loadObjectList() ?: [];
+
         $this->addToolbar();
 
         parent::display($tpl);

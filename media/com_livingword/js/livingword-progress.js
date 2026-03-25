@@ -111,7 +111,7 @@
           // Update the passage text styling
           const passageItem = btn.closest('[data-livingword-passage]');
           if (passageItem) {
-            const lead = passageItem.querySelector('.lead');
+            const lead = passageItem.querySelector('.livingword-scripture-text, .lead, p');
             if (lead) {
               lead.classList.toggle('text-decoration-line-through', passageCompleted);
               lead.classList.toggle('text-muted', passageCompleted);
@@ -190,7 +190,7 @@
 
       const passageItem = btn.closest('[data-livingword-passage]');
       if (passageItem) {
-        const lead = passageItem.querySelector('.lead');
+        const lead = passageItem.querySelector('.livingword-scripture-text, .lead, p');
         if (lead) {
           lead.classList.toggle('text-decoration-line-through', completed);
           lead.classList.toggle('text-muted', completed);

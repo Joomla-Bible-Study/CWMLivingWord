@@ -254,7 +254,7 @@ class CwmgroupHelper
 
         try {
             $db->insertObject('#__livingword_group_members', $record);
-        } catch (\RuntimeException) {
+        } catch (\Exception) {
             return false;
         }
 

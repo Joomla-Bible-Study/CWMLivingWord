@@ -71,17 +71,7 @@ $token = Session::getFormToken();
                         <label for="plan_id" class="form-label"><?php echo Text::_('COM_LIVINGWORD_CSV_SELECT_PLAN'); ?></label>
                         <select name="plan_id" id="csv_plan_id" class="form-select" required>
                             <option value=""><?php echo Text::_('COM_LIVINGWORD_SELECT_PLAN'); ?></option>
-                            <?php
-                            $db    = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
-                            $query = $db->getQuery(true)
-                                ->select($db->quoteName(['id', 'title']))
-                                ->from($db->quoteName('#__livingword_plans'))
-                                ->where($db->quoteName('published') . ' = 1')
-                                ->order($db->quoteName('ordering') . ' ASC');
-                            $db->setQuery($query);
-                            $plans = $db->loadObjectList() ?: [];
-
-                            foreach ($plans as $csvPlan) : ?>
+                            <?php foreach ($this->plans as $csvPlan) : ?>
                                 <option value="<?php echo (int) $csvPlan->id; ?>">
                                     <?php echo htmlspecialchars($csvPlan->title, ENT_QUOTES, 'UTF-8'); ?>
                                 </option>

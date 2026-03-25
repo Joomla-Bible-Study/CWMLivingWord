@@ -106,7 +106,7 @@ class CwmpartnerHelper
             'partner_id'       => $partnerId,
             'shares_progress'  => true,
             'is_mutual'        => $isMutual,
-            'plan_name'        => $planInfo->description ?? '',
+            'plan_name'        => ($planInfo !== null) ? ($planInfo->description ?? '') : '',
             'current_day'      => $currentDay,
             'total_days'       => $totalDays,
             'completed_count'  => $completedCount,

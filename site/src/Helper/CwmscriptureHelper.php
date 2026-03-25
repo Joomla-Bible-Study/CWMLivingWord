@@ -73,9 +73,13 @@ class CwmscriptureHelper
                 continue;
             }
 
-            $result = $provider->getPassage($passage, $version);
+            try {
+                $result = $provider->getPassage($passage, $version);
+            } catch (\Exception) {
+                continue;
+            }
 
-            if ($result->hasText()) {
+            if ($result !== null && $result->hasText()) {
                 $allText[] = '<div class="scripture-passage">'
                     . '<h4>' . htmlspecialchars($passage, ENT_QUOTES, 'UTF-8') . '</h4>'
                     . $result->text
@@ -310,9 +314,13 @@ class CwmscriptureHelper
             $chapters = self::expandChapterRange($passage, $parsed['chapter']);
 
             foreach ($chapters as $chapter) {
-                $result = $provider->getAudio($parsed['book'], $chapter, $version);
+                try {
+                    $result = $provider->getAudio($parsed['book'], $chapter, $version);
+                } catch (\Exception) {
+                    continue;
+                }
 
-                if ($result->hasAudio()) {
+                if ($result !== null && $result->hasAudio()) {
                     $audioList[] = (object) [
                         'audioUrl'    => $result->getPrimaryUrl(),
                         'book'        => $result->book,
