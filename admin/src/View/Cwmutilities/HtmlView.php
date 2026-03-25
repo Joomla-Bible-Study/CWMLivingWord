@@ -62,6 +62,9 @@ class HtmlView extends BaseHtmlView
      */
     protected function addToolbar(): void
     {
+        Factory::getApplication()->getInput()->set('hidemainmenu', true);
+
         ToolbarHelper::title(Text::_('COM_LIVINGWORD_UTILITIES'), 'wrench');
+        ToolbarHelper::back('JTOOLBAR_BACK', 'index.php?option=com_livingword');
     }
 }
