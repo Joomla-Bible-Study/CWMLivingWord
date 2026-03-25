@@ -82,6 +82,14 @@ class CwmmenuHelper
             ];
         }
 
+        if ($user->id) {
+            $links[] = [
+                'url'  => Route::_('index.php?option=com_livingword&view=cwmgroups&Itemid=' . $itemId),
+                'text' => Text::_('COM_LIVINGWORD_GROUPS'),
+                'view' => 'cwmgroups',
+            ];
+        }
+
         if (empty($links)) {
             return '';
         }
@@ -91,7 +99,9 @@ class CwmmenuHelper
         $html = '<nav class="livingword-menu"><ul class="nav nav-pills">';
 
         foreach ($links as $link) {
-            $active = ($link['view'] === $currentView) ? ' active' : '';
+            $isActive = ($link['view'] === $currentView)
+                || ($link['view'] === 'cwmgroups' && $currentView === 'cwmgroupdetail');
+            $active = $isActive ? ' active' : '';
             $html .= '<li class="nav-item">';
             $html .= '<a class="nav-link' . $active . '" href="' . $link['url'] . '">' . $link['text'] . '</a>';
             $html .= '</li>';
