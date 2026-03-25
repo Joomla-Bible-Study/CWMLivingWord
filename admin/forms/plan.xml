@@ -73,6 +73,27 @@
             <option value="2">COM_LIVINGWORD_PLAN_TESTAMENT_OT</option>
         </field>
         <field
+            name="duration_type"
+            type="list"
+            label="COM_LIVINGWORD_PLAN_DURATION_TYPE"
+            description="COM_LIVINGWORD_PLAN_DURATION_TYPE_DESC"
+            default="annual"
+            validate="options"
+        >
+            <option value="annual">COM_LIVINGWORD_PLAN_DURATION_ANNUAL</option>
+            <option value="fixed">COM_LIVINGWORD_PLAN_DURATION_FIXED</option>
+            <option value="self_paced">COM_LIVINGWORD_PLAN_DURATION_SELF_PACED</option>
+        </field>
+        <field
+            name="total_days"
+            type="number"
+            label="COM_LIVINGWORD_PLAN_TOTAL_DAYS"
+            description="COM_LIVINGWORD_PLAN_TOTAL_DAYS_DESC"
+            min="1"
+            max="400"
+            showon="duration_type!:annual"
+        />
+        <field
             name="published"
             type="list"
             label="JSTATUS"

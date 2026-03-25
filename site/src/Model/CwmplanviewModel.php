@@ -45,10 +45,13 @@ class CwmplanviewModel extends BaseDatabaseModel
         $planInfo   = CwmreadingHelper::getPlanById($db, $planId);
         $readings   = CwmreadingHelper::getAllReadings($db, $planId);
         $totalDays  = \count($readings);
-        $currentDay = CwmreadingHelper::getCurrentReadingDay(
+        $currentDay = CwmreadingHelper::getReadingDayForPlan(
+            $planInfo,
             $userData->start_date ?? '',
             (int) $userData->date_offset,
-            $totalDays ?: 365
+            $totalDays ?: 365,
+            $db,
+            $userId
         );
 
         $completedDays          = [];

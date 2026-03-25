@@ -22,12 +22,20 @@ use Joomla\Database\DatabaseInterface;
  * Handles date calculations, current reading day determination,
  * and plan data retrieval. All queries use plan_id (integer FK).
  *
+ * Supports three duration types:
+ * - annual: repeats yearly (wraps around via modulo)
+ * - fixed: runs once from start_date, capped at total_days
+ * - self_paced: advances only when user marks readings complete
+ *
  * @since  5.0.0
  */
 class CwmreadingHelper
 {
     /**
      * Calculate the current reading day based on the plan start date and offset.
+     *
+     * For annual plans, wraps around using modulo.
+     * For fixed plans, caps at totalDays (no wrapping).
      *
      * @param   string  $startDate  The plan start date (Y-m-d)
      * @param   int     $offset     Date offset in days
@@ -53,6 +61,122 @@ class CwmreadingHelper
         }
 
         return $reading + 1;
+    }
+
+    /**
+     * Calculate the current reading day for a fixed-duration plan.
+     *
+     * Returns the day number capped at totalDays (no wrapping).
+     * Returns 0 if the plan hasn't started yet, or totalDays if finished.
+     *
+     * @param   string  $startDate  The plan start date (Y-m-d)
+     * @param   int     $offset     Date offset in days
+     * @param   int     $totalDays  Total days in the plan
+     *
+     * @return  int  Current reading day (1-based), 0 if not started
+     *
+     * @since   5.7.0
+     */
+    public static function getFixedReadingDay(string $startDate, int $offset = 0, int $totalDays = 365): int
+    {
+        if (empty($startDate) || $startDate === '0000-00-00') {
+            return 1;
+        }
+
+        $start = new \DateTime($startDate);
+        $now   = new \DateTime('today');
+        $diff  = (int) $now->diff($start)->days;
+
+        if ($now < $start) {
+            return 0;
+        }
+
+        $day = $diff + $offset + 1;
+
+        return min($day, $totalDays);
+    }
+
+    /**
+     * Get the current day for a self-paced plan.
+     *
+     * Returns the next uncompleted day number (first day without a progress record).
+     *
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $userId  Joomla user ID
+     * @param   int                $planId  Plan ID
+     * @param   int                $totalDays  Total days in the plan
+     *
+     * @return  int  Next reading day (1-based), or totalDays if all complete
+     *
+     * @since   5.7.0
+     */
+    public static function getSelfPacedDay(DatabaseInterface $db, int $userId, int $planId, int $totalDays): int
+    {
+        $completedDays = CwmprogressHelper::getCompletedDays($db, $userId, $planId);
+
+        if (empty($completedDays)) {
+            return 1;
+        }
+
+        $completedSet = array_flip($completedDays);
+
+        for ($day = 1; $day <= $totalDays; $day++) {
+            if (!isset($completedSet[$day])) {
+                return $day;
+            }
+        }
+
+        return $totalDays;
+    }
+
+    /**
+     * Get the current reading day based on plan duration type.
+     *
+     * @param   ?object            $plan      Plan object (needs duration_type, total_days)
+     * @param   string             $startDate User's start date
+     * @param   int                $offset    Date offset
+     * @param   int                $totalDays Total readings in the plan
+     * @param   DatabaseInterface  $db        Database (needed for self_paced)
+     * @param   int                $userId    User ID (needed for self_paced)
+     *
+     * @return  int  Current reading day (1-based)
+     *
+     * @since   5.7.0
+     */
+    public static function getReadingDayForPlan(
+        ?object $plan,
+        string $startDate,
+        int $offset,
+        int $totalDays,
+        DatabaseInterface $db,
+        int $userId
+    ): int {
+        $durationType = $plan->duration_type ?? 'annual';
+        $planId       = (int) ($plan->id ?? 0);
+
+        return match ($durationType) {
+            'fixed'      => self::getFixedReadingDay($startDate, $offset, $totalDays),
+            'self_paced' => self::getSelfPacedDay($db, $userId, $planId, $totalDays),
+            default      => self::getCurrentReadingDay($startDate, $offset, $totalDays),
+        };
+    }
+
+    /**
+     * Check if a fixed-duration plan is complete (past the last day).
+     *
+     * @param   string  $startDate  The plan start date
+     * @param   int     $offset     Date offset
+     * @param   int     $totalDays  Total days in the plan
+     *
+     * @return  bool
+     *
+     * @since   5.7.0
+     */
+    public static function isFixedPlanComplete(string $startDate, int $offset, int $totalDays): bool
+    {
+        $day = self::getFixedReadingDay($startDate, $offset, $totalDays);
+
+        return $day >= $totalDays;
     }
 
     /**

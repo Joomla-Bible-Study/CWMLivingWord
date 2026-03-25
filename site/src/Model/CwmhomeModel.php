@@ -44,10 +44,19 @@ class CwmhomeModel extends BaseDatabaseModel
         $userData = CwmuserHelper::getUserData($db, $userId);
         $planId   = (int) $userData->plan_id;
 
-        $totalDays    = CwmreadingHelper::getPlanTotalDays($db, $planId);
-        $currentDay   = CwmreadingHelper::getCurrentReadingDay($userData->start_date ?? '', (int) $userData->date_offset, $totalDays ?: 365);
-        $todayReading = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
-        $planInfo     = CwmreadingHelper::getPlanById($db, $planId);
+        $totalDays = CwmreadingHelper::getPlanTotalDays($db, $planId);
+        $planInfo  = CwmreadingHelper::getPlanById($db, $planId);
+
+        $currentDay = CwmreadingHelper::getReadingDayForPlan(
+            $planInfo,
+            $userData->start_date ?? '',
+            (int) $userData->date_offset,
+            $totalDays ?: 365,
+            $db,
+            $userId
+        );
+
+        $todayReading = ($currentDay > 0) ? CwmreadingHelper::getReadingForDay($db, $planId, $currentDay) : null;
 
         $isCompleted         = false;
         $completedCount      = 0;
@@ -87,6 +96,7 @@ class CwmhomeModel extends BaseDatabaseModel
             'passageCount'      => $passageCount,
             'completedPassages' => $completedPassages,
             'partnerProgress'   => $partnerProgress,
+            'durationType'      => $planInfo->duration_type ?? 'annual',
         ];
     }
 }
