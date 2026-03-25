@@ -81,7 +81,11 @@
           return;
         }
 
-        audioEl.src = audioData.data.audioUrl;
+        // Build playlist from audioFiles array (multi-chapter support)
+        const playlist = (audioData.data.audioFiles || [audioData.data]).map(f => f.audioUrl);
+        let currentTrack = 0;
+
+        audioEl.src = playlist[0];
         loaded = true;
         playBtn.disabled = false;
 
@@ -89,31 +93,62 @@
           statusEl.classList.add('d-none');
         }
 
+        // Show track count for multi-chapter readings
+        if (playlist.length > 1 && statusEl) {
+          statusEl.textContent = '1 / ' + playlist.length;
+          statusEl.classList.remove('d-none');
+        }
+
         // Set up verse timing sync if available
         if (audioData.data.verseTiming && audioData.data.verseTiming.length > 0) {
           setupVerseSync(container, audioEl, audioData.data.verseTiming);
         }
+
+        // Auto-advance to next chapter when current ends
+        audioEl.addEventListener('ended', () => {
+          currentTrack++;
+
+          if (currentTrack < playlist.length) {
+            audioEl.src = playlist[currentTrack];
+            audioEl.play();
+
+            if (statusEl && playlist.length > 1) {
+              statusEl.textContent = (currentTrack + 1) + ' / ' + playlist.length;
+            }
+          } else {
+            // All chapters done — reset
+            currentTrack = 0;
+            audioEl.src = playlist[0];
+            setPlayIcon();
+
+            if (statusEl && playlist.length > 1) {
+              statusEl.textContent = '';
+              statusEl.classList.add('d-none');
+            }
+          }
+        });
       }
 
       if (audioEl.paused) {
         audioEl.play();
-        playBtn.querySelector('.icon-play, .fa-play')?.classList.replace('icon-play', 'icon-pause');
-        playBtn.querySelector('.fa-play')?.classList.replace('fa-play', 'fa-pause');
-        playBtn.setAttribute('aria-label', Joomla.Text._('COM_LIVINGWORD_AUDIO_PAUSE') || 'Pause');
+        setPauseIcon();
       } else {
         audioEl.pause();
-        playBtn.querySelector('.icon-pause, .fa-pause')?.classList.replace('icon-pause', 'icon-play');
-        playBtn.querySelector('.fa-pause')?.classList.replace('fa-pause', 'fa-play');
-        playBtn.setAttribute('aria-label', Joomla.Text._('COM_LIVINGWORD_AUDIO_PLAY') || 'Play');
+        setPlayIcon();
       }
     });
 
-    // Reset button state when audio ends
-    audioEl.addEventListener('ended', () => {
+    const setPlayIcon = () => {
       playBtn.querySelector('.icon-pause, .fa-pause')?.classList.replace('icon-pause', 'icon-play');
       playBtn.querySelector('.fa-pause')?.classList.replace('fa-pause', 'fa-play');
       playBtn.setAttribute('aria-label', Joomla.Text._('COM_LIVINGWORD_AUDIO_PLAY') || 'Play');
-    });
+    };
+
+    const setPauseIcon = () => {
+      playBtn.querySelector('.icon-play, .fa-play')?.classList.replace('icon-play', 'icon-pause');
+      playBtn.querySelector('.fa-play')?.classList.replace('fa-play', 'fa-pause');
+      playBtn.setAttribute('aria-label', Joomla.Text._('COM_LIVINGWORD_AUDIO_PAUSE') || 'Pause');
+    };
   };
 
   /**

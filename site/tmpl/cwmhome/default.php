@@ -44,7 +44,8 @@ if ($isLoggedIn && $reading) {
 }
 
 // Audio availability check
-$showAudio = $plan && (int) ($plan->audio ?? 0) === 1 && CwmscriptureHelper::isAudioAvailable();
+$audioEnabled = (int) \Joomla\CMS\Component\ComponentHelper::getParams('com_livingword')->get('config_show_audio', 1);
+$showAudio    = $audioEnabled && $plan && (int) ($plan->audio ?? 0) === 1 && CwmscriptureHelper::isAudioAvailable();
 
 if ($showAudio && $reading) {
     $audioUrl = Route::_('index.php?option=com_livingword&task=cwmaudio.getAudio&format=json');
