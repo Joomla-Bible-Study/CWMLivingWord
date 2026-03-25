@@ -11,16 +11,18 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Language\Text;
 
 /** @var \CWM\Component\Livingword\Site\View\Cwmplanview\HtmlView $this */
 
-$data          = $this->planData;
-$readings      = $data->readings;
-$plan          = $data->planInfo;
-$user          = $data->userData;
-$completedDays = array_flip($data->completedDays ?? []);
+$data                   = $this->planData;
+$readings               = $data->readings;
+$plan                   = $data->planInfo;
+$user                   = $data->userData;
+$completedDays          = array_flip($data->completedDays ?? []);
+$completedPassageCounts = $data->completedPassageCounts ?? [];
 ?>
 <div class="com-livingword-planview">
     <?php echo $this->menu; ?>
@@ -56,19 +58,30 @@ $completedDays = array_flip($data->completedDays ?? []);
             <tbody>
                 <?php foreach ($readings as $i => $reading) : ?>
                     <?php
-                    $dayNum      = $i + 1;
-                    $isCompleted = isset($completedDays[$dayNum]);
-                    $rowClass    = '';
+                    $dayNum        = $i + 1;
+                    $hasProgress   = isset($completedDays[$dayNum]);
+                    $passageCount  = CwmprogressHelper::countPassages($reading->reading);
+                    $completedPC   = $completedPassageCounts[$dayNum] ?? 0;
+                    $isFullComplete = $hasProgress && $completedPC >= $passageCount;
+                    $isPartial      = $hasProgress && $completedPC > 0 && $completedPC < $passageCount;
+                    $rowClass      = '';
+
                     if ($dayNum === $data->currentDay) {
                         $rowClass = 'table-active fw-bold';
-                    } elseif ($isCompleted) {
+                    } elseif ($isFullComplete) {
                         $rowClass = 'table-success';
+                    } elseif ($isPartial) {
+                        $rowClass = 'table-warning';
                     }
                     ?>
                     <tr<?php echo $rowClass ? ' class="' . $rowClass . '"' : ''; ?> data-progress-day="<?php echo $dayNum; ?>">
                         <td class="text-center">
-                            <?php if ($isCompleted) : ?>
+                            <?php if ($isFullComplete) : ?>
                                 <span class="icon-checkmark text-success" aria-label="<?php echo Text::_('COM_LIVINGWORD_COMPLETED'); ?>"></span>
+                            <?php elseif ($isPartial) : ?>
+                                <span class="text-warning small" aria-label="<?php echo Text::sprintf('COM_LIVINGWORD_PASSAGES_COMPLETED', $completedPC, $passageCount); ?>">
+                                    <?php echo $completedPC; ?>/<?php echo $passageCount; ?>
+                                </span>
                             <?php endif; ?>
                         </td>
                         <td><?php echo $dayNum; ?></td>

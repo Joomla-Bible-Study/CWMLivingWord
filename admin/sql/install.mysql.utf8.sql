@@ -57,10 +57,12 @@ CREATE TABLE IF NOT EXISTS `#__livingword_progress` (
   `user_id` int NOT NULL COMMENT 'FK to #__users.id',
   `plan_id` int UNSIGNED NOT NULL COMMENT 'FK to plans.id',
   `day` int UNSIGNED NOT NULL COMMENT '1-based day number',
+  `passage_index` smallint UNSIGNED NOT NULL DEFAULT 0 COMMENT '0-based passage index within the day reading',
   `completed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `idx_user_plan_day` (`user_id`, `plan_id`, `day`),
-  KEY `idx_user_plan` (`user_id`, `plan_id`)
+  UNIQUE KEY `idx_user_plan_day_passage` (`user_id`, `plan_id`, `day`, `passage_index`),
+  KEY `idx_user_plan` (`user_id`, `plan_id`),
+  KEY `idx_user_plan_day` (`user_id`, `plan_id`, `day`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__livingword_links` (

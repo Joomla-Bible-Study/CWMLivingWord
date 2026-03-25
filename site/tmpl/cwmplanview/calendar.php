@@ -11,6 +11,7 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Language\Text;
 
@@ -21,7 +22,8 @@ $readings = $data->readings;
 $plan     = $data->planInfo;
 $user     = $data->userData;
 $startDate     = new \DateTime($user->start_date ?: date('Y-01-01'));
-$completedDays = array_flip($data->completedDays ?? []);
+$completedDays          = array_flip($data->completedDays ?? []);
+$completedPassageCounts = $data->completedPassageCounts ?? [];
 ?>
 <div class="com-livingword-planview-calendar">
     <?php echo $this->menu; ?>
@@ -76,13 +78,22 @@ $completedDays = array_flip($data->completedDays ?? []);
             <h3><?php echo $month['label']; ?></h3>
             <div class="row row-cols-7 g-1 mb-3">
                 <?php foreach ($month['readings'] as $entry) : ?>
-                    <?php $isDayCompleted = isset($completedDays[$entry['day']]); ?>
+                    <?php
+                    $isDayStarted    = isset($completedDays[$entry['day']]);
+                    $passageCount    = CwmprogressHelper::countPassages($entry['reading']->reading);
+                    $completedPC     = $completedPassageCounts[$entry['day']] ?? 0;
+                    $isFullComplete  = $isDayStarted && $completedPC >= $passageCount;
+                    $isPartial       = $isDayStarted && $completedPC > 0 && $completedPC < $passageCount;
+                    $borderClass     = $entry['current'] ? ' border-primary' : ($isFullComplete ? ' border-success' : ($isPartial ? ' border-warning' : ''));
+                    ?>
                     <div class="col">
-                        <div class="card<?php echo $entry['current'] ? ' border-primary' : ($isDayCompleted ? ' border-success' : ''); ?> h-100" data-progress-day="<?php echo $entry['day']; ?>">
+                        <div class="card<?php echo $borderClass; ?> h-100" data-progress-day="<?php echo $entry['day']; ?>">
                             <div class="card-body p-1 small">
                                 <strong><?php echo $entry['date']; ?></strong>
-                                <?php if ($isDayCompleted) : ?>
+                                <?php if ($isFullComplete) : ?>
                                     <span class="icon-checkmark text-success float-end" aria-hidden="true"></span>
+                                <?php elseif ($isPartial) : ?>
+                                    <span class="text-warning float-end" style="font-size: 0.7em;"><?php echo $completedPC; ?>/<?php echo $passageCount; ?></span>
                                 <?php endif; ?>
                                 <br>
                                 <?php

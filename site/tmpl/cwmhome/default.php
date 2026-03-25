@@ -25,9 +25,13 @@ $plan    = $data->planInfo;
 $user    = $data->userData;
 
 // Progress tracking
-$isLoggedIn  = (int) ($user->user_id ?? 0) > 0;
-$isCompleted = $data->isCompleted ?? false;
-$progressUrl = Route::_('index.php?option=com_livingword&task=cwmprogress.toggle&format=json', false);
+$isLoggedIn          = (int) ($user->user_id ?? 0) > 0;
+$isCompleted         = $data->isCompleted ?? false;
+$passages            = $data->passages ?? [];
+$passageCount        = $data->passageCount ?? 1;
+$completedPassages   = array_flip($data->completedPassages ?? []);
+$isMultiPassage      = $passageCount > 1;
+$progressUrl         = Route::_('index.php?option=com_livingword&task=cwmprogress.toggle&format=json', false);
 
 if ($isLoggedIn && $reading) {
     /** @var \Joomla\CMS\Document\HtmlDocument $doc */
@@ -93,14 +97,93 @@ if ($showAudio && $reading) {
 
         <?php if ($reading) : ?>
             <div class="livingword-today-reading">
-                <p class="lead">
-                    <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>
-                </p>
-                <?php if (CwmscriptureHelper::isLibraryAvailable()) : ?>
-                    <div class="livingword-scripture-text mt-3">
-                        <?php echo CwmscriptureHelper::renderReading($reading->reading, $user->bible_version); ?>
+                <?php if ($isMultiPassage) : ?>
+                    <?php // Multi-passage: show each passage with its own checkmark ?>
+                    <div class="livingword-passages">
+                        <?php foreach ($passages as $index => $passage) : ?>
+                            <?php $passageCompleted = isset($completedPassages[$index]); ?>
+                            <div class="livingword-passage-item d-flex align-items-start gap-2 mb-3"
+                                 data-livingword-passage
+                                 data-passage-index="<?php echo $index; ?>">
+                                <?php if ($isLoggedIn) : ?>
+                                    <button type="button"
+                                            class="btn btn-sm <?php echo $passageCompleted ? 'btn-success' : 'btn-outline-secondary'; ?> livingword-passage-btn flex-shrink-0 mt-1"
+                                            data-livingword-passage-toggle
+                                            data-plan-id="<?php echo (int) ($plan->id ?? 0); ?>"
+                                            data-day="<?php echo (int) $data->currentDay; ?>"
+                                            data-passage-index="<?php echo $index; ?>"
+                                            data-passage-count="<?php echo $passageCount; ?>"
+                                            data-completed="<?php echo $passageCompleted ? '1' : '0'; ?>"
+                                            data-progress-url="<?php echo $this->escape($progressUrl); ?>"
+                                            aria-label="<?php echo $passageCompleted ? Text::sprintf('COM_LIVINGWORD_PASSAGE_MARK_UNREAD', $passage) : Text::sprintf('COM_LIVINGWORD_PASSAGE_MARK_READ', $passage); ?>">
+                                        <span class="<?php echo $passageCompleted ? 'icon-checkmark' : 'icon-checkbox-unchecked'; ?>" aria-hidden="true"></span>
+                                    </button>
+                                <?php endif; ?>
+                                <div class="livingword-passage-content flex-grow-1">
+                                    <p class="lead mb-1 <?php echo $passageCompleted ? 'text-decoration-line-through text-muted' : ''; ?>">
+                                        <?php echo CwmscriptureHelper::buildReadingLink($passage, $user->bible_version); ?>
+                                    </p>
+                                    <?php if (CwmscriptureHelper::isLibraryAvailable()) : ?>
+                                        <div class="livingword-scripture-text">
+                                            <?php echo CwmscriptureHelper::renderReading($passage, $user->bible_version); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
+
+                    <?php if ($isLoggedIn) : ?>
+                        <div class="livingword-progress-toggle mt-3"
+                             data-livingword-progress
+                             data-plan-id="<?php echo (int) ($plan->id ?? 0); ?>"
+                             data-day="<?php echo (int) $data->currentDay; ?>"
+                             data-completed="<?php echo $isCompleted ? '1' : '0'; ?>"
+                             data-passage-count="<?php echo $passageCount; ?>"
+                             data-progress-url="<?php echo $this->escape($progressUrl); ?>">
+                            <button type="button"
+                                    class="btn <?php echo $isCompleted ? 'btn-success' : 'btn-outline-secondary'; ?> livingword-mark-read-btn"
+                                    data-label-read="<?php echo Text::_('COM_LIVINGWORD_MARK_ALL_UNREAD'); ?>"
+                                    data-label-unread="<?php echo Text::_('COM_LIVINGWORD_MARK_ALL_READ'); ?>"
+                                    aria-label="<?php echo $isCompleted ? Text::_('COM_LIVINGWORD_MARK_ALL_UNREAD') : Text::_('COM_LIVINGWORD_MARK_ALL_READ'); ?>">
+                                <span class="<?php echo $isCompleted ? 'icon-checkmark' : 'icon-checkbox-unchecked'; ?>" aria-hidden="true"></span>
+                                <?php echo $isCompleted ? Text::_('COM_LIVINGWORD_ALL_COMPLETED') : Text::_('COM_LIVINGWORD_MARK_ALL_READ'); ?>
+                            </button>
+                            <small class="text-muted ms-2">
+                                <?php echo Text::sprintf('COM_LIVINGWORD_PASSAGES_COMPLETED', \count($data->completedPassages), $passageCount); ?>
+                            </small>
+                        </div>
+                    <?php endif; ?>
+                <?php else : ?>
+                    <?php // Single-passage: original layout ?>
+                    <p class="lead">
+                        <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>
+                    </p>
+                    <?php if (CwmscriptureHelper::isLibraryAvailable()) : ?>
+                        <div class="livingword-scripture-text mt-3">
+                            <?php echo CwmscriptureHelper::renderReading($reading->reading, $user->bible_version); ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($isLoggedIn) : ?>
+                        <div class="livingword-progress-toggle mt-3"
+                             data-livingword-progress
+                             data-plan-id="<?php echo (int) ($plan->id ?? 0); ?>"
+                             data-day="<?php echo (int) $data->currentDay; ?>"
+                             data-completed="<?php echo $isCompleted ? '1' : '0'; ?>"
+                             data-passage-count="1"
+                             data-progress-url="<?php echo $this->escape($progressUrl); ?>">
+                            <button type="button"
+                                    class="btn <?php echo $isCompleted ? 'btn-success' : 'btn-outline-secondary'; ?> livingword-mark-read-btn"
+                                    data-label-read="<?php echo Text::_('COM_LIVINGWORD_MARK_UNREAD'); ?>"
+                                    data-label-unread="<?php echo Text::_('COM_LIVINGWORD_MARK_READ'); ?>"
+                                    aria-label="<?php echo $isCompleted ? Text::_('COM_LIVINGWORD_MARK_UNREAD') : Text::_('COM_LIVINGWORD_MARK_READ'); ?>">
+                                <span class="<?php echo $isCompleted ? 'icon-checkmark' : 'icon-checkbox-unchecked'; ?>" aria-hidden="true"></span>
+                                <?php echo $isCompleted ? Text::_('COM_LIVINGWORD_COMPLETED') : Text::_('COM_LIVINGWORD_MARK_READ'); ?>
+                            </button>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
+
                 <?php if ($showAudio) : ?>
                     <div class="livingword-audio-player mt-2"
                          data-livingword-audio
@@ -116,24 +199,7 @@ if ($showAudio && $reading) {
                     </div>
                 <?php endif; ?>
                 <?php if (!empty($reading->descrip)) : ?>
-                    <p class="text-muted"><?php echo $this->escape($reading->descrip); ?></p>
-                <?php endif; ?>
-                <?php if ($isLoggedIn) : ?>
-                    <div class="livingword-progress-toggle mt-3"
-                         data-livingword-progress
-                         data-plan-id="<?php echo (int) ($plan->id ?? 0); ?>"
-                         data-day="<?php echo (int) $data->currentDay; ?>"
-                         data-completed="<?php echo $isCompleted ? '1' : '0'; ?>"
-                         data-progress-url="<?php echo $this->escape($progressUrl); ?>">
-                        <button type="button"
-                                class="btn <?php echo $isCompleted ? 'btn-success' : 'btn-outline-secondary'; ?> livingword-mark-read-btn"
-                                data-label-read="<?php echo Text::_('COM_LIVINGWORD_MARK_UNREAD'); ?>"
-                                data-label-unread="<?php echo Text::_('COM_LIVINGWORD_MARK_READ'); ?>"
-                                aria-label="<?php echo $isCompleted ? Text::_('COM_LIVINGWORD_MARK_UNREAD') : Text::_('COM_LIVINGWORD_MARK_READ'); ?>">
-                            <span class="<?php echo $isCompleted ? 'icon-checkmark' : 'icon-checkbox-unchecked'; ?>" aria-hidden="true"></span>
-                            <?php echo $isCompleted ? Text::_('COM_LIVINGWORD_COMPLETED') : Text::_('COM_LIVINGWORD_MARK_READ'); ?>
-                        </button>
-                    </div>
+                    <p class="text-muted mt-2"><?php echo $this->escape($reading->descrip); ?></p>
                 <?php endif; ?>
             </div>
         <?php else : ?>

@@ -48,25 +48,37 @@ class CwmhomeModel extends BaseDatabaseModel
         $todayReading = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
         $planInfo     = CwmreadingHelper::getPlanById($db, $planId);
 
-        $isCompleted    = false;
-        $completedCount = 0;
+        $isCompleted         = false;
+        $completedCount      = 0;
+        $passages            = [];
+        $completedPassages   = [];
+        $passageCount        = 1;
+
+        if ($todayReading) {
+            $passages     = CwmprogressHelper::splitPassages($todayReading->reading);
+            $passageCount = \count($passages);
+        }
 
         if ($userId > 0) {
-            $isCompleted    = CwmprogressHelper::isCompleted($db, $userId, $planId, $currentDay);
-            $completedCount = CwmprogressHelper::getCompletedCount($db, $userId, $planId);
+            $isCompleted       = CwmprogressHelper::isCompleted($db, $userId, $planId, $currentDay, $passageCount);
+            $completedCount    = CwmprogressHelper::getCompletedCount($db, $userId, $planId);
+            $completedPassages = CwmprogressHelper::getCompletedPassages($db, $userId, $planId, $currentDay);
         }
 
         $progressPercent = ($totalDays > 0) ? round(($completedCount / $totalDays) * 100) : 0;
 
         return (object) [
-            'userData'        => $userData,
-            'todayReading'    => $todayReading,
-            'planInfo'        => $planInfo,
-            'currentDay'      => $currentDay,
-            'totalDays'       => $totalDays,
-            'isCompleted'     => $isCompleted,
-            'completedCount'  => $completedCount,
-            'progressPercent' => $progressPercent,
+            'userData'          => $userData,
+            'todayReading'      => $todayReading,
+            'planInfo'          => $planInfo,
+            'currentDay'        => $currentDay,
+            'totalDays'         => $totalDays,
+            'isCompleted'       => $isCompleted,
+            'completedCount'    => $completedCount,
+            'progressPercent'   => $progressPercent,
+            'passages'          => $passages,
+            'passageCount'      => $passageCount,
+            'completedPassages' => $completedPassages,
         ];
     }
 }
