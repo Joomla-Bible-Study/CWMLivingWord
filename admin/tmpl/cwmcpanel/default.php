@@ -11,11 +11,24 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
 $counts = $this->counts;
 $stats  = $this->stats;
+
+// Audio status
+$scriptureAvailable = class_exists('CWM\\Library\\Scripture\\LibraryVersion');
+$audioAvailable     = false;
+$bbKeyConfigured    = false;
+$audioPlansCount    = 0;
+
+if ($scriptureAvailable) {
+    $audioAvailable  = CwmscriptureHelper::isAudioAvailable();
+    $bbKeyConfigured = $audioAvailable;
+    $audioPlansCount = $stats->audioPlansCount ?? 0;
+}
 ?>
 <div class="com-livingword-cpanel">
 
@@ -65,6 +78,24 @@ $stats  = $this->stats;
                     <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_UTILITIES'); ?></small>
                 </div>
             </a>
+        </div>
+    </div>
+
+    <?php // ── Audio Status Card ── ?>
+    <div class="card mb-4 <?php echo $audioAvailable ? 'border-success' : 'border-warning'; ?>">
+        <div class="card-body d-flex align-items-center gap-3">
+            <span class="icon-music fa-2x <?php echo $audioAvailable ? 'text-success' : 'text-warning'; ?>" aria-hidden="true"></span>
+            <div class="flex-grow-1">
+                <h5 class="card-title mb-1"><?php echo Text::_('COM_LIVINGWORD_AUDIO_STATUS'); ?></h5>
+                <?php if (!$scriptureAvailable) : ?>
+                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_AUDIO_NO_LIBRARY'); ?></small>
+                <?php elseif (!$bbKeyConfigured) : ?>
+                    <small class="text-warning"><?php echo Text::_('COM_LIVINGWORD_AUDIO_NO_KEY'); ?></small>
+                <?php else : ?>
+                    <small class="text-success"><?php echo Text::_('COM_LIVINGWORD_AUDIO_CONFIGURED'); ?></small>
+                    <span class="ms-2 badge bg-info"><?php echo Text::sprintf('COM_LIVINGWORD_AUDIO_PLANS_ENABLED', $audioPlansCount); ?></span>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 

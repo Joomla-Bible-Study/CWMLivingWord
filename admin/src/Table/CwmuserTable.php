@@ -36,6 +36,9 @@ class CwmuserTable extends Table
     /** @var string|null Bible translation code @since 5.2.0 */
     public ?string $bible_version = '';
 
+    /** @var string|null Preferred audio Bible fileset code @since 5.7.0 */
+    public ?string $audio_version = '';
+
     /** @var int|null Email subscription flag (0/1) @since 5.0.0 */
     public ?int $email = 0;
 

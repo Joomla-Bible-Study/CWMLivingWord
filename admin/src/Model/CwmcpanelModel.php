@@ -199,6 +199,15 @@ class CwmcpanelModel extends BaseDatabaseModel
             $group->total_days       = $totalDays;
         }
 
+        // Audio-enabled plans count
+        $query = $db->getQuery(true)
+            ->select('COUNT(*)')
+            ->from($db->quoteName('#__livingword_plans'))
+            ->where($db->quoteName('audio') . ' = 1')
+            ->where($db->quoteName('published') . ' = 1');
+        $db->setQuery($query);
+        $audioPlansCount = (int) $db->loadResult();
+
         return (object) [
             'totalSubscribers' => $totalSubscribers,
             'activeUsers'      => $activeUsers,
@@ -207,6 +216,7 @@ class CwmcpanelModel extends BaseDatabaseModel
             'planProgress'     => $planProgress,
             'inactiveList'     => $inactiveList,
             'groups'           => $groups,
+            'audioPlansCount'  => $audioPlansCount,
         ];
     }
 }

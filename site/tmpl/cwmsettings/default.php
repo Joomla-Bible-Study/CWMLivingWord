@@ -58,6 +58,13 @@ if ($planId > 0) {
                 </div>
 
                 <div class="mb-3">
+                    <label for="audio_version" class="form-label"><?php echo Text::_('COM_LIVINGWORD_AUDIO_VERSION'); ?></label>
+                    <input type="text" name="audio_version" id="audio_version" class="form-control" value="<?php echo $this->escape($user->audio_version ?? ''); ?>"
+                           placeholder="<?php echo Text::_('COM_LIVINGWORD_AUDIO_VERSION_HINT'); ?>">
+                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_AUDIO_VERSION_DESC'); ?></small>
+                </div>
+
+                <div class="mb-3">
                     <label for="start_date" class="form-label"><?php echo Text::_('COM_LIVINGWORD_START_DATE'); ?></label>
                     <input type="date" name="start_date" id="start_date" class="form-control" value="<?php echo $this->escape($user->start_date); ?>">
                 </div>

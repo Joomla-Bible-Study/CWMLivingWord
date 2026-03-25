@@ -36,6 +36,16 @@ $isNew = ((int) $this->item->id === 0);
                 <?php echo $this->form->renderField('published'); ?>
                 <?php echo $this->form->renderField('audio'); ?>
                 <?php echo $this->form->renderField('audio_version'); ?>
+                <?php if ((int) ($this->item->audio ?? 0) === 1 && !$isNew) : ?>
+                    <div class="mb-3" id="audioPreviewContainer">
+                        <button type="button" class="btn btn-sm btn-outline-info" id="testAudioBtn">
+                            <span class="icon-play" aria-hidden="true"></span>
+                            <?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO'); ?>
+                        </button>
+                        <audio id="testAudioPlayer" preload="none" class="d-none"></audio>
+                        <small id="testAudioStatus" class="d-block mt-1 text-muted"></small>
+                    </div>
+                <?php endif; ?>
                 <?php echo $this->form->renderField('testament'); ?>
                 <?php echo $this->form->renderField('ordering'); ?>
                 <?php echo $this->form->renderField('id'); ?>
@@ -121,6 +131,76 @@ $isNew = ((int) $this->item->id === 0);
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Test Audio Preview
+    var testBtn = document.getElementById('testAudioBtn');
+    var testPlayer = document.getElementById('testAudioPlayer');
+    var testStatus = document.getElementById('testAudioStatus');
+
+    if (testBtn && testPlayer) {
+        testBtn.addEventListener('click', function() {
+            // Get audio version from the form field
+            var audioVersion = document.querySelector('[name="jform[audio_version]"]');
+            var version = audioVersion ? audioVersion.value : '';
+
+            if (!version) {
+                testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO_NO_VERSION', true); ?>';
+                testStatus.className = 'd-block mt-1 text-warning';
+                return;
+            }
+
+            // Get the first reading from the subform
+            var firstReading = document.querySelector('[name*="[reading]"]');
+            var reading = firstReading ? firstReading.value : '';
+
+            if (!reading) {
+                testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO_NO_READING', true); ?>';
+                testStatus.className = 'd-block mt-1 text-warning';
+                return;
+            }
+
+            testBtn.disabled = true;
+            testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_AUDIO_LOADING', true); ?>';
+            testStatus.className = 'd-block mt-1 text-muted';
+
+            var url = '<?php echo \Joomla\CMS\Router\Route::_('index.php?option=com_livingword&task=cwmaudio.getAudio&format=json', false); ?>'
+                + '&reading=' + encodeURIComponent(reading)
+                + '&version=' + encodeURIComponent(version)
+                + '&<?php echo \Joomla\CMS\Session\Session::getFormToken(); ?>=1';
+
+            fetch(url, { credentials: 'same-origin' })
+                .then(function(r) { return r.json(); })
+                .then(function(json) {
+                    if (json.success && json.data && json.data.audioUrl) {
+                        testPlayer.src = json.data.audioUrl;
+                        testPlayer.currentTime = 0;
+                        testPlayer.play();
+                        testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO_PLAYING', true); ?>';
+                        testStatus.className = 'd-block mt-1 text-success';
+
+                        // Stop after 10 seconds
+                        setTimeout(function() {
+                            testPlayer.pause();
+                            testPlayer.currentTime = 0;
+                            testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO_SUCCESS', true); ?>';
+                        }, 10000);
+                    } else {
+                        testStatus.textContent = json.message || '<?php echo Text::_('COM_LIVINGWORD_AUDIO_UNAVAILABLE', true); ?>';
+                        testStatus.className = 'd-block mt-1 text-danger';
+                    }
+                    testBtn.disabled = false;
+                })
+                .catch(function() {
+                    testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_AUDIO_ERROR', true); ?>';
+                    testStatus.className = 'd-block mt-1 text-danger';
+                    testBtn.disabled = false;
+                });
+        });
+    }
+});
+</script>
 
 <style>
 .subform-repeatable-group.lw-selected { background-color: var(--template-bg-dark-3, #e8f0fe); }
