@@ -61,6 +61,17 @@ class Router extends RouterView
         $tools->setParent($home);
         $this->registerView($tools);
 
+        // Groups
+        $groups = new RouterViewConfiguration('cwmgroups');
+        $groups->setParent($home);
+        $this->registerView($groups);
+
+        // Group detail
+        $groupdetail = new RouterViewConfiguration('cwmgroupdetail');
+        $groupdetail->setParent($groups);
+        $groupdetail->setKey('id');
+        $this->registerView($groupdetail);
+
         parent::__construct($app, $menu);
 
         $this->attachRule(new MenuRules($this));

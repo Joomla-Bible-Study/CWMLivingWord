@@ -51,6 +51,8 @@ class DisplayController extends BaseController
 
         $safeurlparams = [
             'id'         => 'INT',
+            'group_id'   => 'INT',
+            'token'      => 'CMD',
             'limit'      => 'INT',
             'limitstart' => 'INT',
             'lang'       => 'CMD',

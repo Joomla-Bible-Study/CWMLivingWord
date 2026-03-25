@@ -81,6 +81,39 @@ CREATE TABLE IF NOT EXISTS `#__livingword_links` (
   KEY `idx_published` (`published`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `#__livingword_groups` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) NOT NULL DEFAULT '' COMMENT 'Group display name',
+  `description` text NOT NULL COMMENT 'Group description',
+  `plan_id` int UNSIGNED NOT NULL DEFAULT 0 COMMENT 'FK to #__livingword_plans.id',
+  `start_date` date DEFAULT NULL COMMENT 'Group reading plan start date',
+  `invite_token` varchar(64) NOT NULL DEFAULT '' COMMENT 'Token for invite link',
+  `created_by` int NOT NULL DEFAULT 0 COMMENT 'FK to #__users.id (creator)',
+  `published` tinyint NOT NULL DEFAULT 1,
+  `checked_out` int UNSIGNED DEFAULT NULL,
+  `checked_out_time` datetime DEFAULT NULL,
+  `ordering` int NOT NULL DEFAULT 0,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_invite_token` (`invite_token`),
+  KEY `idx_plan_id` (`plan_id`),
+  KEY `idx_published` (`published`),
+  KEY `idx_created_by` (`created_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `#__livingword_group_members` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `group_id` int UNSIGNED NOT NULL COMMENT 'FK to #__livingword_groups.id',
+  `user_id` int NOT NULL COMMENT 'FK to #__users.id',
+  `role` varchar(20) NOT NULL DEFAULT 'member' COMMENT 'member or group_admin',
+  `joined_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_group_user` (`group_id`, `user_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_group_id` (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+
 -- LivingWord Seed Data (v5.2.0 schema)
 
 INSERT INTO `#__livingword_plans` (`id`, `alias`, `title`, `description`, `message`, `audio`, `testament`, `published`, `ordering`) VALUES

@@ -5,6 +5,7 @@
         <action name="livingword.settings" title="COM_LIVINGWORD_ACL_SETTINGS" description="COM_LIVINGWORD_ACL_SETTINGS_DESC" />
         <action name="livingword.tools" title="COM_LIVINGWORD_ACL_TOOLS" description="COM_LIVINGWORD_ACL_TOOLS_DESC" />
         <action name="livingword.links" title="COM_LIVINGWORD_ACL_LINKS" description="COM_LIVINGWORD_ACL_LINKS_DESC" />
+        <action name="livingword.groups.admin" title="COM_LIVINGWORD_ACL_GROUPS_ADMIN" description="COM_LIVINGWORD_ACL_GROUPS_ADMIN_DESC" />
         <action name="core.admin" title="JACTION_ADMIN" description="JACTION_ADMIN_COMPONENT_DESC" />
         <action name="core.manage" title="JACTION_MANAGE" description="JACTION_MANAGE_COMPONENT_DESC" />
         <action name="core.create" title="JACTION_CREATE" description="JACTION_CREATE_COMPONENT_DESC" />
