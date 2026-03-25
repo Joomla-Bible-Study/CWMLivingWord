@@ -30,12 +30,31 @@ if ($scriptureAvailable) {
     $audioPlansCount = $stats->audioPlansCount ?? 0;
 }
 ?>
+<style>
+.cpanel-icon-card {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    border: 1px solid var(--template-bg-dark-7, rgba(255,255,255,0.08));
+}
+.cpanel-icon-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    border-color: var(--template-link-color, #4f94cd);
+}
+.cpanel-icon-card:hover h4 {
+    color: var(--template-link-color, #4f94cd) !important;
+}
+.cpanel-icon-card h4 {
+    transition: color 0.15s ease;
+}
+</style>
+
 <div class="com-livingword-cpanel">
 
     <?php // ── Quick Icon Navigation ── ?>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-5 g-3 mb-4">
         <div class="col">
-            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmplans'); ?>" class="card text-center text-decoration-none h-100">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmplans'); ?>" class="card cpanel-icon-card text-center text-decoration-none h-100">
                 <div class="card-body">
                     <span class="icon-book fa-2x text-primary mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['plans'] ?? 0; ?></h4>
@@ -44,7 +63,7 @@ if ($scriptureAvailable) {
             </a>
         </div>
         <div class="col">
-            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmgroups'); ?>" class="card text-center text-decoration-none h-100">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmgroups'); ?>" class="card cpanel-icon-card text-center text-decoration-none h-100">
                 <div class="card-body">
                     <span class="icon-users fa-2x text-info mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['groups'] ?? 0; ?></h4>
@@ -53,7 +72,7 @@ if ($scriptureAvailable) {
             </a>
         </div>
         <div class="col">
-            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmusers'); ?>" class="card text-center text-decoration-none h-100">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmusers'); ?>" class="card cpanel-icon-card text-center text-decoration-none h-100">
                 <div class="card-body">
                     <span class="icon-user fa-2x text-success mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['users'] ?? 0; ?></h4>
@@ -62,7 +81,7 @@ if ($scriptureAvailable) {
             </a>
         </div>
         <div class="col">
-            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmlinks'); ?>" class="card text-center text-decoration-none h-100">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmlinks'); ?>" class="card cpanel-icon-card text-center text-decoration-none h-100">
                 <div class="card-body">
                     <span class="icon-link fa-2x text-warning mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['links'] ?? 0; ?></h4>
@@ -71,7 +90,7 @@ if ($scriptureAvailable) {
             </a>
         </div>
         <div class="col">
-            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmutilities'); ?>" class="card text-center text-decoration-none h-100">
+            <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmutilities'); ?>" class="card cpanel-icon-card text-center text-decoration-none h-100">
                 <div class="card-body">
                     <span class="icon-wrench fa-2x text-secondary mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0">&nbsp;</h4>
