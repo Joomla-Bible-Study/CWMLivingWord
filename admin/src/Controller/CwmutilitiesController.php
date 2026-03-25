@@ -91,7 +91,7 @@ class CwmutilitiesController extends BaseController
         $db  = Factory::getContainer()->get(DatabaseInterface::class);
 
         $output   = "-- LivingWord Database Backup\n";
-        $output  .= "-- Date: " . date('Y-m-d H:i:s') . "\n\n";
+        $output .= "-- Date: " . date('Y-m-d H:i:s') . "\n\n";
 
         foreach (self::TABLES as $table) {
             $realTable = str_replace('#__', $app->get('dbprefix'), $table);

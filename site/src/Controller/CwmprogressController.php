@@ -23,12 +23,20 @@ use Joomla\CMS\Session\Session;
 /**
  * AJAX controller for reading completion tracking.
  *
+ * Supports both day-level and passage-level toggling.
+ *
  * @since  5.3.0
  */
 class CwmprogressController extends BaseController
 {
     /**
-     * Toggle completion for a reading day. Returns JSON.
+     * Toggle completion for a reading day or individual passage. Returns JSON.
+     *
+     * Parameters:
+     *   - plan_id (int, required)
+     *   - day (int, required)
+     *   - passage_index (int, optional) — if provided, toggles a single passage
+     *   - passage_count (int, optional) — total passages in this day, needed for day-complete check
      *
      * @return  void
      *
@@ -53,8 +61,10 @@ class CwmprogressController extends BaseController
             $app->close();
         }
 
-        $planId = $this->input->getInt('plan_id', 0);
-        $day    = $this->input->getInt('day', 0);
+        $planId       = $this->input->getInt('plan_id', 0);
+        $day          = $this->input->getInt('day', 0);
+        $passageIndex = $this->input->getInt('passage_index', -1);
+        $passageCount = $this->input->getInt('passage_count', 1);
 
         if ($planId <= 0 || $day <= 0) {
             $app->sendHeaders();
@@ -62,8 +72,32 @@ class CwmprogressController extends BaseController
             $app->close();
         }
 
-        $db        = Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
-        $completed = CwmprogressHelper::toggleComplete($db, $userId, $planId, $day);
+        $db = Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+
+        if ($passageIndex >= 0) {
+            // Passage-level toggle
+            $result = CwmprogressHelper::togglePassage(
+                $db,
+                $userId,
+                $planId,
+                $day,
+                $passageIndex,
+                max($passageCount, 1)
+            );
+
+            $app->sendHeaders();
+            echo new JsonResponse([
+                'completed'         => $result['day_completed'],
+                'passage_completed' => $result['passage_completed'],
+                'passage_index'     => $passageIndex,
+                'day'               => $day,
+                'plan_id'           => $planId,
+            ]);
+            $app->close();
+        }
+
+        // Day-level toggle (mark all passages at once)
+        $completed = CwmprogressHelper::toggleComplete($db, $userId, $planId, $day, max($passageCount, 1));
 
         $app->sendHeaders();
         echo new JsonResponse([

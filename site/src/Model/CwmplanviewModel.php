@@ -51,22 +51,27 @@ class CwmplanviewModel extends BaseDatabaseModel
             $totalDays ?: 365
         );
 
-        $completedDays = ($userId > 0)
-            ? CwmprogressHelper::getCompletedDays($db, $userId, $planId)
-            : [];
+        $completedDays          = [];
+        $completedPassageCounts = [];
+
+        if ($userId > 0) {
+            $completedDays          = CwmprogressHelper::getCompletedDays($db, $userId, $planId);
+            $completedPassageCounts = CwmprogressHelper::getCompletedPassageCounts($db, $userId, $planId);
+        }
 
         $completedCount  = \count($completedDays);
         $progressPercent = ($totalDays > 0) ? round(($completedCount / $totalDays) * 100) : 0;
 
         return (object) [
-            'planInfo'        => $planInfo,
-            'readings'        => $readings,
-            'userData'        => $userData,
-            'currentDay'      => $currentDay,
-            'totalDays'       => $totalDays,
-            'completedDays'   => $completedDays,
-            'completedCount'  => $completedCount,
-            'progressPercent' => $progressPercent,
+            'planInfo'               => $planInfo,
+            'readings'               => $readings,
+            'userData'               => $userData,
+            'currentDay'             => $currentDay,
+            'totalDays'              => $totalDays,
+            'completedDays'          => $completedDays,
+            'completedCount'         => $completedCount,
+            'progressPercent'        => $progressPercent,
+            'completedPassageCounts' => $completedPassageCounts,
         ];
     }
 }
