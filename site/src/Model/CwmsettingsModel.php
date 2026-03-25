@@ -131,6 +131,7 @@ class CwmsettingsModel extends BaseDatabaseModel
             'user_id'                   => $userId,
             'plan_id'                   => $planId,
             'bible_version'             => $data['bible_version'] ?? 'kjv',
+            'audio_version'             => $data['audio_version'] ?? '',
             'email'                     => (int) ($data['email'] ?? 0),
             'plan_view'                 => (int) ($data['plan_view'] ?? 0),
             'start_date'                => $startDate,

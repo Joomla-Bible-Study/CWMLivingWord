@@ -34,6 +34,9 @@
             <option value="0">JNO</option>
             <option value="1">JYES</option>
         </field>
+        <field name="config_audio_default_version" type="text" default=""
+               label="COM_LIVINGWORD_CONFIG_AUDIO_VERSION" description="COM_LIVINGWORD_CONFIG_AUDIO_VERSION_DESC"
+               hint="COM_LIVINGWORD_PLAN_AUDIO_VERSION_HINT" size="20" maxlength="20" />
     </fieldset>
     <fieldset name="menu_settings" label="COM_LIVINGWORD_CONFIG_MENU">
         <field name="config_show_menu" type="radio" layout="joomla.form.field.radio.switcher" default="1"
