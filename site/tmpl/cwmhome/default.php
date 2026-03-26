@@ -35,6 +35,13 @@ $isSelfPaced       = $durationType === 'self_paced';
 $progressUrl       = Route::_('index.php?option=com_livingword&task=cwmprogress.toggle&format=json', false);
 $hasScripture      = CwmscriptureHelper::isLibraryAvailable();
 
+// Dashboard data
+$greetingContext = $data->greetingContext ?? 'guest';
+$weeklyProgress  = $data->weeklyProgress ?? 0;
+$nextMilestone   = $data->nextMilestone ?? null;
+$streakCurrent   = (int) ($user->streak_current ?? 0);
+$streakBest      = (int) ($user->streak_best ?? 0);
+
 /** @var \Joomla\CMS\Document\HtmlDocument $doc */
 $doc = $this->getDocument();
 $wa  = $doc->getWebAssetManager();
@@ -62,52 +69,104 @@ if ($showAudio && $reading) {
 <div class="com-livingword-home">
     <?php echo $this->menu; ?>
 
-    <?php // ── Plan Header ── ?>
-    <?php if ($plan) : ?>
-        <div class="livingword-plan-header">
-            <h2><?php echo $this->escape($plan->description); ?></h2>
-            <?php if (!empty($plan->message)) : ?>
-                <div class="livingword-plan-message"><?php echo $plan->message; ?></div>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
-
-    <?php // ── Progress Bar ── ?>
-    <?php if ($isLoggedIn && $data->totalDays > 0) : ?>
-        <div class="livingword-progress-info mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="livingword-day-indicator">
-                    <?php echo Text::sprintf($isSelfPaced ? 'COM_LIVINGWORD_READING_OF' : 'COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?>
-                </span>
-                <span class="badge bg-primary rounded-pill"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_PERCENT', $data->progressPercent); ?></span>
-            </div>
-            <div class="progress" style="height: 6px;" role="progressbar"
-                 aria-valuenow="<?php echo $data->progressPercent; ?>" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar bg-success" style="width: <?php echo $data->progressPercent; ?>%"></div>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-1">
-                <small class="text-muted"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_DAYS', $data->completedCount, $data->totalDays); ?></small>
-                <?php if ((int) ($user->streak_current ?? 0) > 0) : ?>
-                    <small class="text-muted">
-                        <?php echo Text::sprintf('COM_LIVINGWORD_STREAK_CURRENT', (int) $user->streak_current); ?>
-                        <?php if ((int) ($user->streak_best ?? 0) > (int) ($user->streak_current ?? 0)) : ?>
-                            &middot; <?php echo Text::sprintf('COM_LIVINGWORD_STREAK_BEST', (int) $user->streak_best); ?>
-                        <?php endif; ?>
-                    </small>
+    <?php // ── Section 1: Hero / Welcome ── ?>
+    <div class="livingword-hero livingword-hero-<?php echo $greetingContext; ?> mb-4">
+        <?php if ($greetingContext === 'completed_today') : ?>
+            <div class="livingword-hero-inner">
+                <h2><?php echo Text::_('COM_LIVINGWORD_COMPLETED_TODAY'); ?></h2>
+                <?php if ($plan) : ?>
+                    <p class="livingword-hero-sub"><?php echo $this->escape($plan->description); ?></p>
                 <?php endif; ?>
             </div>
+        <?php elseif ($greetingContext === 'new_user') : ?>
+            <div class="livingword-hero-inner">
+                <h2><?php echo Text::_('COM_LIVINGWORD_WELCOME_NEW'); ?></h2>
+                <?php if ($plan) : ?>
+                    <p class="livingword-hero-sub"><?php echo $this->escape($plan->description); ?></p>
+                    <?php if (!empty($plan->message)) : ?>
+                        <div class="livingword-hero-message"><?php echo $plan->message; ?></div>
+                    <?php endif; ?>
+                <?php endif; ?>
+                <?php if ($reading) : ?>
+                    <a href="#todays-reading" class="btn livingword-cta mt-2">
+                        <?php echo Text::_('COM_LIVINGWORD_START_READING'); ?>
+                    </a>
+                <?php endif; ?>
+            </div>
+        <?php elseif ($greetingContext === 'returning') : ?>
+            <div class="livingword-hero-inner">
+                <h2>
+                    <?php echo Text::_('COM_LIVINGWORD_WELCOME_BACK'); ?>
+                    <?php if ($streakCurrent > 1) : ?>
+                        <span class="livingword-streak-badge"><?php echo Text::sprintf('COM_LIVINGWORD_STREAK_CURRENT', $streakCurrent); ?></span>
+                    <?php endif; ?>
+                </h2>
+                <?php if ($plan) : ?>
+                    <p class="livingword-hero-sub"><?php echo $this->escape($plan->description); ?></p>
+                <?php endif; ?>
+            </div>
+        <?php else : ?>
+            <?php // Guest ?>
+            <div class="livingword-hero-inner">
+                <?php if ($plan) : ?>
+                    <h2><?php echo $this->escape($plan->description); ?></h2>
+                    <?php if (!empty($plan->message)) : ?>
+                        <div class="livingword-hero-message"><?php echo $plan->message; ?></div>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <?php // ── Section 2: Dashboard Stats Strip ── ?>
+    <?php if ($isLoggedIn && $data->totalDays > 0 && $data->completedCount > 0) : ?>
+        <div class="livingword-stats-strip mb-4">
+            <div class="livingword-stat-item">
+                <span class="livingword-stat-value"><?php echo $data->progressPercent; ?>%</span>
+                <span class="livingword-stat-label"><?php echo Text::_('COM_LIVINGWORD_PROGRESS_PERCENT_LABEL'); ?></span>
+                <div class="progress mt-1" style="height: 4px; width: 100%;">
+                    <div class="progress-bar bg-success" style="width: <?php echo $data->progressPercent; ?>%"></div>
+                </div>
+            </div>
+            <div class="livingword-stat-item">
+                <span class="livingword-stat-value">
+                    <?php echo Text::sprintf($isSelfPaced ? 'COM_LIVINGWORD_READING_OF' : 'COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?>
+                </span>
+                <span class="livingword-stat-label"><?php echo Text::sprintf('COM_LIVINGWORD_PROGRESS_DAYS', $data->completedCount, $data->totalDays); ?></span>
+            </div>
+            <div class="livingword-stat-item">
+                <span class="livingword-stat-value"><?php echo $weeklyProgress; ?>/7</span>
+                <span class="livingword-stat-label"><?php echo Text::_('COM_LIVINGWORD_THIS_WEEK'); ?></span>
+            </div>
+            <?php if ($streakCurrent > 0) : ?>
+                <div class="livingword-stat-item">
+                    <span class="livingword-stat-value"><?php echo $streakCurrent; ?></span>
+                    <span class="livingword-stat-label"><?php echo Text::_('COM_LIVINGWORD_STREAK_CURRENT_LABEL'); ?></span>
+                </div>
+            <?php endif; ?>
         </div>
-    <?php elseif (!$isLoggedIn) : ?>
-        <div class="mb-4">
-            <span class="livingword-day-indicator">
-                <?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?>
-            </span>
+
+        <?php // ── Milestone nudge ── ?>
+        <?php if ($nextMilestone) : ?>
+            <div class="livingword-milestone mb-4">
+                <span class="icon-star" aria-hidden="true"></span>
+                <?php echo Text::sprintf($nextMilestone->key, ...$nextMilestone->values); ?>
+            </div>
+        <?php endif; ?>
+
+    <?php elseif (!$isLoggedIn && $data->totalDays > 0) : ?>
+        <div class="livingword-stats-strip livingword-stats-guest mb-4">
+            <div class="livingword-stat-item">
+                <span class="livingword-stat-value">
+                    <?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $data->currentDay, $data->totalDays); ?>
+                </span>
+            </div>
         </div>
     <?php endif; ?>
 
-    <?php // ── Today's Reading Card ── ?>
+    <?php // ── Section 3: Today's Reading Card ── ?>
     <?php if ($reading) : ?>
-        <div class="card livingword-reading-card mb-4">
+        <div class="card livingword-reading-card mb-4" id="todays-reading">
             <div class="card-body">
                 <?php if ($isMultiPassage) : ?>
                     <?php // ── Multi-passage readings ── ?>
@@ -203,11 +262,11 @@ if ($showAudio && $reading) {
             </div>
         </div>
 
-        <?php // ── Study Notes / Devotional ── ?>
+        <?php // ── Section 4: Study Notes / Devotional ── ?>
         <?php
-        $descripText = trim($reading->descrip ?? '');
+        $descripText  = trim($reading->descrip ?? '');
         $hasStudyText = !empty($descripText);
-        $isLongText = $hasStudyText && str_word_count(strip_tags($descripText)) > 150;
+        $isLongText   = $hasStudyText && str_word_count(strip_tags($descripText)) > 150;
         ?>
         <?php if ($hasStudyText) : ?>
             <div class="card livingword-study-card mb-4">
@@ -221,7 +280,6 @@ if ($showAudio && $reading) {
                             <?php echo $reading->descrip; ?>
                         </div>
                         <button type="button" class="btn btn-sm btn-link p-0 mt-2 livingword-study-toggle"
-                                data-bs-toggle="collapse" data-bs-target="#studyContentFull"
                                 onclick="this.closest('.card-body').querySelector('.livingword-study-content').classList.toggle('livingword-study-collapsed'); this.textContent = this.textContent.trim() === '<?php echo Text::_('COM_LIVINGWORD_READ_MORE'); ?>' ? '<?php echo Text::_('COM_LIVINGWORD_READ_LESS'); ?>' : '<?php echo Text::_('COM_LIVINGWORD_READ_MORE'); ?>';">
                             <?php echo Text::_('COM_LIVINGWORD_READ_MORE'); ?>
                         </button>
@@ -234,7 +292,7 @@ if ($showAudio && $reading) {
             </div>
         <?php endif; ?>
 
-        <?php // ── Audio Player ── ?>
+        <?php // ── Section 5: Audio Player ── ?>
         <?php if ($showAudio) : ?>
             <div class="livingword-audio-section mb-4"
                  data-livingword-audio
@@ -250,7 +308,7 @@ if ($showAudio && $reading) {
             </div>
         <?php endif; ?>
 
-        <?php // ── Journal / Notes ── ?>
+        <?php // ── Section 6: Journal / Notes ── ?>
         <?php if ($isLoggedIn) : ?>
             <div class="card livingword-journal-card mb-4"
                  data-livingword-notes
@@ -272,18 +330,19 @@ if ($showAudio && $reading) {
                 </div>
             </div>
         <?php endif; ?>
+
     <?php else : ?>
         <div class="alert alert-info"><?php echo Text::_('COM_LIVINGWORD_NO_READING_TODAY'); ?></div>
     <?php endif; ?>
 
-    <?php // ── Actions ── ?>
+    <?php // ── Section 7: Actions ── ?>
     <div class="livingword-actions mb-4">
         <a href="<?php echo Route::_('index.php?option=com_livingword&view=cwmplanview'); ?>" class="btn btn-outline-primary">
             <?php echo Text::_('COM_LIVINGWORD_VIEW_FULL_PLAN'); ?>
         </a>
     </div>
 
-    <?php // ── Partner Progress ── ?>
+    <?php // ── Section 8: Partner Progress ── ?>
     <?php
     $partner = $data->partnerProgress ?? null;
 

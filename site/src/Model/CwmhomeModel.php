@@ -21,6 +21,7 @@ use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
+use Joomla\Database\DatabaseInterface;
 
 /**
  * Home/main view model — user settings and today's reading.
@@ -80,10 +81,29 @@ class CwmhomeModel extends BaseDatabaseModel
 
         $partnerProgress = null;
         $todayNote       = '';
+        $weeklyProgress  = 0;
+        $greetingContext = 'guest';
+        $nextMilestone   = null;
 
         if ($userId > 0) {
             $partnerProgress = CwmpartnerHelper::getPartnerProgress($db, $userId);
             $todayNote       = CwmnotesHelper::getNote($db, $userId, $planId, $currentDay) ?? '';
+            $weeklyProgress  = self::getWeeklyProgress($db, $userId, $planId);
+
+            if ($completedCount === 0) {
+                $greetingContext = 'new_user';
+            } elseif ($isCompleted) {
+                $greetingContext = 'completed_today';
+            } else {
+                $greetingContext = 'returning';
+            }
+
+            $nextMilestone = self::calculateMilestone(
+                $completedCount,
+                $totalDays,
+                (int) ($userData->streak_current ?? 0),
+                (int) ($userData->streak_best ?? 0)
+            );
         }
 
         return (object) [
@@ -101,6 +121,84 @@ class CwmhomeModel extends BaseDatabaseModel
             'partnerProgress'   => $partnerProgress,
             'durationType'      => $planInfo->duration_type ?? 'annual',
             'todayNote'         => $todayNote,
+            'greetingContext'   => $greetingContext,
+            'weeklyProgress'    => $weeklyProgress,
+            'nextMilestone'     => $nextMilestone,
         ];
+    }
+
+    /**
+     * Count readings completed in the last 7 days.
+     *
+     * @param   DatabaseInterface  $db      Database
+     * @param   int                $userId  User ID
+     * @param   int                $planId  Plan ID
+     *
+     * @return  int
+     *
+     * @since   5.4.0
+     */
+    private static function getWeeklyProgress(DatabaseInterface $db, int $userId, int $planId): int
+    {
+        $weekAgo = (new \DateTime('-7 days'))->format('Y-m-d H:i:s');
+
+        $query = $db->getQuery(true)
+            ->select('COUNT(DISTINCT ' . $db->quoteName('day') . ')')
+            ->from($db->quoteName('#__livingword_progress'))
+            ->where($db->quoteName('user_id') . ' = ' . $userId)
+            ->where($db->quoteName('plan_id') . ' = ' . $planId)
+            ->where($db->quoteName('completed_at') . ' >= ' . $db->quote($weekAgo));
+
+        $db->setQuery($query);
+
+        return (int) $db->loadResult();
+    }
+
+    /**
+     * Calculate the next motivational milestone.
+     *
+     * @param   int  $completed      Completed readings
+     * @param   int  $total          Total readings
+     * @param   int  $streakCurrent  Current streak
+     * @param   int  $streakBest     Best streak
+     *
+     * @return  ?object  {type, message_key, values} or null
+     *
+     * @since   5.4.0
+     */
+    private static function calculateMilestone(int $completed, int $total, int $streakCurrent, int $streakBest): ?object
+    {
+        // Streak milestone: close to matching or beating best
+        if ($streakBest > 0 && $streakCurrent > 0 && $streakCurrent < $streakBest) {
+            $gap = $streakBest - $streakCurrent;
+
+            if ($gap <= 7) {
+                return (object) [
+                    'type'   => 'streak',
+                    'key'    => 'COM_LIVINGWORD_MILESTONE_STREAK',
+                    'values' => [$gap, $streakBest],
+                ];
+            }
+        }
+
+        // Progress milestone: next 10% boundary
+        if ($total > 0) {
+            $currentPercent = ($completed / $total) * 100;
+            $nextBoundary   = (int) (ceil(($currentPercent + 0.1) / 10) * 10);
+
+            if ($nextBoundary <= 100) {
+                $needed = (int) ceil(($nextBoundary / 100) * $total) - $completed;
+
+                if ($needed > 0 && $needed <= 30) {
+                    return (object) [
+                        'type'   => 'progress',
+                        'key'    => 'COM_LIVINGWORD_MILESTONE_PROGRESS',
+                        'values' => [$needed, $nextBoundary],
+                    ];
+                }
+            }
+        }
+
+        return null;
     }
 }
