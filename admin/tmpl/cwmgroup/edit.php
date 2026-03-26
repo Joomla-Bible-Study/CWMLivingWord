@@ -36,15 +36,88 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
                 <?php echo $this->form->renderField('plan_id'); ?>
                 <?php echo $this->form->renderField('start_date'); ?>
                 <?php echo $this->form->renderField('invite_token'); ?>
-                <?php if (!$isNew && !empty($this->item->invite_token)) : ?>
+                <?php if (!$isNew && !empty($this->item->invite_token)) :
+                    $inviteUrl = Uri::root() . 'index.php?option=com_livingword&task=cwmgroup.join&token=' . $this->escape($this->item->invite_token);
+                ?>
                     <div class="control-group">
                         <div class="control-label">
                             <label><?php echo Text::_('COM_LIVINGWORD_GROUP_INVITE_URL'); ?></label>
                         </div>
                         <div class="controls">
-                            <code><?php echo Uri::root() . 'index.php?option=com_livingword&task=cwmgroup.join&token=' . $this->escape($this->item->invite_token); ?></code>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="inviteUrlField" value="<?php echo $this->escape($inviteUrl); ?>" readonly>
+                                <button type="button" class="btn btn-outline-secondary" id="copyInviteUrl"
+                                        onclick="navigator.clipboard.writeText(document.getElementById('inviteUrlField').value).then(function(){var b=document.getElementById('copyInviteUrl');b.innerHTML='<span class=\'icon-checkmark\'></span> <?php echo Text::_('COM_LIVINGWORD_COPIED'); ?>';setTimeout(function(){b.innerHTML='<span class=\'icon-copy\'></span> <?php echo Text::_('COM_LIVINGWORD_COPY'); ?>';},2000);});">
+                                    <span class="icon-copy"></span> <?php echo Text::_('COM_LIVINGWORD_COPY'); ?>
+                                </button>
+                            </div>
                         </div>
                     </div>
+
+                    <?php // ── Invite by Email ── ?>
+                    <div class="control-group mt-3">
+                        <div class="control-label">
+                            <label for="inviteEmails"><?php echo Text::_('COM_LIVINGWORD_GROUP_INVITE_BY_EMAIL'); ?></label>
+                        </div>
+                        <div class="controls">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="inviteEmails"
+                                       placeholder="<?php echo Text::_('COM_LIVINGWORD_GROUP_INVITE_EMAIL_HINT'); ?>">
+                                <button type="button" class="btn btn-primary" id="sendInviteBtn"
+                                        onclick="Livingword.sendGroupInvite();">
+                                    <span class="icon-envelope"></span> <?php echo Text::_('COM_LIVINGWORD_SEND_INVITES'); ?>
+                                </button>
+                            </div>
+                            <div class="form-text"><?php echo Text::_('COM_LIVINGWORD_GROUP_INVITE_EMAIL_DESC'); ?></div>
+                            <div id="inviteStatus" class="mt-2" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <script>
+                    var Livingword = Livingword || {};
+                    Livingword.sendGroupInvite = function() {
+                        var field = document.getElementById('inviteEmails');
+                        var status = document.getElementById('inviteStatus');
+                        var btn = document.getElementById('sendInviteBtn');
+                        var emails = field.value.trim();
+
+                        if (!emails) {
+                            field.focus();
+                            return;
+                        }
+
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="icon-spinner icon-spin"></span> <?php echo Text::_('COM_LIVINGWORD_SENDING'); ?>';
+
+                        var url = 'index.php?option=com_livingword&task=cwmgroup.sendInvites&format=json'
+                                + '&id=<?php echo (int) $this->item->id; ?>'
+                                + '&emails=' + encodeURIComponent(emails)
+                                + '&<?php echo \Joomla\CMS\Session\Session::getFormToken(); ?>=1';
+
+                        fetch(url, {method: 'GET', headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                            .then(function(r) { return r.json(); })
+                            .then(function(json) {
+                                status.style.display = 'block';
+                                if (json.success) {
+                                    status.className = 'mt-2 alert alert-success';
+                                    status.textContent = json.message || '<?php echo Text::_('COM_LIVINGWORD_INVITES_SENT'); ?>';
+                                    field.value = '';
+                                } else {
+                                    status.className = 'mt-2 alert alert-danger';
+                                    status.textContent = json.message || '<?php echo Text::_('COM_LIVINGWORD_INVITES_FAILED'); ?>';
+                                }
+                                btn.disabled = false;
+                                btn.innerHTML = '<span class="icon-envelope"></span> <?php echo Text::_('COM_LIVINGWORD_SEND_INVITES'); ?>';
+                            })
+                            .catch(function() {
+                                status.style.display = 'block';
+                                status.className = 'mt-2 alert alert-danger';
+                                status.textContent = '<?php echo Text::_('COM_LIVINGWORD_INVITES_FAILED'); ?>';
+                                btn.disabled = false;
+                                btn.innerHTML = '<span class="icon-envelope"></span> <?php echo Text::_('COM_LIVINGWORD_SEND_INVITES'); ?>';
+                            });
+                    };
+                    </script>
                 <?php endif; ?>
             </div>
             <div class="col-lg-3">
