@@ -124,12 +124,19 @@ class Livingword extends CMSPlugin implements SubscriberInterface
                 continue;
             }
 
-            // Ensure unsubscribe token exists
-            $token = CwmuserHelper::ensureUnsubscribeToken($db, (int) $sub->user_id);
+            // Ensure tokens exist
+            $token          = CwmuserHelper::ensureUnsubscribeToken($db, (int) $sub->user_id);
             $unsubscribeUrl = CwmuserHelper::getUnsubscribeUrl($token);
+            $actionToken    = CwmuserHelper::ensureActionToken($db, (int) $sub->user_id);
+            $completeUrl    = CwmuserHelper::getCompleteReadingUrl($actionToken);
 
             $body = '<p>Today\'s reading (Day ' . $currentDay . '):</p>'
                   . CwmscriptureHelper::buildEmailContent($reading->reading, $version)
+                  . '<p style="margin:20px 0;text-align:center;">'
+                  . '<a href="' . htmlspecialchars($completeUrl, ENT_QUOTES, 'UTF-8') . '" '
+                  . 'style="display:inline-block;padding:10px 24px;background:#198754;color:#fff;'
+                  . 'text-decoration:none;border-radius:6px;font-weight:600;">'
+                  . 'Mark as Read</a></p>'
                   . '<p>From ' . htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8') . '</p>'
                   . '<hr style="margin-top:20px;border:none;border-top:1px solid #ccc;">'
                   . '<p style="font-size:0.85em;color:#666;">'

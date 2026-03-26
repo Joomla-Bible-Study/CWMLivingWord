@@ -224,6 +224,83 @@ class CwmuserHelper
     }
 
     /**
+     * Ensure a user has an action token for email-based completion.
+     *
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $userId  Joomla user ID
+     *
+     * @return  string  The action token
+     *
+     * @since   5.3.0
+     */
+    public static function ensureActionToken(DatabaseInterface $db, int $userId): string
+    {
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('action_token'))
+            ->from($db->quoteName('#__livingword_users'))
+            ->where($db->quoteName('user_id') . ' = ' . $userId);
+
+        $db->setQuery($query);
+        $token = $db->loadResult();
+
+        if (!empty($token)) {
+            return $token;
+        }
+
+        $token = bin2hex(random_bytes(32));
+
+        $query = $db->getQuery(true)
+            ->update($db->quoteName('#__livingword_users'))
+            ->set($db->quoteName('action_token') . ' = ' . $db->quote($token))
+            ->where($db->quoteName('user_id') . ' = ' . $userId);
+
+        $db->setQuery($query);
+        $db->execute();
+
+        return $token;
+    }
+
+    /**
+     * Build the completion URL for a given action token.
+     *
+     * @param   string  $token  The action token
+     *
+     * @return  string  Absolute URL
+     *
+     * @since   5.3.0
+     */
+    public static function getCompleteReadingUrl(string $token): string
+    {
+        return Uri::root() . 'index.php?option=com_livingword&task=cwmcomplete.complete&token=' . urlencode($token);
+    }
+
+    /**
+     * Look up a user by their action token.
+     *
+     * @param   DatabaseInterface  $db     Database instance
+     * @param   string             $token  The action token
+     *
+     * @return  ?object  User row or null if not found
+     *
+     * @since   5.3.0
+     */
+    public static function getUserByActionToken(DatabaseInterface $db, string $token): ?object
+    {
+        if (empty($token) || \strlen($token) !== 64) {
+            return null;
+        }
+
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName('#__livingword_users'))
+            ->where($db->quoteName('action_token') . ' = ' . $db->quote($token));
+
+        $db->setQuery($query);
+
+        return $db->loadObject() ?: null;
+    }
+
+    /**
      * Resolve a plan alias to its ID.
      *
      * @param   DatabaseInterface  $db     Database instance
