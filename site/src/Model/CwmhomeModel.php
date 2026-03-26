@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Site\Model;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmnotesHelper;
 use CWM\Component\Livingword\Site\Helper\CwmpartnerHelper;
 use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
@@ -78,9 +79,11 @@ class CwmhomeModel extends BaseDatabaseModel
         $progressPercent = ($totalDays > 0) ? round(($completedCount / $totalDays) * 100) : 0;
 
         $partnerProgress = null;
+        $todayNote       = '';
 
         if ($userId > 0) {
             $partnerProgress = CwmpartnerHelper::getPartnerProgress($db, $userId);
+            $todayNote       = CwmnotesHelper::getNote($db, $userId, $planId, $currentDay) ?? '';
         }
 
         return (object) [
@@ -97,6 +100,7 @@ class CwmhomeModel extends BaseDatabaseModel
             'completedPassages' => $completedPassages,
             'partnerProgress'   => $partnerProgress,
             'durationType'      => $planInfo->duration_type ?? 'annual',
+            'todayNote'         => $todayNote,
         ];
     }
 }

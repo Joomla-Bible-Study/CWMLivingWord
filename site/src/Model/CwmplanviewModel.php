@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Site\Model;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmnotesHelper;
 use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
@@ -56,10 +57,12 @@ class CwmplanviewModel extends BaseDatabaseModel
 
         $completedDays          = [];
         $completedPassageCounts = [];
+        $noteDays               = [];
 
         if ($userId > 0) {
             $completedDays          = CwmprogressHelper::getCompletedDays($db, $userId, $planId);
             $completedPassageCounts = CwmprogressHelper::getCompletedPassageCounts($db, $userId, $planId);
+            $noteDays               = CwmnotesHelper::getNoteDays($db, $userId, $planId);
         }
 
         $completedCount  = \count($completedDays);
@@ -75,6 +78,7 @@ class CwmplanviewModel extends BaseDatabaseModel
             'completedCount'         => $completedCount,
             'progressPercent'        => $progressPercent,
             'completedPassageCounts' => $completedPassageCounts,
+            'noteDays'               => $noteDays,
         ];
     }
 }
