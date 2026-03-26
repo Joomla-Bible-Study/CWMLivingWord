@@ -182,11 +182,6 @@ class CwmemailHelper
         ?string $unsubscribeUrl = null,
         array $customHeaders = []
     ): bool {
-        // Validate recipient email
-        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
-            throw new \InvalidArgumentException('Invalid recipient email address');
-        }
-
         // Prevent header injection in subject
         $subject = str_replace(["\r", "\n"], '', $subject);
 
