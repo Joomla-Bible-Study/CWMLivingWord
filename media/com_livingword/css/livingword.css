@@ -149,6 +149,28 @@
   font-size: 1rem;
 }
 
+/* ── Journal card ── */
+.livingword-journal-card {
+  border: none;
+  border-left: 4px solid var(--bs-success, #198754);
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 0 8px 8px 0;
+}
+
+.livingword-notes-textarea {
+  border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.1));
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 80px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.livingword-notes-textarea:focus {
+  border-color: var(--bs-success, #198754);
+  box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.15);
+}
+
 /* ── Partner card ── */
 .livingword-partner-card {
   border: 1px solid var(--bs-border-color, #dee2e6);

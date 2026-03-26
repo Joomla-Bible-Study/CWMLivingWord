@@ -23,6 +23,7 @@ $plan                   = $data->planInfo;
 $user                   = $data->userData;
 $completedDays          = array_flip($data->completedDays ?? []);
 $completedPassageCounts = $data->completedPassageCounts ?? [];
+$noteDays               = array_flip($data->noteDays ?? []);
 
 // Calculate the date for each reading day based on user start date
 $startDate = $user->start_date ?? '';
@@ -187,6 +188,11 @@ $wa->registerAndUseStyle('com_livingword.main', 'media/com_livingword/css/living
                                             <td class="livingword-day-cell"><?php echo $r['dayNum']; ?></td>
                                             <td>
                                                 <?php echo CwmscriptureHelper::buildReadingLink($r['reading']->reading, $user->bible_version); ?>
+                                                <?php if (isset($noteDays[$r['dayNum']])) : ?>
+                                                    <span class="icon-pencil-2 text-success ms-1" style="font-size: 0.75em;"
+                                                          aria-label="<?php echo Text::_('COM_LIVINGWORD_NOTES_INDICATOR'); ?>"
+                                                          title="<?php echo Text::_('COM_LIVINGWORD_MY_JOURNAL'); ?>"></span>
+                                                <?php endif; ?>
                                                 <?php if (!empty(trim($r['reading']->descrip ?? ''))) : ?>
                                                     <div class="text-muted small mt-1" style="font-style: italic;">
                                                         <?php echo htmlspecialchars(mb_strimwidth(strip_tags($r['reading']->descrip), 0, 120, '...'), ENT_QUOTES, 'UTF-8'); ?>

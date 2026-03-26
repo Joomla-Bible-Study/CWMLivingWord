@@ -42,8 +42,11 @@ $wa->registerAndUseStyle('com_livingword.main', 'media/com_livingword/css/living
 
 if ($isLoggedIn && $reading) {
     $wa->registerAndUseScript('com_livingword.progress', 'media/com_livingword/js/livingword-progress.js', [], ['defer' => true]);
+    $wa->registerAndUseScript('com_livingword.notes', 'media/com_livingword/js/livingword-notes.js', [], ['defer' => true]);
     $doc->addScriptOptions('csrf.token', Session::getFormToken());
 }
+
+$notesUrl = Route::_('index.php?option=com_livingword&task=cwmnotes.save&format=json', false);
 
 // Audio availability check
 $audioEnabled = (int) \Joomla\CMS\Component\ComponentHelper::getParams('com_livingword')->get('config_show_audio', 1);
@@ -226,6 +229,29 @@ if ($showAudio && $reading) {
                     </h5>
                     <div class="livingword-devotional">
                         <?php echo $reading->descrip; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php // ── Journal / Notes ── ?>
+        <?php if ($isLoggedIn) : ?>
+            <div class="card livingword-journal-card mb-4"
+                 data-livingword-notes
+                 data-notes-url="<?php echo $this->escape($notesUrl); ?>"
+                 data-plan-id="<?php echo (int) ($plan->id ?? 0); ?>"
+                 data-day="<?php echo (int) $data->currentDay; ?>">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <span class="icon-pencil-2" aria-hidden="true"></span>
+                        <?php echo Text::_('COM_LIVINGWORD_MY_JOURNAL'); ?>
+                    </h5>
+                    <textarea class="form-control livingword-notes-textarea"
+                              rows="4"
+                              placeholder="<?php echo Text::_('COM_LIVINGWORD_NOTES_PLACEHOLDER'); ?>"
+                    ><?php echo $this->escape($data->todayNote ?? ''); ?></textarea>
+                    <div class="d-flex justify-content-end mt-1">
+                        <span class="livingword-notes-status small text-muted"></span>
                     </div>
                 </div>
             </div>
