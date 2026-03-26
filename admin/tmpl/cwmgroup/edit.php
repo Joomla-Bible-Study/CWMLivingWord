@@ -45,6 +45,7 @@ $isNew = ((int) $this->item->id === 0);
                 <?php endif; ?>
             </div>
             <div class="col-lg-3">
+                <?php echo $this->form->renderField('join_mode'); ?>
                 <?php echo $this->form->renderField('published'); ?>
                 <?php echo $this->form->renderField('ordering'); ?>
                 <?php echo $this->form->renderField('id'); ?>
@@ -85,7 +86,12 @@ $isNew = ((int) $this->item->id === 0);
                             <?php foreach ($this->members as $member) : ?>
                                 <tr>
                                     <td><?php echo $this->escape($member->user_name ?? Text::_('COM_LIVINGWORD_UNKNOWN_USER')); ?></td>
-                                    <td><?php echo $this->escape($member->role ?? ''); ?></td>
+                                    <td>
+                                        <select class="form-select form-select-sm" style="width:auto;" onchange="window.location.href='<?php echo Route::_('index.php?option=com_livingword&task=cwmgroup.updateMemberRole&member_id=' . (int) $member->id . '&id=' . (int) $this->item->id . '&' . \Joomla\CMS\Session\Session::getFormToken() . '=1&role=', false); ?>'+this.value">
+                                            <option value="member" <?php echo ($member->role === 'member') ? 'selected' : ''; ?>><?php echo Text::_('COM_LIVINGWORD_GROUP_ROLE_MEMBER'); ?></option>
+                                            <option value="leader" <?php echo ($member->role === 'leader') ? 'selected' : ''; ?>><?php echo Text::_('COM_LIVINGWORD_GROUP_ROLE_LEADER'); ?></option>
+                                        </select>
+                                    </td>
                                     <td><?php echo $this->escape($member->joined_at ?? ''); ?></td>
                                     <td class="text-center">
                                         <a href="<?php echo Route::_('index.php?option=com_livingword&task=cwmgroup.removeMember&member_id=' . (int) $member->id . '&id=' . (int) $this->item->id . '&' . \Joomla\CMS\Session\Session::getFormToken() . '=1'); ?>" class="btn btn-sm btn-danger" onclick="return confirm('<?php echo Text::_('COM_LIVINGWORD_CONFIRM_REMOVE_MEMBER'); ?>');">

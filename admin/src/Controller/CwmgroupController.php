@@ -15,6 +15,8 @@ namespace CWM\Component\Livingword\Administrator\Controller;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\MVC\Controller\FormController;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Session\Session;
 
 /**
  * Group form controller
@@ -23,4 +25,28 @@ use Joomla\CMS\MVC\Controller\FormController;
  */
 class CwmgroupController extends FormController
 {
+    /**
+     * Update a group member's role (leader/member).
+     *
+     * @return  void
+     *
+     * @since   5.7.0
+     */
+    public function updateMemberRole(): void
+    {
+        Session::checkToken('get') or die;
+
+        $input    = $this->input;
+        $memberId = $input->getInt('member_id', 0);
+        $role     = $input->getCmd('role', 'member');
+        $groupId  = $input->getInt('id', 0);
+
+        /** @var \CWM\Component\Livingword\Administrator\Model\CwmgroupModel $model */
+        $model = $this->getModel();
+        $model->updateMemberRole($memberId, $role);
+
+        $this->setRedirect(
+            Route::_('index.php?option=com_livingword&view=cwmgroup&layout=edit&id=' . $groupId, false)
+        );
+    }
 }

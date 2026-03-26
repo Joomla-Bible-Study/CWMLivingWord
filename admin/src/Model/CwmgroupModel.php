@@ -15,6 +15,7 @@ namespace CWM\Component\Livingword\Administrator\Model;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Model\AdminModel;
 use Joomla\CMS\Table\Table;
 use Joomla\Database\DatabaseInterface;
@@ -142,6 +143,38 @@ class CwmgroupModel extends AdminModel
         $db->setQuery($query);
 
         return $db->loadObjectList() ?: [];
+    }
+
+    /**
+     * Update a group member's role.
+     *
+     * @param   int     $memberId  The group_members row ID
+     * @param   string  $role      The new role (member or leader)
+     *
+     * @return  bool
+     *
+     * @since   5.7.0
+     */
+    public function updateMemberRole(int $memberId, string $role): bool
+    {
+        $validRoles = ['member', 'leader'];
+        if (!\in_array($role, $validRoles, true)) {
+            $this->setError(Text::_('COM_LIVINGWORD_ERROR_INVALID_ROLE'));
+            return false;
+        }
+
+        $db    = Factory::getContainer()->get(DatabaseInterface::class);
+        $query = $db->getQuery(true)
+            ->update($db->quoteName('#__livingword_group_members'))
+            ->set($db->quoteName('role') . ' = :role')
+            ->where($db->quoteName('id') . ' = :id')
+            ->bind(':role', $role)
+            ->bind(':id', $memberId, \Joomla\Database\ParameterType::INTEGER);
+
+        $db->setQuery($query);
+        $db->execute();
+
+        return true;
     }
 
     /**

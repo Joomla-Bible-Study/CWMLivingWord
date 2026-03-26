@@ -42,6 +42,9 @@ class CwmgroupTable extends Table
     /** @var string|null Invite token for joining the group @since 5.7.0 */
     public ?string $invite_token = '';
 
+    /** @var string|null Join mode: open, request, or private @since 5.7.0 */
+    public ?string $join_mode = 'open';
+
     /** @var int|null User ID of group creator @since 5.7.0 */
     public ?int $created_by = 0;
 

@@ -26,10 +26,11 @@
         />
         <field
             name="description"
-            type="text"
+            type="editor"
             label="COM_LIVINGWORD_PLAN_DESCRIPTION"
             description="COM_LIVINGWORD_PLAN_DESCRIPTION_DESC"
-            size="100"
+            filter="safehtml"
+            buttons="true"
         />
         <field
             name="message"
