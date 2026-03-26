@@ -15,6 +15,111 @@
   margin: 0 auto;
 }
 
+/* ── Hero / Welcome ── */
+.livingword-hero {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(var(--bs-primary-rgb, 13, 110, 253), 0.06), rgba(var(--bs-primary-rgb, 13, 110, 253), 0.02));
+}
+
+.livingword-hero h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.livingword-hero-sub {
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.livingword-hero-message {
+  font-size: 0.9rem;
+  color: var(--bs-body-color, #212529);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.livingword-hero-completed_today {
+  background: linear-gradient(135deg, rgba(var(--bs-success-rgb, 25, 135, 84), 0.08), rgba(var(--bs-success-rgb, 25, 135, 84), 0.02));
+}
+
+.livingword-streak-badge {
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: 600;
+  padding: 0.2em 0.6em;
+  background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.15);
+  color: var(--bs-warning-text-emphasis, #664d03);
+  border-radius: 20px;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+}
+
+.livingword-cta {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  background: var(--bs-primary, #0d6efd);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.livingword-cta:hover {
+  background: var(--bs-primary, #0d6efd);
+  opacity: 0.9;
+  color: #fff;
+}
+
+/* ── Dashboard Stats Strip ── */
+.livingword-stats-strip {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.livingword-stat-item {
+  flex: 1 1 0;
+  min-width: 100px;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 8px;
+}
+
+.livingword-stat-value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--bs-body-color, #212529);
+  line-height: 1.2;
+}
+
+.livingword-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-top: 0.15rem;
+}
+
+.livingword-stats-guest .livingword-stat-item {
+  background: transparent;
+}
+
+/* ── Milestone nudge ── */
+.livingword-milestone {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--bs-warning-text-emphasis, #664d03);
+  background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
 /* ── Navigation menu ── */
 .livingword-menu {
   margin-bottom: 1.5rem;
