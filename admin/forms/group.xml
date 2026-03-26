@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<form>
+<form addfieldprefix="CWM\Component\Livingword\Administrator\Field">
     <fieldset>
         <field
             name="id"
@@ -25,13 +25,10 @@
         />
         <field
             name="plan_id"
-            type="sql"
+            type="PlanId"
             label="COM_LIVINGWORD_GROUP_PLAN"
             description="COM_LIVINGWORD_GROUP_PLAN_DESC"
             required="true"
-            key_field="value"
-            value_field="text"
-            query="SELECT id AS value, title AS text FROM #__livingword_plans WHERE published = 1 ORDER BY ordering"
         >
             <option value="">COM_LIVINGWORD_SELECT_PLAN</option>
         </field>

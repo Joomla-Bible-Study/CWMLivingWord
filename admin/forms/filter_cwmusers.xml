@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<form>
+<form addfieldprefix="CWM\Component\Livingword\Administrator\Field">
     <fields name="filter">
         <field
             name="search"
@@ -10,12 +10,9 @@
         />
         <field
             name="plan_id"
-            type="sql"
+            type="PlanId"
             label="COM_LIVINGWORD_USER_PLAN"
             onchange="this.form.submit();"
-            key_field="value"
-            value_field="text"
-            query="SELECT id AS value, title AS text FROM #__livingword_plans WHERE published = 1 ORDER BY ordering"
         >
             <option value="">COM_LIVINGWORD_FILTER_ALL_PLANS</option>
         </field>
