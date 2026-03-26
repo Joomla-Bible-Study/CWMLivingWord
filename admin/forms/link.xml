@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<form>
+<form addfieldprefix="CWM\Component\Livingword\Administrator\Field">
     <fieldset>
         <field
             name="id"
@@ -26,7 +26,7 @@
         />
         <field
             name="category"
-            type="text"
+            type="LinkCategory"
             label="COM_LIVINGWORD_LINK_CATEGORY"
             description="COM_LIVINGWORD_LINK_CATEGORY_DESC"
             size="40"
