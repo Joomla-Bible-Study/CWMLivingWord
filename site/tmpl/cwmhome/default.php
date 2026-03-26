@@ -88,7 +88,7 @@ if ($showAudio && $reading) {
                     <?php endif; ?>
                 <?php endif; ?>
                 <?php if ($reading) : ?>
-                    <a href="#todays-reading" class="btn livingword-cta mt-2">
+                    <a href="#todays-reading" class="btn btn-primary livingword-cta mt-2">
                         <?php echo Text::_('COM_LIVINGWORD_START_READING'); ?>
                     </a>
                 <?php endif; ?>
