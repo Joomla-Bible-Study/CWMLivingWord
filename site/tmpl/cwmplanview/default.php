@@ -24,6 +24,75 @@ $user                   = $data->userData;
 $completedDays          = array_flip($data->completedDays ?? []);
 $completedPassageCounts = $data->completedPassageCounts ?? [];
 
+// Calculate the date for each reading day based on user start date
+$startDate = $user->start_date ?? '';
+
+if (empty($startDate) || $startDate === '0000-00-00') {
+    $startDate = date('Y-01-01');
+}
+
+$startDt = new \DateTime($startDate);
+$offset  = (int) ($user->date_offset ?? 0);
+
+if ($offset !== 0) {
+    $startDt->modify(($offset > 0 ? '+' : '') . $offset . ' days');
+}
+
+// Group readings by month
+$months      = [];
+$currentMonth = '';
+
+foreach ($readings as $i => $reading) {
+    $dayNum  = $i + 1;
+    $dayDate = (clone $startDt)->modify('+' . $i . ' days');
+    $monthKey = $dayDate->format('Y-m');
+    $monthLabel = $dayDate->format('F Y');
+
+    if (!isset($months[$monthKey])) {
+        $months[$monthKey] = [
+            'label'    => $monthLabel,
+            'readings' => [],
+            'completed' => 0,
+            'total'    => 0,
+        ];
+    }
+
+    $hasProgress    = isset($completedDays[$dayNum]);
+    $passageCount   = CwmprogressHelper::countPassages($reading->reading);
+    $completedPC    = $completedPassageCounts[$dayNum] ?? 0;
+    $isFullComplete = $hasProgress && $completedPC >= $passageCount;
+
+    $months[$monthKey]['readings'][] = [
+        'reading'         => $reading,
+        'dayNum'          => $dayNum,
+        'date'            => $dayDate,
+        'hasProgress'     => $hasProgress,
+        'passageCount'    => $passageCount,
+        'completedPC'     => $completedPC,
+        'isFullComplete'  => $isFullComplete,
+        'isPartial'       => $hasProgress && $completedPC > 0 && $completedPC < $passageCount,
+        'isCurrent'       => $dayNum === $data->currentDay,
+    ];
+
+    $months[$monthKey]['total']++;
+
+    if ($isFullComplete) {
+        $months[$monthKey]['completed']++;
+    }
+}
+
+// Determine which month contains the current day
+$currentMonthKey = '';
+
+foreach ($months as $key => $month) {
+    foreach ($month['readings'] as $r) {
+        if ($r['isCurrent']) {
+            $currentMonthKey = $key;
+            break 2;
+        }
+    }
+}
+
 /** @var \Joomla\CMS\Document\HtmlDocument $doc */
 $wa = $this->getDocument()->getWebAssetManager();
 $wa->registerAndUseStyle('com_livingword.main', 'media/com_livingword/css/livingword.css');
@@ -54,48 +123,95 @@ $wa->registerAndUseStyle('com_livingword.main', 'media/com_livingword/css/living
     <?php if (empty($readings)) : ?>
         <div class="alert alert-info"><?php echo Text::_('COM_LIVINGWORD_NO_READINGS'); ?></div>
     <?php else : ?>
-        <table class="table livingword-plan-table">
-            <thead>
-                <tr>
-                    <th class="livingword-check-cell"></th>
-                    <th class="livingword-day-cell"><?php echo Text::_('COM_LIVINGWORD_DAY'); ?></th>
-                    <th><?php echo Text::_('COM_LIVINGWORD_READING'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($readings as $i => $reading) : ?>
-                    <?php
-                    $dayNum         = $i + 1;
-                    $hasProgress    = isset($completedDays[$dayNum]);
-                    $passageCount   = CwmprogressHelper::countPassages($reading->reading);
-                    $completedPC    = $completedPassageCounts[$dayNum] ?? 0;
-                    $isFullComplete = $hasProgress && $completedPC >= $passageCount;
-                    $isPartial      = $hasProgress && $completedPC > 0 && $completedPC < $passageCount;
-                    $isCurrent      = $dayNum === $data->currentDay;
-                    $rowClass       = $isCurrent ? 'livingword-current-row' : '';
-                    ?>
-                    <tr<?php echo $rowClass ? ' class="' . $rowClass . '"' : ''; ?> data-progress-day="<?php echo $dayNum; ?>">
-                        <td class="livingword-check-cell">
-                            <?php if ($isFullComplete) : ?>
-                                <span class="icon-checkmark text-success fs-5" aria-label="<?php echo Text::_('COM_LIVINGWORD_COMPLETED'); ?>"></span>
-                            <?php elseif ($isPartial) : ?>
-                                <span class="badge bg-warning text-dark" aria-label="<?php echo Text::sprintf('COM_LIVINGWORD_PASSAGES_COMPLETED', $completedPC, $passageCount); ?>">
-                                    <?php echo $completedPC; ?>/<?php echo $passageCount; ?>
+        <div class="accordion livingword-month-accordion" id="planMonths">
+            <?php foreach ($months as $monthKey => $month) :
+                $collapseId = 'month-' . str_replace('-', '', $monthKey);
+                $isCurrentMonth = ($monthKey === $currentMonthKey);
+                $monthPercent = ($month['total'] > 0) ? round(($month['completed'] / $month['total']) * 100) : 0;
+                $allComplete = ($month['completed'] === $month['total']);
+            ?>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button<?php echo $isCurrentMonth ? '' : ' collapsed'; ?>"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#<?php echo $collapseId; ?>"
+                                aria-expanded="<?php echo $isCurrentMonth ? 'true' : 'false'; ?>"
+                                aria-controls="<?php echo $collapseId; ?>">
+                            <span class="d-flex align-items-center justify-content-between w-100 me-2">
+                                <span>
+                                    <?php if ($allComplete) : ?>
+                                        <span class="icon-checkmark text-success me-1"></span>
+                                    <?php endif; ?>
+                                    <?php echo $this->escape($month['label']); ?>
+                                    <span class="text-muted ms-2" style="font-size: 0.85em;">
+                                        <?php echo Text::sprintf('COM_LIVINGWORD_MONTH_DAYS', $month['total']); ?>
+                                    </span>
                                 </span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="livingword-day-cell"><?php echo $dayNum; ?></td>
-                        <td>
-                            <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>
-                            <?php if (!empty(trim($reading->descrip ?? ''))) : ?>
-                                <div class="text-muted small mt-1" style="font-style: italic;">
-                                    <?php echo htmlspecialchars(mb_strimwidth(strip_tags($reading->descrip), 0, 120, '...'), ENT_QUOTES, 'UTF-8'); ?>
-                                </div>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                                <?php if ($month['completed'] > 0) : ?>
+                                    <span class="badge <?php echo $allComplete ? 'bg-success' : 'bg-secondary'; ?> rounded-pill ms-2">
+                                        <?php echo $month['completed']; ?>/<?php echo $month['total']; ?>
+                                    </span>
+                                <?php endif; ?>
+                            </span>
+                        </button>
+                    </h2>
+                    <div id="<?php echo $collapseId; ?>"
+                         class="accordion-collapse collapse<?php echo $isCurrentMonth ? ' show' : ''; ?>"
+                         data-bs-parent="#planMonths">
+                        <div class="accordion-body p-0">
+                            <table class="table livingword-plan-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="livingword-check-cell"></th>
+                                        <th class="livingword-day-cell"><?php echo Text::_('COM_LIVINGWORD_DAY'); ?></th>
+                                        <th><?php echo Text::_('COM_LIVINGWORD_READING'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($month['readings'] as $r) :
+                                        $rowClass = $r['isCurrent'] ? 'livingword-current-row' : '';
+                                    ?>
+                                        <tr<?php echo $rowClass ? ' class="' . $rowClass . '"' : ''; ?>
+                                           data-progress-day="<?php echo $r['dayNum']; ?>"
+                                           <?php echo $r['isCurrent'] ? ' id="current-reading"' : ''; ?>>
+                                            <td class="livingword-check-cell">
+                                                <?php if ($r['isFullComplete']) : ?>
+                                                    <span class="icon-checkmark text-success fs-5" aria-label="<?php echo Text::_('COM_LIVINGWORD_COMPLETED'); ?>"></span>
+                                                <?php elseif ($r['isPartial']) : ?>
+                                                    <span class="badge bg-warning text-dark" aria-label="<?php echo Text::sprintf('COM_LIVINGWORD_PASSAGES_COMPLETED', $r['completedPC'], $r['passageCount']); ?>">
+                                                        <?php echo $r['completedPC']; ?>/<?php echo $r['passageCount']; ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="livingword-day-cell"><?php echo $r['dayNum']; ?></td>
+                                            <td>
+                                                <?php echo CwmscriptureHelper::buildReadingLink($r['reading']->reading, $user->bible_version); ?>
+                                                <?php if (!empty(trim($r['reading']->descrip ?? ''))) : ?>
+                                                    <div class="text-muted small mt-1" style="font-style: italic;">
+                                                        <?php echo htmlspecialchars(mb_strimwidth(strip_tags($r['reading']->descrip), 0, 120, '...'), ENT_QUOTES, 'UTF-8'); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var el = document.getElementById('current-reading');
+                if (el) {
+                    setTimeout(function() {
+                        el.scrollIntoView({behavior: 'smooth', block: 'center'});
+                    }, 300);
+                }
+            });
+        </script>
     <?php endif; ?>
 </div>
