@@ -12,16 +12,12 @@
             label="COM_LIVINGWORD_PLAN"
             description="COM_LIVINGWORD_READING_PLAN_DESC"
             required="true"
-            sql_select="name"
-            sql_value="name"
-            sql_from="#__livingword_plans"
-            sql_filter="name"
-            sql_order="ordering ASC"
-            key_field="name"
-            value_field="name"
-            header="COM_LIVINGWORD_SELECT_PLAN"
+            key_field="value"
+            value_field="text"
             query="SELECT name AS value, name AS text FROM #__livingword_plans WHERE published = 1 ORDER BY ordering"
-        />
+        >
+            <option value="">COM_LIVINGWORD_SELECT_PLAN</option>
+        </field>
         <field
             name="reading"
             type="text"

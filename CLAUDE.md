@@ -151,3 +151,22 @@ This project follows Proclaim coding standards:
 - `#[\Override]` attribute on all overridden methods
 - ACL defined in `admin/access.xml`
 - Use `Factory::getContainer()->get(DatabaseInterface::class)` for DB access (Joomla 6 compatible)
+
+### Joomla 6 Compatibility Requirements
+
+These patterns are **required** for Joomla 6 (PHP 8.3+ strict typing):
+
+- **SQL form fields** (`type="sql"`) must always include `key_field` and `value_field` attributes. Without these, Joomla 6's `SqlField` passes `null` to `trim()`, causing PHP 8.3 deprecation warnings. Use the `query` attribute with aliased columns:
+  ```xml
+  <field name="plan_id" type="sql"
+         key_field="value" value_field="text"
+         query="SELECT id AS value, title AS text FROM #__table WHERE published = 1" />
+  ```
+  Do NOT use the legacy `sql_select`/`sql_value`/`sql_from` attributes — they are deprecated.
+
+- **Admin edit templates** with `class="form-validate"` must load the form validator web asset:
+  ```php
+  $this->getDocument()->getWebAssetManager()->useScript('form.validate');
+  ```
+
+- **Container access** uses `Factory::getContainer()` (not `$app->getContainer()` which is protected in J6)
