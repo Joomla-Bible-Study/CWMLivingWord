@@ -14,9 +14,9 @@ namespace CWM\Component\Livingword\Administrator\Controller;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Site\Helper\CwmemailHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Mail\MailerFactoryInterface;
 use Joomla\CMS\MVC\Controller\FormController;
 use Joomla\CMS\Response\JsonResponse;
 use Joomla\CMS\Router\Route;
@@ -59,6 +59,8 @@ class CwmgroupController extends FormController
     /**
      * Send invite emails for a group. Returns JSON.
      *
+     * Requires core.edit permission on com_livingword.
+     *
      * @return  void
      *
      * @since   5.4.0
@@ -74,8 +76,17 @@ class CwmgroupController extends FormController
             $app->close();
         }
 
-        $groupId    = $this->input->getInt('id', 0);
-        $emailsRaw  = $this->input->getString('emails', '');
+        // ACL check — only users who can edit groups may send invites
+        $user = $app->getIdentity();
+
+        if (!$user->authorise('core.edit', 'com_livingword')) {
+            $app->sendHeaders();
+            echo new JsonResponse(null, Text::_('JLIB_APPLICATION_ERROR_ACCESS_FORBIDDEN'), true);
+            $app->close();
+        }
+
+        $groupId   = $this->input->getInt('id', 0);
+        $emailsRaw = $this->input->getString('emails', '');
 
         if ($groupId <= 0 || empty($emailsRaw)) {
             $app->sendHeaders();
@@ -101,11 +112,8 @@ class CwmgroupController extends FormController
         $inviteUrl = Uri::root() . 'index.php?option=com_livingword&task=cwmgroup.join&token=' . urlencode($group->invite_token);
         $siteName  = $app->get('sitename');
 
-        // Parse comma or semicolon separated emails
-        $emails = preg_split('/[,;\s]+/', $emailsRaw, -1, PREG_SPLIT_NO_EMPTY);
-        $emails = array_filter($emails, function ($e) {
-            return filter_var(trim($e), FILTER_VALIDATE_EMAIL);
-        });
+        // Parse and validate email addresses
+        $emails = CwmemailHelper::parseEmailList($emailsRaw);
 
         if (empty($emails)) {
             $app->sendHeaders();
@@ -113,27 +121,21 @@ class CwmgroupController extends FormController
             $app->close();
         }
 
+        // Rate limit: max 20 invites per request
+        $emails = \array_slice($emails, 0, 20);
+
         $sent   = 0;
         $failed = 0;
 
         $subject = Text::sprintf('COM_LIVINGWORD_INVITE_EMAIL_SUBJECT', $siteName, $group->name);
-        $body    = Text::sprintf('COM_LIVINGWORD_INVITE_EMAIL_BODY', $group->name, $siteName)
-                 . '<p style="margin:20px 0;text-align:center;">'
-                 . '<a href="' . htmlspecialchars($inviteUrl, ENT_QUOTES, 'UTF-8') . '" '
-                 . 'style="display:inline-block;padding:10px 24px;background:#0d6efd;color:#fff;'
-                 . 'text-decoration:none;border-radius:6px;font-weight:600;">'
-                 . Text::_('COM_LIVINGWORD_INVITE_JOIN_BUTTON') . '</a></p>';
+        $content = Text::sprintf('COM_LIVINGWORD_INVITE_EMAIL_BODY', htmlspecialchars($group->name, ENT_QUOTES, 'UTF-8'), htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8'))
+                 . CwmemailHelper::button($inviteUrl, Text::_('COM_LIVINGWORD_INVITE_JOIN_BUTTON'));
+
+        $body = CwmemailHelper::wrapLayout($content, $siteName);
 
         foreach ($emails as $email) {
-            $email = trim($email);
-
             try {
-                $mailer = $app->getContainer()->get(MailerFactoryInterface::class)->createMailer();
-                $mailer->addRecipient($email);
-                $mailer->setSubject($subject);
-                $mailer->setBody($body);
-                $mailer->isHtml(true);
-                $mailer->send();
+                CwmemailHelper::send($email, $subject, $body);
                 $sent++;
             } catch (\Exception $e) {
                 $failed++;
