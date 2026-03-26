@@ -13,24 +13,48 @@ namespace CWM\Component\Livingword\Site\Helper;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Mail\MailerFactoryInterface;
 
 /**
  * Shared email helper for building and sending templated emails.
  *
- * Provides a consistent HTML email layout used by daily readings,
- * weekly digest, group invites, and any future email types.
+ * All outgoing emails use a consistent branded layout configured via
+ * component options: logo, organization name, brand color, and footer.
  *
  * @since  5.4.0
  */
 class CwmemailHelper
 {
     /**
-     * Wrap body content in the standard email layout.
+     * Get email branding settings from component config.
+     *
+     * @return  object  {logo, orgName, color, footer}
+     *
+     * @since   5.4.0
+     */
+    public static function getBranding(): object
+    {
+        $params   = ComponentHelper::getParams('com_livingword');
+        $siteName = Factory::getApplication()->get('sitename');
+
+        return (object) [
+            'logo'    => $params->get('config_email_logo', ''),
+            'orgName' => $params->get('config_email_org_name', '') ?: $siteName,
+            'color'   => $params->get('config_email_color', '#0d6efd'),
+            'footer'  => $params->get('config_email_footer', ''),
+        ];
+    }
+
+    /**
+     * Wrap body content in the branded email layout.
+     *
+     * Pulls logo, organization name, brand color, and footer from
+     * component configuration. All emails share this consistent shell.
      *
      * @param   string   $content         The main email body HTML
-     * @param   string   $siteName        Site name for the footer
+     * @param   string   $siteName        Site name for fallback
      * @param   ?string  $unsubscribeUrl  Optional unsubscribe link for footer
      * @param   ?string  $footerExtra     Optional extra HTML before the unsubscribe link
      *
@@ -44,25 +68,49 @@ class CwmemailHelper
         ?string $unsubscribeUrl = null,
         ?string $footerExtra = null
     ): string {
+        $brand = self::getBranding();
+        $color = htmlspecialchars($brand->color, ENT_QUOTES, 'UTF-8');
+        $org   = htmlspecialchars($brand->orgName ?: $siteName, ENT_QUOTES, 'UTF-8');
+
         $html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
               . '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
-              . '<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">'
+              . '<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#333;">'
               . '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:20px 0;">'
               . '<tr><td align="center">'
-              . '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;">'
-              . '<tr><td style="padding:24px 32px;">'
-              . $content
-              . '</td></tr>'
-              . '<tr><td style="padding:16px 32px;background:#f8f9fa;border-top:1px solid #eee;">'
-              . '<p style="margin:0;font-size:0.85em;color:#666;">From ' . htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8') . '</p>';
+              . '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">';
+
+        // ── Branded header bar ──
+        $html .= '<tr><td style="background:' . $color . ';padding:16px 32px;text-align:center;">';
+
+        if (!empty($brand->logo)) {
+            $html .= '<img src="' . htmlspecialchars($brand->logo, ENT_QUOTES, 'UTF-8') . '" '
+                    . 'alt="' . $org . '" style="max-height:48px;max-width:200px;vertical-align:middle;" /> ';
+        }
+
+        $html .= '<span style="color:#ffffff;font-weight:700;font-size:1.1em;vertical-align:middle;">' . $org . '</span>'
+                . '</td></tr>';
+
+        // ── Content area ──
+        $html .= '<tr><td style="padding:28px 32px;">'
+                . $content
+                . '</td></tr>';
+
+        // ── Footer ──
+        $html .= '<tr><td style="padding:16px 32px;background:#f8f9fa;border-top:1px solid #eee;">';
+
+        if (!empty($brand->footer)) {
+            $html .= '<div style="margin:0 0 10px;font-size:0.85em;color:#555;">' . $brand->footer . '</div>';
+        }
+
+        $html .= '<p style="margin:0;font-size:0.8em;color:#999;">From ' . $org . '</p>';
 
         if ($footerExtra) {
             $html .= $footerExtra;
         }
 
         if ($unsubscribeUrl) {
-            $html .= '<p style="margin:8px 0 0;font-size:0.8em;color:#999;">'
-                    . '<a href="' . htmlspecialchars($unsubscribeUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#999;">'
+            $html .= '<p style="margin:8px 0 0;font-size:0.75em;color:#bbb;">'
+                    . '<a href="' . htmlspecialchars($unsubscribeUrl, ENT_QUOTES, 'UTF-8') . '" style="color:#bbb;">'
                     . 'Unsubscribe from emails</a></p>';
         }
 
@@ -72,21 +120,25 @@ class CwmemailHelper
     }
 
     /**
-     * Build a styled CTA button for emails.
+     * Build a styled CTA button using the brand color.
      *
-     * @param   string  $url    Button URL
-     * @param   string  $label  Button text
-     * @param   string  $color  Background color (hex)
+     * @param   string   $url    Button URL
+     * @param   string   $label  Button text
+     * @param   ?string  $color  Override color (null = use brand color from config)
      *
      * @return  string  HTML for the button
      *
      * @since   5.4.0
      */
-    public static function button(string $url, string $label, string $color = '#0d6efd'): string
+    public static function button(string $url, string $label, ?string $color = null): string
     {
+        if ($color === null) {
+            $color = self::getBranding()->color;
+        }
+
         return '<p style="margin:20px 0;text-align:center;">'
              . '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" '
-             . 'style="display:inline-block;padding:12px 28px;background:' . $color . ';color:#fff;'
+             . 'style="display:inline-block;padding:12px 28px;background:' . htmlspecialchars($color, ENT_QUOTES, 'UTF-8') . ';color:#fff;'
              . 'text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">'
              . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</a></p>';
     }
@@ -104,9 +156,9 @@ class CwmemailHelper
     public static function statRow(string $label, string $value): string
     {
         return '<tr>'
-             . '<td style="padding:8px 12px;border-bottom:1px solid #eee;color:#666;">'
+             . '<td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;color:#666;font-size:0.9em;">'
              . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</td>'
-             . '<td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:bold;">'
+             . '<td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:0.9em;">'
              . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '</td></tr>';
     }
 
@@ -119,7 +171,7 @@ class CwmemailHelper
      */
     public static function statsTableOpen(): string
     {
-        return '<table style="border-collapse:collapse;margin:10px 0;width:100%;">';
+        return '<table style="border-collapse:collapse;margin:12px 0;width:100%;border-radius:6px;overflow:hidden;border:1px solid #f0f0f0;">';
     }
 
     /**
