@@ -203,6 +203,37 @@ if ($showAudio && $reading) {
             </div>
         </div>
 
+        <?php // ── Study Notes / Devotional ── ?>
+        <?php
+        $descripText = trim($reading->descrip ?? '');
+        $hasStudyText = !empty($descripText);
+        $isLongText = $hasStudyText && str_word_count(strip_tags($descripText)) > 150;
+        ?>
+        <?php if ($hasStudyText) : ?>
+            <div class="card livingword-study-card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <span class="icon-book" aria-hidden="true"></span>
+                        <?php echo Text::_('COM_LIVINGWORD_STUDY_NOTES'); ?>
+                    </h5>
+                    <?php if ($isLongText) : ?>
+                        <div class="livingword-study-content livingword-study-collapsed" id="studyContent">
+                            <?php echo $reading->descrip; ?>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-link p-0 mt-2 livingword-study-toggle"
+                                data-bs-toggle="collapse" data-bs-target="#studyContentFull"
+                                onclick="this.closest('.card-body').querySelector('.livingword-study-content').classList.toggle('livingword-study-collapsed'); this.textContent = this.textContent.trim() === '<?php echo Text::_('COM_LIVINGWORD_READ_MORE'); ?>' ? '<?php echo Text::_('COM_LIVINGWORD_READ_LESS'); ?>' : '<?php echo Text::_('COM_LIVINGWORD_READ_MORE'); ?>';">
+                            <?php echo Text::_('COM_LIVINGWORD_READ_MORE'); ?>
+                        </button>
+                    <?php else : ?>
+                        <div class="livingword-study-content">
+                            <?php echo $reading->descrip; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <?php // ── Audio Player ── ?>
         <?php if ($showAudio) : ?>
             <div class="livingword-audio-section mb-4"
@@ -216,21 +247,6 @@ if ($showAudio && $reading) {
                 </button>
                 <audio preload="none"></audio>
                 <span class="livingword-audio-status d-none"></span>
-            </div>
-        <?php endif; ?>
-
-        <?php // ── Devotional / Reflection ── ?>
-        <?php if (!empty(trim($reading->descrip ?? ''))) : ?>
-            <div class="card livingword-devotional-card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <span class="icon-quote" aria-hidden="true"></span>
-                        <?php echo Text::_('COM_LIVINGWORD_TODAYS_REFLECTION'); ?>
-                    </h5>
-                    <div class="livingword-devotional">
-                        <?php echo $reading->descrip; ?>
-                    </div>
-                </div>
             </div>
         <?php endif; ?>
 
@@ -256,7 +272,6 @@ if ($showAudio && $reading) {
                 </div>
             </div>
         <?php endif; ?>
-
     <?php else : ?>
         <div class="alert alert-info"><?php echo Text::_('COM_LIVINGWORD_NO_READING_TODAY'); ?></div>
     <?php endif; ?>

@@ -193,9 +193,21 @@ $wa->registerAndUseStyle('com_livingword.main', 'media/com_livingword/css/living
                                                           aria-label="<?php echo Text::_('COM_LIVINGWORD_NOTES_INDICATOR'); ?>"
                                                           title="<?php echo Text::_('COM_LIVINGWORD_MY_JOURNAL'); ?>"></span>
                                                 <?php endif; ?>
-                                                <?php if (!empty(trim($r['reading']->descrip ?? ''))) : ?>
-                                                    <div class="text-muted small mt-1" style="font-style: italic;">
-                                                        <?php echo htmlspecialchars(mb_strimwidth(strip_tags($r['reading']->descrip), 0, 120, '...'), ENT_QUOTES, 'UTF-8'); ?>
+                                                <?php $descripContent = trim($r['reading']->descrip ?? ''); ?>
+                                                <?php if (!empty($descripContent)) : ?>
+                                                    <?php $collapseStudyId = 'study-day-' . $r['dayNum']; ?>
+                                                    <button class="btn btn-sm btn-link p-0 ms-1 livingword-study-toggle"
+                                                            type="button"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#<?php echo $collapseStudyId; ?>"
+                                                            aria-expanded="false">
+                                                        <span class="icon-book" aria-hidden="true" style="font-size: 0.8em;"></span>
+                                                        <?php echo Text::_('COM_LIVINGWORD_STUDY_NOTES'); ?>
+                                                    </button>
+                                                    <div class="collapse mt-2" id="<?php echo $collapseStudyId; ?>">
+                                                        <div class="livingword-study-inline">
+                                                            <?php echo $r['reading']->descrip; ?>
+                                                        </div>
                                                     </div>
                                                 <?php endif; ?>
                                             </td>

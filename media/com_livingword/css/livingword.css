@@ -136,6 +136,51 @@
 }
 
 /* ── Devotional card ── */
+/* ── Study/Devotional card ── */
+.livingword-study-card {
+  border: none;
+  border-left: 4px solid var(--bs-primary, #0d6efd);
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 0 8px 8px 0;
+}
+
+.livingword-study-content {
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.8;
+  font-size: 1.05rem;
+}
+
+.livingword-study-collapsed {
+  max-height: 12em;
+  overflow: hidden;
+  position: relative;
+}
+
+.livingword-study-collapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4em;
+  background: linear-gradient(transparent, var(--bs-light, #f8f9fa));
+  pointer-events: none;
+}
+
+.livingword-study-toggle {
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.livingword-study-inline {
+  padding: 0.75rem;
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* Deprecated — kept for template override compat */
 .livingword-devotional-card {
   border: none;
   border-left: 4px solid var(--bs-primary, #0d6efd);
