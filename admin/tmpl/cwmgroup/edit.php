@@ -19,6 +19,9 @@ use Joomla\CMS\Uri\Uri;
 /** @var \CWM\Component\Livingword\Administrator\View\Cwmgroup\HtmlView $this */
 
 $isNew = ((int) $this->item->id === 0);
+
+/** @var \Joomla\CMS\Document\HtmlDocument $doc */
+$this->getDocument()->getWebAssetManager()->useScript('form.validate');
 ?>
 <form action="<?php echo Route::_('index.php?option=com_livingword&layout=edit&id=' . (int) $this->item->id); ?>" method="post" name="adminForm" id="adminForm" class="form-validate">
     <div class="main-card">

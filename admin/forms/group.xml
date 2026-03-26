@@ -17,11 +17,11 @@
         />
         <field
             name="description"
-            type="textarea"
+            type="editor"
             label="COM_LIVINGWORD_GROUP_DESCRIPTION"
             description="COM_LIVINGWORD_GROUP_DESCRIPTION_DESC"
-            rows="4"
             filter="safehtml"
+            buttons="true"
         />
         <field
             name="plan_id"
