@@ -78,6 +78,11 @@
                   alt="LivingWord/Groups">
                 COM_LIVINGWORD_MANAGE_GROUPS
             </menu>
+            <menu link="option=com_livingword&amp;view=cwmtools"
+                  view="cwmtools"
+                  alt="LivingWord/Tools">
+                COM_LIVINGWORD_MANAGE_TOOLS
+            </menu>
             <menu link="option=com_livingword&amp;view=cwmusers"
                   view="cwmusers"
                   alt="LivingWord/Users">

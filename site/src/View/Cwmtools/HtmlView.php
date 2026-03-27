@@ -29,6 +29,9 @@ class HtmlView extends BaseHtmlView
     /** @var string @since 5.0.0 */
     protected string $menu = '';
 
+    /** @var array @since 5.4.0 */
+    protected array $tools = [];
+
     /**
      * @param   string  $tpl  Template name.
      *
@@ -40,7 +43,8 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
-        $this->menu = CwmmenuHelper::buildMenu();
+        $this->menu  = CwmmenuHelper::buildMenu();
+        $this->tools = $this->getModel()->getTools();
 
         $this->prepareDocument();
 

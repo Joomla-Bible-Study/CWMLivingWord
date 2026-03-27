@@ -14,7 +14,9 @@ namespace CWM\Component\Livingword\Site\Model;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
+use Joomla\Database\DatabaseInterface;
 
 /**
  * Tools model for Bible study tools page.
@@ -23,4 +25,25 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
  */
 class CwmtoolsModel extends BaseDatabaseModel
 {
+    /**
+     * Get published study tools ordered by ordering.
+     *
+     * @return  array
+     *
+     * @since   5.4.0
+     */
+    public function getTools(): array
+    {
+        $db    = Factory::getContainer()->get(DatabaseInterface::class);
+        $query = $db->getQuery(true);
+
+        $query->select($db->quoteName(['id', 'name', 'description', 'url', 'icon', 'color']))
+            ->from($db->quoteName('#__livingword_tools'))
+            ->where($db->quoteName('published') . ' = 1')
+            ->order($db->quoteName('ordering') . ' ASC');
+
+        $db->setQuery($query);
+
+        return $db->loadAssocList() ?: [];
+    }
 }

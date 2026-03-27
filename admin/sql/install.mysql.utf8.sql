@@ -87,6 +87,21 @@ CREATE TABLE IF NOT EXISTS `#__livingword_links` (
   KEY `idx_published` (`published`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `#__livingword_tools` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) NOT NULL DEFAULT '',
+  `description` varchar(500) NOT NULL DEFAULT '',
+  `url` varchar(200) NOT NULL DEFAULT '',
+  `icon` varchar(100) NOT NULL DEFAULT '' COMMENT 'CSS icon class',
+  `color` varchar(100) NOT NULL DEFAULT '' COMMENT 'CSS color class',
+  `published` tinyint NOT NULL DEFAULT 0,
+  `checked_out` int UNSIGNED DEFAULT NULL,
+  `checked_out_time` datetime DEFAULT NULL,
+  `ordering` int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_published` (`published`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `#__livingword_groups` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(200) NOT NULL DEFAULT '' COMMENT 'Group display name',
@@ -1907,3 +1922,9 @@ INSERT INTO `#__livingword_links` (`name`, `url`, `category`, `target`, `publish
 ('Keys for Kids', 'https://www.keysforkids.org', 'Just For Kids', 2, 1, 2),
 ('Superbook Kids', 'https://www.superbook.cbn.com', 'Just For Kids', 2, 1, 3),
 ('Bible App for Kids', 'https://bibleappforkids.com', 'Just For Kids', 2, 1, 4);
+
+INSERT INTO `#__livingword_tools` (`name`, `description`, `url`, `icon`, `color`, `published`, `ordering`) VALUES
+('Bible Dictionary', 'Look up definitions of Bible words and terms.', 'https://www.blueletterbible.org/lexicon/', 'icon-book', 'text-primary', 1, 1),
+('Bible Commentary', 'Read commentary and study notes.', 'https://enduringword.com/bible-commentary/', 'icon-file-text', 'text-info', 1, 2),
+('Bible Concordance', 'Search for words and phrases across the entire Bible.', 'https://www.blueletterbible.org/search.cfm', 'icon-search', 'text-success', 1, 3),
+('Bible Maps', 'Explore geographic locations mentioned in Scripture.', 'https://www.openbible.info/geo/', 'icon-location', 'text-warning', 1, 4);
