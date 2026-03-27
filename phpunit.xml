@@ -6,16 +6,13 @@
          beStrictAboutOutputDuringTests="true"
          failOnRisky="true"
          failOnWarning="true"
-         colors="true"
-         cacheDirectory=".phpunit.cache"
-         requireCoverageMetadata="false"
-         beStrictAboutCoverageMetadata="false">
+         colors="true">
     <testsuites>
         <testsuite name="LivingWord Unit Tests">
-            <directory suffix="Test.php">tests/unit</directory>
+            <directory>tests/unit</directory>
         </testsuite>
         <testsuite name="LivingWord Integration Tests">
-            <directory suffix="Test.php">tests/integration</directory>
+            <directory>tests/integration</directory>
         </testsuite>
     </testsuites>
     <php>
@@ -24,13 +21,13 @@
     </php>
     <source>
         <include>
-            <directory suffix=".php">admin/src</directory>
-            <directory suffix=".php">site/src</directory>
+            <directory>admin/src</directory>
+            <directory>site/src</directory>
         </include>
         <exclude>
-            <directory suffix=".php">admin/src/View</directory>
-            <directory suffix=".php">site/src/View</directory>
-            <directory suffix=".php">admin/src/Field</directory>
+            <directory>admin/src/View</directory>
+            <directory>site/src/View</directory>
+            <directory>admin/src/Field</directory>
         </exclude>
     </source>
 </phpunit>
