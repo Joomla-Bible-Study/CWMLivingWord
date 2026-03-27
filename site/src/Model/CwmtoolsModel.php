@@ -26,9 +26,9 @@ use Joomla\Database\DatabaseInterface;
 class CwmtoolsModel extends BaseDatabaseModel
 {
     /**
-     * Get published study tools ordered by ordering.
+     * Get published study tools grouped by category.
      *
-     * @return  array
+     * @return  array  Associative array keyed by category title, each containing an array of tools.
      *
      * @since   5.4.0
      */
@@ -37,13 +37,25 @@ class CwmtoolsModel extends BaseDatabaseModel
         $db    = Factory::getContainer()->get(DatabaseInterface::class);
         $query = $db->getQuery(true);
 
-        $query->select($db->quoteName(['id', 'name', 'description', 'url', 'icon', 'color']))
-            ->from($db->quoteName('#__livingword_tools'))
-            ->where($db->quoteName('published') . ' = 1')
-            ->order($db->quoteName('ordering') . ' ASC');
+        $query->select($db->quoteName([
+            'a.id', 'a.name', 'a.description', 'a.url', 'a.icon', 'a.color',
+        ]));
+        $query->select($db->quoteName('c.title', 'category_title'));
+        $query->from($db->quoteName('#__livingword_tools', 'a'));
+        $query->join('LEFT', $db->quoteName('#__categories', 'c') . ' ON ' . $db->quoteName('c.id') . ' = ' . $db->quoteName('a.catid'));
+        $query->where($db->quoteName('a.published') . ' = 1');
+        $query->order($db->quoteName('c.lft') . ' ASC, ' . $db->quoteName('a.ordering') . ' ASC');
 
         $db->setQuery($query);
+        $rows = $db->loadAssocList() ?: [];
 
-        return $db->loadAssocList() ?: [];
+        $grouped = [];
+
+        foreach ($rows as $row) {
+            $cat             = $row['category_title'] ?: '';
+            $grouped[$cat][] = $row;
+        }
+
+        return $grouped;
     }
 }

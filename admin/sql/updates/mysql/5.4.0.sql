@@ -6,12 +6,14 @@ CREATE TABLE IF NOT EXISTS `#__livingword_tools` (
   `url` varchar(200) NOT NULL DEFAULT '',
   `icon` varchar(100) NOT NULL DEFAULT '' COMMENT 'CSS icon class',
   `color` varchar(100) NOT NULL DEFAULT '' COMMENT 'CSS color class',
+  `catid` int UNSIGNED NOT NULL DEFAULT 0,
   `published` tinyint NOT NULL DEFAULT 0,
   `checked_out` int UNSIGNED DEFAULT NULL,
   `checked_out_time` datetime DEFAULT NULL,
   `ordering` int NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `idx_published` (`published`)
+  KEY `idx_published` (`published`),
+  KEY `idx_catid` (`catid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
 
 -- Seed with the 4 previously hard-coded tools

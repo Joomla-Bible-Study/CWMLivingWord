@@ -20,6 +20,12 @@ use Joomla\CMS\Router\Route;
 
 $listOrder = $this->escape($this->state->get('list.ordering'));
 $listDirn  = $this->escape($this->state->get('list.direction'));
+$saveOrder = ($listOrder === 'a.ordering' || $listOrder === 'a.category, a.ordering');
+
+if ($saveOrder && !empty($this->items)) {
+    $saveOrderingUrl = 'index.php?option=com_livingword&task=cwmlinks.saveOrderAjax&tmpl=component&' . \Joomla\CMS\Session\Session::getFormToken() . '=1';
+    HTMLHelper::_('draggablelist.draggable');
+}
 ?>
 <form action="<?php echo Route::_('index.php?option=com_livingword&view=cwmlinks'); ?>" method="post" name="adminForm" id="adminForm">
     <div class="row">
@@ -39,6 +45,9 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                 <td class="w-1 text-center">
                                     <?php echo HTMLHelper::_('grid.checkall'); ?>
                                 </td>
+                                <th scope="col" class="w-1 text-center d-none d-md-table-cell">
+                                    <?php echo HTMLHelper::_('searchtools.sort', '', 'a.ordering', $listDirn, $listOrder, null, 'asc', 'JGRID_HEADING_ORDERING', 'icon-sort'); ?>
+                                </th>
                                 <th scope="col" class="w-1 text-center">
                                     <?php echo HTMLHelper::_('searchtools.sort', 'JSTATUS', 'a.published', $listDirn, $listOrder); ?>
                                 </th>
@@ -56,11 +65,27 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody <?php if ($saveOrder) : ?>class="js-draggable" data-url="<?php echo $saveOrderingUrl; ?>" data-direction="<?php echo strtolower($listDirn); ?>" data-nested="true"<?php endif; ?>>
                             <?php foreach ($this->items as $i => $item) : ?>
-                                <tr class="row<?php echo $i % 2; ?>">
+                                <tr class="row<?php echo $i % 2; ?>" data-draggable-group="<?php echo $this->escape($item->category); ?>">
                                     <td class="text-center">
                                         <?php echo HTMLHelper::_('grid.id', $i, $item->id, false, 'cid', 'cb', $item->name); ?>
+                                    </td>
+                                    <td class="text-center d-none d-md-table-cell">
+                                        <?php
+                                        $iconClass = '';
+                                        if (!$this->canDo->get('core.edit.state')) {
+                                            $iconClass = ' inactive';
+                                        } elseif (!$saveOrder) {
+                                            $iconClass = ' inactive" title="' . Text::_('JORDERINGDISABLED');
+                                        }
+                                        ?>
+                                        <span class="sortable-handler<?php echo $iconClass; ?>">
+                                            <span class="icon-ellipsis-v" aria-hidden="true"></span>
+                                        </span>
+                                        <?php if ($saveOrder) : ?>
+                                            <input type="text" name="order[]" size="5" value="<?php echo $item->ordering; ?>" class="width-20 text-area-order hidden">
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-center">
                                         <?php echo HTMLHelper::_('jgrid.published', $item->published, $i, 'cwmlinks.', true, 'cb'); ?>

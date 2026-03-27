@@ -14,6 +14,8 @@ namespace CWM\Component\Livingword\Administrator\Extension;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Categories\CategoryServiceInterface;
+use Joomla\CMS\Categories\CategoryServiceTrait;
 use Joomla\CMS\Component\Router\RouterServiceInterface;
 use Joomla\CMS\Component\Router\RouterServiceTrait;
 use Joomla\CMS\Extension\BootableExtensionInterface;
@@ -29,8 +31,10 @@ use Psr\Container\ContainerInterface;
  */
 class LivingwordComponent extends MVCComponent implements
     BootableExtensionInterface,
+    CategoryServiceInterface,
     RouterServiceInterface
 {
+    use CategoryServiceTrait;
     use RouterServiceTrait;
 
     /**
@@ -53,6 +57,37 @@ class LivingwordComponent extends MVCComponent implements
      * @since 5.0.0
      */
     public const string MIN_JOOMLA_VERSION = '5.0.0';
+
+    /**
+     * Returns the table name for the count items function of the category service.
+     *
+     * @param   string|null  $section  The section
+     *
+     * @return  string
+     *
+     * @since   5.4.0
+     */
+    protected function getTableNameForSection(?string $section = null): string
+    {
+        return match ($section) {
+            'tool'  => 'livingword_tools',
+            default => '',
+        };
+    }
+
+    /**
+     * Returns the state column for the count items function of the category service.
+     *
+     * @param   string|null  $section  The section
+     *
+     * @return  string
+     *
+     * @since   5.4.0
+     */
+    protected function getStateColumnForSection(?string $section = null): string
+    {
+        return 'published';
+    }
 
     /**
      * Booting the extension.

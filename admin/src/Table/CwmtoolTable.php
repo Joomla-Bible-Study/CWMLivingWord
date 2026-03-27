@@ -24,34 +24,84 @@ use Joomla\Database\DatabaseInterface;
  */
 class CwmtoolTable extends Table
 {
-    /** @var int|null @since 5.4.0 */
+    /**
+     * @var int|null
+     * @since 5.4.0
+     */
     public ?int $id = 0;
 
-    /** @var string|null Tool display name @since 5.4.0 */
+    /**
+     * Tool display name
+     *
+     * @var string|null
+     * @since 5.4.0
+     */
     public ?string $name = '';
 
-    /** @var string|null Tool description @since 5.4.0 */
+    /**
+     * Tool description
+     *
+     * @var string|null
+     * @since 5.4.0
+     */
     public ?string $description = '';
 
-    /** @var string|null Tool URL @since 5.4.0 */
+    /**
+     * Tool URL
+     *
+     * @var string|null
+     * @since 5.4.0
+     */
     public ?string $url = '';
 
-    /** @var string|null CSS icon class @since 5.4.0 */
+    /**
+     * CSS icon class
+     *
+     * @var string|null
+     * @since 5.4.0
+     */
     public ?string $icon = '';
 
-    /** @var string|null CSS color class @since 5.4.0 */
+    /**
+     * CSS color class
+     *
+     * @var string|null
+     * @since 5.4.0
+     */
     public ?string $color = '';
 
-    /** @var int|null Published state @since 5.4.0 */
+    /**
+     * Category FK
+     *
+     * @var int|null
+     * @since 5.4.0
+     */
+    public ?int $catid = 0;
+
+    /**
+     * Published state
+     *
+     * @var int|null
+     * @since 5.4.0
+     */
     public ?int $published = 0;
 
-    /** @var string|null @since 5.4.0 */
+    /**
+     * @var string|null
+     * @since 5.4.0
+     */
     public ?string $checked_out_time = null;
 
-    /** @var int|null @since 5.4.0 */
+    /**
+     * @var int|null
+     * @since 5.4.0
+     */
     public ?int $checked_out = null;
 
-    /** @var int|null @since 5.4.0 */
+    /**
+     * @var int|null
+     * @since 5.4.0
+     */
     public ?int $ordering = 0;
 
     /**
@@ -100,7 +150,7 @@ class CwmtoolTable extends Table
     #[\Override]
     public function bind($src, $ignore = ''): bool
     {
-        foreach (['id', 'published', 'checked_out', 'ordering'] as $field) {
+        foreach (['id', 'catid', 'published', 'checked_out', 'ordering'] as $field) {
             if (isset($src[$field])) {
                 $src[$field] = $src[$field] !== '' ? (int) $src[$field] : null;
             }
