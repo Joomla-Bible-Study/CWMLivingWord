@@ -1,10 +1,10 @@
 <?php
 
 /**
- * @package    Livingword.Admin
+ * @package        Livingword.Admin
  * @copyright  (C) 2026 CWM Team All rights reserved
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
- * @link       https://www.christianwebministries.org
+ * @license        GNU General Public License version 2 or later; see LICENSE.txt
+ * @link           https://www.christianwebministries.org
  */
 
 namespace CWM\Component\Livingword\Administrator\View\Cwmplandetail;
@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Administrator\View\Cwmplandetail;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Administrator\Model\CwmplandetailModel;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Text;
@@ -28,16 +29,28 @@ use Joomla\CMS\Toolbar\ToolbarHelper;
  */
 class HtmlView extends BaseHtmlView
 {
-    /** @var mixed @since 5.0.0 */
+    /**
+     * @var mixed
+     * @since 5.0.0
+     */
     protected mixed $form;
 
-    /** @var ?object @since 5.0.0 */
+    /**
+     * @var ?object
+     * @since 5.0.0
+     */
     protected ?object $item = null;
 
-    /** @var ?object @since 5.0.0 */
+    /**
+     * @var ?object
+     * @since 5.0.0
+     */
     protected ?object $state = null;
 
-    /** @var ?object @since 5.0.0 */
+    /**
+     * @var ?object
+     * @since 5.0.0
+     */
     protected ?object $canDo = null;
 
     /**
@@ -51,6 +64,7 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
+        /** @var CwmplandetailModel $model */
         $model = $this->getModel();
         $model->setUseExceptions(true);
 

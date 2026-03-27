@@ -24,52 +24,120 @@ use Joomla\Database\DatabaseInterface;
  */
 class CwmplanTable extends Table
 {
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $id = 0;
 
-    /** @var string|null URL-safe slug (e.g. comp, newtest, bio) @since 5.2.0 */
+    /**
+     * URL-safe slug (e.g. comp, newtest, bio)
+     *
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $alias = '';
 
-    /** @var string|null Display name or language key @since 5.2.0 */
+    /**
+     * Display name or language key
+     *
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $title = '';
 
-    /** @var string|null Plan description @since 5.0.0 */
+    /**
+     * Plan description
+     *
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $description = '';
 
-    /** @var string|null Introductory message (HTML or language key) @since 5.0.0 */
+    /**
+     * Introductory message (HTML or language key)
+     *
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $message = '';
 
-    /** @var int|null Enable audio player (0/1) @since 5.0.0 */
+    /**
+     * Enable audio player (0/1)
+     *
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $audio = 0;
 
-    /** @var string|null BibleBrain audio fileset code @since 5.1.0 */
+    /**
+     * BibleBrain audio fileset code
+     *
+     * @var string|null
+     * @since 5.1.0
+     */
     public ?string $audio_version = '';
 
-    /** @var int|null Testament scope: 0=full, 1=NT, 2=OT @since 5.2.0 */
+    /**
+     * Testament scope: 0=full, 1=NT, 2=OT
+     *
+     * @var int|null
+     * @since 5.2.0
+     */
     public ?int $testament = 0;
 
-    /** @var string|null Duration type: annual, fixed, or self_paced @since 5.7.0 */
+    /**
+     * Duration type: annual, fixed, or self_paced
+     *
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $duration_type = 'annual';
 
-    /** @var int|null Total days for fixed/self_paced plans @since 5.7.0 */
+    /**
+     * Total days for fixed/self_paced plans
+     *
+     * @var int|null
+     * @since 5.7.0
+     */
     public ?int $total_days = null;
 
-    /** @var int|null Published state @since 5.0.0 */
+    /**
+     * Published state
+     *
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $published = 0;
 
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $checked_out = null;
 
-    /** @var string|null @since 5.0.0 */
+    /**
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $checked_out_time = null;
 
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $ordering = 0;
 
-    /** @var string|null @since 5.2.0 */
+    /**
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $created = null;
 
-    /** @var string|null @since 5.2.0 */
+    /**
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $modified = null;
 
     /**

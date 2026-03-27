@@ -25,22 +25,50 @@ use Joomla\Database\DatabaseInterface;
  */
 class CwmplandetailTable extends Table
 {
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $id = 0;
 
-    /** @var int|null FK to plans.id @since 5.2.0 */
+    /**
+     * FK to plans.id
+     *
+     * @var int|null
+     * @since 5.2.0
+     */
     public ?int $plan_id = 0;
 
-    /** @var int|null Day number within the plan @since 5.0.0 */
+    /**
+     * Day number within the plan
+     *
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $ordering = 0;
 
-    /** @var string|null Human-readable passage reference @since 5.1.0 */
+    /**
+     * Human-readable passage reference
+     *
+     * @var string|null
+     * @since 5.1.0
+     */
     public ?string $reading = '';
 
-    /** @var string|null Optional audio URL override @since 5.1.0 */
+    /**
+     * Optional audio URL override
+     *
+     * @var string|null
+     * @since 5.1.0
+     */
     public ?string $audio = '';
 
-    /** @var string|null Description text @since 5.0.0 */
+    /**
+     * Description text
+     *
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $descrip = '';
 
     /**

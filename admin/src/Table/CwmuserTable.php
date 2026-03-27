@@ -24,61 +24,150 @@ use Joomla\Database\DatabaseInterface;
  */
 class CwmuserTable extends Table
 {
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $id = 0;
 
-    /** @var int|null Joomla user ID @since 5.2.0 */
+    /**
+     * Joomla user ID
+     *
+     * @var int|null
+     * @since 5.2.0
+     */
     public ?int $user_id = 0;
 
-    /** @var int|null FK to plans.id @since 5.2.0 */
+    /**
+     * FK to plans.id
+     *
+     * @var int|null
+     * @since 5.2.0
+     */
     public ?int $plan_id = 0;
 
-    /** @var string|null Bible translation code @since 5.2.0 */
+    /**
+     * Bible translation code
+     *
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $bible_version = '';
 
-    /** @var string|null Preferred audio Bible fileset code @since 5.7.0 */
+    /**
+     * Preferred audio Bible fileset code
+     *
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $audio_version = '';
 
-    /** @var int|null Email subscription flag (0/1) @since 5.0.0 */
+    /**
+     * Email subscription flag (0/1)
+     *
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $email = 0;
 
-    /** @var string|null One-click unsubscribe token @since 5.2.0 */
+    /**
+     * One-click unsubscribe token
+     *
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $unsubscribe_token = null;
 
-    /** @var int|null Plan view preference (0=default, 1=list, 2=calendar) @since 5.2.0 */
+    /**
+     * Plan view preference (0=default, 1=list, 2=calendar)
+     *
+     * @var int|null
+     * @since 5.2.0
+     */
     public ?int $plan_view = 0;
 
-    /** @var string|null Plan start date @since 5.2.0 */
+    /**
+     * Plan start date
+     *
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $start_date = null;
 
-    /** @var int|null Date offset in days @since 5.2.0 */
+    /**
+     * Date offset in days
+     *
+     * @var int|null
+     * @since 5.2.0
+     */
     public ?int $date_offset = 0;
 
-    /** @var int|null Current consecutive days streak @since 5.4.0 */
+    /**
+     * Current consecutive days streak
+     *
+     * @var int|null
+     * @since 5.4.0
+     */
     public ?int $streak_current = 0;
 
-    /** @var int|null Best streak ever @since 5.4.0 */
+    /**
+     * Best streak ever
+     *
+     * @var int|null
+     * @since 5.4.0
+     */
     public ?int $streak_best = 0;
 
-    /** @var string|null Last date a reading was completed @since 5.4.0 */
+    /**
+     * Last date a reading was completed
+     *
+     * @var string|null
+     * @since 5.4.0
+     */
     public ?string $streak_last_date = null;
 
-    /** @var int|null Preferred email hour (0-23) @since 5.8.0 */
+    /**
+     * Preferred email hour (0-23)
+     *
+     * @var int|null
+     * @since 5.8.0
+     */
     public ?int $email_hour = 6;
 
-    /** @var string|null User timezone @since 5.8.0 */
+    /**
+     * User timezone
+     *
+     * @var string|null
+     * @since 5.8.0
+     */
     public ?string $timezone = '';
 
-    /** @var int|null FK to #__users.id — accountability partner @since 5.6.0 */
+    /**
+     * FK to #__users.id — accountability partner
+     *
+     * @var int|null
+     * @since 5.6.0
+     */
     public ?int $accountability_partner_id = null;
 
-    /** @var int|null Share progress with partner (0/1) @since 5.6.0 */
+    /**
+     * Share progress with partner (0/1)
+     *
+     * @var int|null
+     * @since 5.6.0
+     */
     public ?int $share_progress = 0;
 
-    /** @var string|null @since 5.2.0 */
+    /**
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $created = null;
 
-    /** @var string|null @since 5.2.0 */
+    /**
+     * @var string|null
+     * @since 5.2.0
+     */
     public ?string $modified = null;
 
     /**

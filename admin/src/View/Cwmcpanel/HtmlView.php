@@ -28,13 +28,22 @@ use Joomla\Component\Content\Administrator\Helper\ContentHelper;
  */
 class HtmlView extends BaseHtmlView
 {
-    /** @var ?array @since 5.0.0 */
+    /**
+     * @var ?array
+     * @since 5.0.0
+     */
     protected ?array $counts = null;
 
-    /** @var ?object @since 5.7.0 */
+    /**
+     * @var ?object
+     * @since 5.7.0
+     */
     protected ?object $stats = null;
 
-    /** @var ?object @since 5.0.0 */
+    /**
+     * @var ?object
+     * @since 5.0.0
+     */
     protected ?object $canDo = null;
 
     /**

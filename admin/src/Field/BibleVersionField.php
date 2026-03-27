@@ -22,7 +22,10 @@ use Joomla\CMS\Form\Field\ListField;
  */
 class BibleVersionField extends ListField
 {
-    /** @var string @since 5.8.0 */
+    /**
+     * @var string
+     * @since 5.8.0
+     */
     protected $type = 'BibleVersion';
 
     /**
@@ -31,7 +34,7 @@ class BibleVersionField extends ListField
      * @var array
      * @since 5.8.0
      */
-    private const VERSIONS = [
+    private const array VERSIONS = [
         'kjv'  => 'King James Version (KJV)',
         'nkjv' => 'New King James Version (NKJV)',
         'niv'  => 'New International Version (NIV)',

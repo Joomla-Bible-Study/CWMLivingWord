@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Administrator\View\Cwmplan;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Administrator\Model\CwmplanModel;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Text;
@@ -28,16 +29,28 @@ use Joomla\CMS\Toolbar\ToolbarHelper;
  */
 class HtmlView extends BaseHtmlView
 {
-    /** @var mixed @since 5.0.0 */
+    /**
+     * @var mixed
+     * @since 5.0.0
+     */
     protected mixed $form;
 
-    /** @var ?object @since 5.0.0 */
+    /**
+     * @var ?object
+     * @since 5.0.0
+     */
     protected ?object $item = null;
 
-    /** @var ?object @since 5.0.0 */
+    /**
+     * @var ?object
+     * @since 5.0.0
+     */
     protected ?object $state = null;
 
-    /** @var ?object @since 5.0.0 */
+    /**
+     * @var ?object
+     * @since 5.0.0
+     */
     protected ?object $canDo = null;
 
     /**
@@ -51,6 +64,7 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
+        /** @var CwmplanModel $model */
         $model = $this->getModel();
         $model->setUseExceptions(true);
 

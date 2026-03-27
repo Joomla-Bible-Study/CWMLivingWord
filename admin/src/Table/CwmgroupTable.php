@@ -24,46 +24,104 @@ use Joomla\Database\DatabaseInterface;
  */
 class CwmgroupTable extends Table
 {
-    /** @var int|null @since 5.7.0 */
+    /**
+     * @var int|null
+     * @since 5.7.0
+     */
     public ?int $id = 0;
 
-    /** @var string|null Group name @since 5.7.0 */
+    /**
+     * Group name
+     *
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $name = '';
 
-    /** @var string|null Group description @since 5.7.0 */
+    /**
+     * Group description
+     *
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $description = '';
 
-    /** @var int|null FK to #__livingword_plans @since 5.7.0 */
+    /**
+     * FK to #__livingword_plans
+     *
+     * @var int|null
+     * @since 5.7.0
+     */
     public ?int $plan_id = 0;
 
-    /** @var string|null Start date for the group plan @since 5.7.0 */
+    /**
+     * Start date for the group plan
+     *
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $start_date = null;
 
-    /** @var string|null Invite token for joining the group @since 5.7.0 */
+    /**
+     * Invite token for joining the group
+     *
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $invite_token = '';
 
-    /** @var string|null Join mode: open, request, or private @since 5.7.0 */
+    /**
+     * Join mode: open, request, or private
+     *
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $join_mode = 'open';
 
-    /** @var int|null User ID of group creator @since 5.7.0 */
+    /**
+     * User ID of group creator
+     *
+     * @var int|null
+     * @since 5.7.0
+     */
     public ?int $created_by = 0;
 
-    /** @var int|null Published state @since 5.7.0 */
+    /**
+     * Published state
+     *
+     * @var int|null
+     * @since 5.7.0
+     */
     public ?int $published = 0;
 
-    /** @var int|null @since 5.7.0 */
+    /**
+     * @var int|null
+     * @since 5.7.0
+     */
     public ?int $checked_out = null;
 
-    /** @var string|null @since 5.7.0 */
+    /**
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $checked_out_time = null;
 
-    /** @var int|null @since 5.7.0 */
+    /**
+     * @var int|null
+     * @since 5.7.0
+     */
     public ?int $ordering = 0;
 
-    /** @var string|null @since 5.7.0 */
+    /**
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $created = null;
 
-    /** @var string|null @since 5.7.0 */
+    /**
+     * @var string|null
+     * @since 5.7.0
+     */
     public ?string $modified = null;
 
     /**

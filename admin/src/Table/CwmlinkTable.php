@@ -24,31 +24,68 @@ use Joomla\Database\DatabaseInterface;
  */
 class CwmlinkTable extends Table
 {
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $id = 0;
 
-    /** @var string|null Link display name @since 5.0.0 */
+    /**
+     * Link display name
+     *
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $name = '';
 
-    /** @var string|null Link URL @since 5.0.0 */
+    /**
+     * Link URL
+     *
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $url = '';
 
-    /** @var string|null Link category @since 5.0.0 */
+    /**
+     * Link category
+     *
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $category = '';
 
-    /** @var int|null Target window (0=same, 2=new) @since 5.0.0 */
+    /**
+     * Target window (0=same, 2=new)
+     *
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $target = 0;
 
-    /** @var int|null Published state @since 5.0.0 */
+    /**
+     * Published state
+     *
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $published = 0;
 
-    /** @var string|null @since 5.0.0 */
+    /**
+     * @var string|null
+     * @since 5.0.0
+     */
     public ?string $checked_out_time = null;
 
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $checked_out = null;
 
-    /** @var int|null @since 5.0.0 */
+    /**
+     * @var int|null
+     * @since 5.0.0
+     */
     public ?int $ordering = 0;
 
     /**

@@ -97,6 +97,7 @@ class CwmplanModel extends AdminModel
      *
      * @return  bool  True on success
      *
+     * @throws \Exception
      * @since   5.1.0
      */
     #[\Override]

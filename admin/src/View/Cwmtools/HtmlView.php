@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Administrator\View\Cwmtools;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Administrator\Model\CwmtoolsModel;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\GenericDataException;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
@@ -29,22 +30,40 @@ use Joomla\Component\Content\Administrator\Helper\ContentHelper;
  */
 class HtmlView extends BaseHtmlView
 {
-    /** @var ?\Joomla\CMS\Form\Form @since 5.4.0 */
+    /**
+     * @var ?\Joomla\CMS\Form\Form
+     * @since 5.4.0
+     */
     public ?\Joomla\CMS\Form\Form $filterForm = null;
 
-    /** @var ?array @since 5.4.0 */
+    /**
+     * @var ?array
+     * @since 5.4.0
+     */
     public ?array $activeFilters = null;
 
-    /** @var ?array @since 5.4.0 */
+    /**
+     * @var ?array
+     * @since 5.4.0
+     */
     protected ?array $items = null;
 
-    /** @var ?object @since 5.4.0 */
+    /**
+     * @var ?object
+     * @since 5.4.0
+     */
     protected ?object $pagination = null;
 
-    /** @var ?object @since 5.4.0 */
+    /**
+     * @var ?object
+     * @since 5.4.0
+     */
     protected ?object $state = null;
 
-    /** @var ?object @since 5.4.0 */
+    /**
+     * @var ?object
+     * @since 5.4.0
+     */
     protected ?object $canDo = null;
 
     /**
@@ -58,6 +77,7 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
+        /** @var CwmtoolsModel $model */
         $model = $this->getModel();
         $model->setUseExceptions(true);
 

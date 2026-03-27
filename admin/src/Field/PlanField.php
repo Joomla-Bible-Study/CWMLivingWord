@@ -24,7 +24,10 @@ use Joomla\Database\DatabaseInterface;
  */
 class PlanField extends ListField
 {
-    /** @var string @since 5.8.0 */
+    /**
+     * @var string
+     * @since 5.8.0
+     */
     protected $type = 'Plan';
 
     /**
