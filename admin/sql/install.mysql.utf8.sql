@@ -1927,6 +1927,6 @@ INSERT INTO `#__livingword_links` (`name`, `url`, `category`, `target`, `publish
 
 INSERT INTO `#__livingword_tools` (`name`, `description`, `url`, `icon`, `color`, `published`, `ordering`) VALUES
 ('Bible Dictionary', 'Look up definitions of Bible words and terms.', 'https://www.blueletterbible.org/lexicon/', 'icon-book', 'text-primary', 1, 1),
-('Bible Commentary', 'Read commentary and study notes.', 'https://enduringword.com/bible-commentary/', 'icon-file-text', 'text-info', 1, 2),
+('Bible Commentary', 'Read commentary and study notes.', 'https://enduringword.com/bible-commentary/', 'icon-file-alt', 'text-info', 1, 2),
 ('Bible Concordance', 'Search for words and phrases across the entire Bible.', 'https://www.blueletterbible.org/search.cfm', 'icon-search', 'text-success', 1, 3),
 ('Bible Maps', 'Explore geographic locations mentioned in Scripture.', 'https://www.openbible.info/geo/', 'icon-location', 'text-warning', 1, 4);

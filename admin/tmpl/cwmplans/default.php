@@ -95,7 +95,7 @@ if ($saveOrder && !empty($this->items)) {
                                         </div>
                                     </td>
                                     <td class="d-none d-md-table-cell">
-                                        <?php echo $this->escape($item->description); ?>
+                                        <?php echo $this->escape(strip_tags($item->description)); ?>
                                     </td>
                                     <td class="text-center d-none d-md-table-cell">
                                         <?php echo $item->audio ? Text::_('JYES') : Text::_('JNO'); ?>

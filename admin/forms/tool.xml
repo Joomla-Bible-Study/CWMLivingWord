@@ -17,11 +17,12 @@
         />
         <field
             name="description"
-            type="textarea"
+            type="editor"
             label="COM_LIVINGWORD_TOOL_DESCRIPTION"
             description="COM_LIVINGWORD_TOOL_DESCRIPTION_DESC"
-            rows="3"
-            maxlength="500"
+            filter="safehtml"
+            buttons="true"
+            height="200"
         />
         <field
             name="url"
@@ -34,20 +35,48 @@
         />
         <field
             name="icon"
-            type="text"
+            type="list"
             label="COM_LIVINGWORD_TOOL_ICON"
             description="COM_LIVINGWORD_TOOL_ICON_DESC"
-            size="40"
-            maxlength="100"
-        />
+        >
+            <option value="">- None -</option>
+            <option value="icon-book">Book</option>
+            <option value="icon-bookmark">Bookmark</option>
+            <option value="icon-file-alt">Document</option>
+            <option value="icon-search">Search</option>
+            <option value="icon-location">Location</option>
+            <option value="icon-globe">Globe</option>
+            <option value="icon-link">Link</option>
+            <option value="icon-comments">Comments</option>
+            <option value="icon-quote-left">Quote</option>
+            <option value="icon-pencil-alt">Pencil</option>
+            <option value="icon-users">Users</option>
+            <option value="icon-graduation-cap">Graduation Cap</option>
+            <option value="icon-lightbulb">Lightbulb</option>
+            <option value="icon-play">Play</option>
+            <option value="icon-headphones">Headphones</option>
+            <option value="icon-video">Video</option>
+            <option value="icon-calendar">Calendar</option>
+            <option value="icon-star">Star</option>
+            <option value="icon-heart">Heart</option>
+            <option value="icon-info-circle">Info</option>
+            <option value="icon-question-circle">Question</option>
+        </field>
         <field
             name="color"
-            type="text"
+            type="list"
             label="COM_LIVINGWORD_TOOL_COLOR"
             description="COM_LIVINGWORD_TOOL_COLOR_DESC"
-            size="40"
-            maxlength="100"
-        />
+        >
+            <option value="">- Default -</option>
+            <option value="text-primary">Blue</option>
+            <option value="text-success">Green</option>
+            <option value="text-danger">Red</option>
+            <option value="text-warning">Yellow</option>
+            <option value="text-info">Cyan</option>
+            <option value="text-secondary">Grey</option>
+            <option value="text-dark">Dark</option>
+        </field>
         <field
             name="published"
             type="list"

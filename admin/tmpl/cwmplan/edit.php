@@ -20,7 +20,9 @@ use Joomla\CMS\Router\Route;
 $isNew = ((int) $this->item->id === 0);
 
 /** @var \Joomla\CMS\Document\HtmlDocument $doc */
-$this->getDocument()->getWebAssetManager()->useScript('form.validate');
+$this->getDocument()->getWebAssetManager()
+    ->useScript('form.validate')
+    ->useScript('bootstrap.modal');
 ?>
 <form action="<?php echo Route::_('index.php?option=com_livingword&layout=edit&id=' . (int) $this->item->id); ?>" method="post" name="adminForm" id="adminForm" class="form-validate">
     <div class="main-card">
@@ -39,8 +41,8 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
                 <?php echo $this->form->renderField('published'); ?>
                 <?php echo $this->form->renderField('audio'); ?>
                 <?php echo $this->form->renderField('audio_version'); ?>
-                <?php if ((int) ($this->item->audio ?? 0) === 1 && !$isNew) : ?>
-                    <div class="mb-3" id="audioPreviewContainer">
+                <?php if (!$isNew) : ?>
+                    <div class="mb-3" id="audioPreviewContainer" style="display: none;">
                         <button type="button" class="btn btn-sm btn-outline-info" id="testAudioBtn">
                             <span class="icon-play" aria-hidden="true"></span>
                             <?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO'); ?>
@@ -50,7 +52,6 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
                     </div>
                 <?php endif; ?>
                 <?php echo $this->form->renderField('testament'); ?>
-                <?php echo $this->form->renderField('ordering'); ?>
                 <?php echo $this->form->renderField('id'); ?>
             </div>
         </div>
@@ -114,6 +115,31 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
     </div>
 </div>
 
+<!-- Devotional Editor Modal -->
+<div class="modal fade" id="devotionalModal" tabindex="-1" aria-labelledby="devotionalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="devotionalModalLabel">
+                    <span id="devotionalDayLabel"></span>
+                    — <?php echo Text::_('COM_LIVINGWORD_READING_DEVOTIONAL'); ?>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <?php echo $this->form->renderField('devotional_editor_content'); ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo Text::_('JCANCEL'); ?></button>
+                <button type="button" class="btn btn-success" id="devotionalSaveBtn">
+                    <span class="icon-save" aria-hidden="true"></span>
+                    <?php echo Text::_('JAPPLY'); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Batch Move Modal -->
 <div class="modal fade" id="batchMoveModal" tabindex="-1" aria-labelledby="batchMoveModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -137,6 +163,23 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Toggle Test Audio button with Enable Audio switch
+    var audioContainer = document.getElementById('audioPreviewContainer');
+    var audioRadios = document.querySelectorAll('[name="jform[audio]"]');
+
+    function updateAudioPreviewVisibility() {
+        var checked = document.querySelector('[name="jform[audio]"]:checked');
+        var isOn = checked && checked.value === '1';
+        if (audioContainer) {
+            audioContainer.style.display = isOn ? '' : 'none';
+        }
+    }
+
+    audioRadios.forEach(function(radio) {
+        radio.addEventListener('change', updateAudioPreviewVisibility);
+    });
+    updateAudioPreviewVisibility();
+
     // Test Audio Preview
     var testBtn = document.getElementById('testAudioBtn');
     var testPlayer = document.getElementById('testAudioPlayer');
@@ -206,20 +249,54 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-.subform-repeatable-group.lw-selected { background-color: var(--template-bg-dark-3, #e8f0fe); }
-.subform-repeatable-group .lw-row-actions { white-space: nowrap; }
-.subform-repeatable-group .lw-row-select { margin-right: 0.5rem; }
-.subform-repeatable-group .lw-row-num {
-    display: inline-block; min-width: 2.5em; text-align: center;
-    font-weight: bold; color: var(--template-text-dark, #666);
-    cursor: pointer; border-bottom: 1px dashed currentColor;
+/* --- Readings subform table --- */
+.subform-repeatable table { table-layout: fixed; width: 100%; }
+
+/* Column widths: # | Reading | Devotional | Audio | Actions */
+.subform-repeatable table .lw-col-order { width: 3.5em; }
+.subform-repeatable table thead th:nth-child(2) { width: auto; }
+.subform-repeatable table .lw-col-devotional { width: 7em; text-align: center; }
+.subform-repeatable table thead th:nth-child(4) { width: 30%; }
+.subform-repeatable table thead th:last-child { width: 7em; }
+
+/* Compact cell padding */
+.subform-repeatable-group td { padding: 0.35rem 0.5rem; vertical-align: middle; }
+
+/* Compact inputs */
+.subform-repeatable-group input[type="text"],
+.subform-repeatable-group input[type="url"] { font-size: 0.875rem; padding: 0.3rem 0.5rem; }
+
+/* Subtle row separator — override Joomla table borders for dark mode */
+.subform-repeatable table,
+.subform-repeatable table th,
+.subform-repeatable table td { border-color: var(--template-bg-dark-7, rgba(255,255,255,0.1)); }
+.subform-repeatable-group { border-bottom: 1px solid var(--template-bg-dark-7, rgba(255,255,255,0.1)); }
+
+/* Batch move button: muted but visible when disabled in dark mode */
+#batchMoveBtn:disabled {
+    opacity: 1;
+    border-color: #5a6268;
+    color: #adb5bd;
 }
-.subform-repeatable-group .lw-row-num:hover { color: var(--template-link-color, #0d6efd); }
-.subform-repeatable-group .lw-pos-input {
-    width: 3.5em; text-align: center; font-size: 0.85rem;
-    padding: 0.1rem 0.25rem;
+
+/* Selected row highlight — works in both light and dark mode */
+.subform-repeatable-group.lw-selected { background-color: rgba(13, 110, 253, 0.15); }
+
+/* Ordering column */
+.lw-col-order { text-align: center; vertical-align: middle; }
+.lw-row-num {
+    display: inline-block; min-width: 2em; text-align: center;
+    font-weight: 600; font-size: 0.85rem;
+    color: var(--template-text-dark, #999);
 }
-.lw-move-btn { padding: 0.15rem 0.35rem; font-size: 0.75rem; line-height: 1; }
+.lw-pos-input {
+    width: 3em; text-align: center; font-size: 0.8rem;
+    padding: 0.1rem 0.2rem;
+}
+
+/* Devotional button in its own column */
+.lw-col-devotional { text-align: center; vertical-align: middle; }
+.lw-devotional-btn { font-size: 0.8rem; padding: 0.15rem 0.5rem; }
 </style>
 
 <script>
@@ -227,47 +304,84 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('.subform-repeatable');
     if (!container) return;
 
+    // --- Add ordering header column ---
+    function addOrderHeader() {
+        const thead = container.querySelector('thead tr');
+        if (!thead || thead.querySelector('.lw-col-order')) return;
+        const th = document.createElement('th');
+        th.className = 'lw-col-order';
+        th.textContent = '#';
+        thead.insertBefore(th, thead.firstChild);
+
+        // Add devotional column header after Reading column
+        if (!thead.querySelector('.lw-col-devotional')) {
+            const devTh = document.createElement('th');
+            devTh.className = 'lw-col-devotional';
+            devTh.textContent = '<?php echo Text::_('COM_LIVINGWORD_READING_DEVOTIONAL_SHORT', true); ?>';
+            const readingTh = thead.children[1]; // Reading is 2nd column (after #)
+            readingTh.after(devTh);
+        }
+    }
+
     // --- Row numbering, selection checkboxes, and move buttons ---
     function enhanceRows() {
+        addOrderHeader();
         const rows = container.querySelectorAll('.subform-repeatable-group');
         rows.forEach(function(row, idx) {
-            // Add row number + select checkbox + move buttons if not already present
+            // Update existing row number
             if (row.querySelector('.lw-row-num')) {
                 row.querySelector('.lw-row-num').textContent = idx + 1;
                 return;
             }
 
-            const firstCell = row.querySelector('td, .subform-repeatable-group-column');
-            if (!firstCell) return;
+            // Create a new cell for ordering controls
+            const orderCell = document.createElement('td');
+            orderCell.className = 'lw-col-order';
+            orderCell.innerHTML =
+                '<div class="d-flex align-items-center gap-1 justify-content-center">' +
+                    '<input type="checkbox" class="form-check-input lw-row-select m-0" title="<?php echo Text::_('COM_LIVINGWORD_SELECT_FOR_BATCH_MOVE', true); ?>">' +
+                    '<span class="lw-row-num">' + (idx + 1) + '</span>' +
+                '</div>';
 
-            const controls = document.createElement('span');
-            controls.className = 'lw-row-actions d-flex align-items-center gap-1 me-2';
-            controls.innerHTML =
-                '<input type="checkbox" class="form-check-input lw-row-select" title="Select">' +
-                '<span class="lw-row-num">' + (idx + 1) + '</span>' +
-                '<span class="btn-group-vertical">' +
-                    '<button type="button" class="btn btn-outline-secondary lw-move-btn lw-move-up" title="Move up">' +
-                        '<span class="icon-chevron-up" aria-hidden="true"></span>' +
-                    '</button>' +
-                    '<button type="button" class="btn btn-outline-secondary lw-move-btn lw-move-down" title="Move down">' +
-                        '<span class="icon-chevron-down" aria-hidden="true"></span>' +
-                    '</button>' +
-                '</span>';
-
-            firstCell.insertBefore(controls, firstCell.firstChild);
+            row.insertBefore(orderCell, row.firstChild);
         });
 
         updateBatchBtn();
     }
 
-    // Re-enhance after Joomla adds/removes rows
+    // Combined enhancement: ordering + devotional buttons in one pass
+    let enhancePending = false;
+    function enhanceAll() {
+        enhancePending = false;
+        enhanceRows();
+        addDevotionalButtons();
+    }
+    function scheduleEnhance() {
+        if (enhancePending) return;
+        enhancePending = true;
+        requestAnimationFrame(enhanceAll);
+    }
+
+    // Pause observer during our own DOM changes to prevent re-triggering
+    let observing = false;
+    function enhanceAllGuarded() {
+        observer.disconnect();
+        enhanceAll();
+        observer.observe(container, { childList: true, subtree: true });
+    }
+
+    // Observe for rows added/removed (initial render, add/remove buttons, bulk import)
     const observer = new MutationObserver(function() {
-        setTimeout(enhanceRows, 100);
+        if (enhancePending) return;
+        enhancePending = true;
+        requestAnimationFrame(enhanceAllGuarded);
     });
     observer.observe(container, { childList: true, subtree: true });
 
-    // Initial enhancement
-    setTimeout(enhanceRows, 500);
+    // If rows already exist, enhance immediately; otherwise the observer handles it
+    if (container.querySelector('.subform-repeatable-group')) {
+        enhanceAll();
+    }
 
     // --- Click row number to jump to position ---
     container.addEventListener('click', function(e) {
@@ -319,24 +433,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- Move up/down ---
-    container.addEventListener('click', function(e) {
-        const btn = e.target.closest('.lw-move-up, .lw-move-down');
-        if (!btn) return;
-
-        e.preventDefault();
-        const row = btn.closest('.subform-repeatable-group');
-        const parent = row.parentNode;
-
-        if (btn.classList.contains('lw-move-up') && row.previousElementSibling) {
-            parent.insertBefore(row, row.previousElementSibling);
-        } else if (btn.classList.contains('lw-move-down') && row.nextElementSibling) {
-            parent.insertBefore(row.nextElementSibling, row);
-        }
-
-        renumberRows();
-    });
-
     // --- Selection tracking ---
     container.addEventListener('change', function(e) {
         if (!e.target.classList.contains('lw-row-select')) return;
@@ -353,6 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btn) {
             const count = getSelectedRows().length;
             btn.disabled = count === 0;
+            btn.className = 'btn btn-sm ' + (count > 0 ? 'btn-primary' : 'btn-outline-primary');
         }
     }
 
@@ -404,6 +501,89 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const modal = bootstrap.Modal.getInstance(document.getElementById('batchMoveModal'));
         if (modal) modal.hide();
+    });
+
+    // --- Devotional editor modal ---
+    let activeDevotionalField = null;
+    const devotionalModal = document.getElementById('devotionalModal');
+    const devotionalDayLabel = document.getElementById('devotionalDayLabel');
+    const editorFieldName = 'jform_devotional_editor_content';
+
+    function getEditorInstance() {
+        return typeof JoomlaEditor !== 'undefined' ? JoomlaEditor.get(editorFieldName) : null;
+    }
+
+    function addDevotionalButtons() {
+        const rows = container.querySelectorAll('.subform-repeatable-group');
+        rows.forEach(function(row, idx) {
+            if (row.querySelector('.lw-col-devotional')) return;
+
+            const descripField = row.querySelector('input[name*="[descrip]"]');
+            if (!descripField) return;
+
+            const readingField = row.querySelector('input[name*="[reading]"]');
+            if (!readingField) return;
+
+            const content = descripField.value || '';
+            const hasContent = content.trim().length > 0;
+
+            const cell = document.createElement('td');
+            cell.className = 'lw-col-devotional';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm lw-devotional-btn ' + (hasContent ? 'btn-info' : 'btn-outline-secondary');
+            btn.title = '<?php echo Text::_('COM_LIVINGWORD_READING_DEVOTIONAL', true); ?>';
+            btn.innerHTML = '<span class="icon-pencil-alt" aria-hidden="true"></span> <?php echo Text::_('JACTION_EDIT', true); ?>';
+
+            btn.addEventListener('click', function() {
+                activeDevotionalField = descripField;
+                const dayNum = row.querySelector('.lw-row-num');
+                devotionalDayLabel.textContent = 'Day ' + (dayNum ? dayNum.textContent : (idx + 1))
+                    + (readingField ? ' \u2014 ' + readingField.value : '');
+
+                const editor = getEditorInstance();
+                if (editor) {
+                    editor.setValue(descripField.value || '');
+                }
+
+                devotionalModal.open ? devotionalModal.open() : bootstrap.Modal.getOrCreateInstance(devotionalModal).show();
+            });
+
+            cell.appendChild(btn);
+
+            // Insert after the reading cell (2nd column, index 1)
+            const readingCell = readingField.closest('td');
+            readingCell.after(cell);
+        });
+    }
+
+    // Move focus out before modal hides to prevent aria-hidden warning
+    devotionalModal.addEventListener('hide.bs.modal', function() {
+        if (devotionalModal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+    });
+
+    // Save devotional content back to hidden field
+    document.getElementById('devotionalSaveBtn')?.addEventListener('click', function() {
+        if (!activeDevotionalField) return;
+
+        const editor = getEditorInstance();
+        if (editor) {
+            activeDevotionalField.value = editor.getValue();
+        }
+
+        // Update the button appearance
+        const row = activeDevotionalField.closest('.subform-repeatable-group');
+        const btn = row?.querySelector('.lw-devotional-btn');
+        if (btn) {
+            const hasContent = activeDevotionalField.value.trim().length > 0;
+            btn.className = 'btn btn-sm lw-devotional-btn ' + (hasContent ? 'btn-info' : 'btn-outline-secondary');
+        }
+
+        devotionalModal.close ? devotionalModal.close() : bootstrap.Modal.getInstance(devotionalModal)?.hide();
+        activeDevotionalField = null;
     });
 
     // --- Bulk import ---

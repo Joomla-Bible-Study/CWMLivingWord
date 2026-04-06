@@ -12,9 +12,6 @@
            hint="COM_LIVINGWORD_READING_AUDIO_HINT"
            size="40"
            maxlength="255" />
-    <field name="descrip" type="textarea"
-           label="COM_LIVINGWORD_READING_DEVOTIONAL"
-           description="COM_LIVINGWORD_READING_DEVOTIONAL_DESC"
-           rows="3"
+    <field name="descrip" type="hidden"
            filter="safehtml" />
 </form>

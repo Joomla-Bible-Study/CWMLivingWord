@@ -48,19 +48,28 @@
             layout="joomla.form.field.radio.switcher"
             default="0"
         >
-            <option value="1">JYES</option>
             <option value="0">JNO</option>
+            <option value="1">JYES</option>
         </field>
         <field
             name="audio_version"
-            type="text"
+            type="list"
             label="COM_LIVINGWORD_PLAN_AUDIO_VERSION"
             description="COM_LIVINGWORD_PLAN_AUDIO_VERSION_DESC"
-            hint="COM_LIVINGWORD_PLAN_AUDIO_VERSION_HINT"
-            size="20"
-            maxlength="20"
             showon="audio:1"
-        />
+        >
+            <option value="">COM_LIVINGWORD_PLAN_AUDIO_VERSION_DEFAULT</option>
+            <option value="kjv">KJV</option>
+            <option value="nkjv">NKJV</option>
+            <option value="niv">NIV</option>
+            <option value="esv">ESV</option>
+            <option value="nlt">NLT</option>
+            <option value="nasb">NASB</option>
+            <option value="amp">AMP</option>
+            <option value="csb">CSB</option>
+            <option value="web">WEB</option>
+            <option value="msg">MSG</option>
+        </field>
         <field
             name="testament"
             type="list"
@@ -108,8 +117,19 @@
         </field>
         <field
             name="ordering"
-            type="number"
-            label="JFIELD_ORDERING_LABEL"
+            type="hidden"
+            default="0"
+        />
+    </fieldset>
+    <fieldset name="devotional_modal">
+        <field
+            name="devotional_editor_content"
+            type="editor"
+            label="COM_LIVINGWORD_READING_DEVOTIONAL"
+            hiddenLabel="true"
+            filter="safehtml"
+            buttons="true"
+            height="400"
         />
     </fieldset>
     <fieldset name="readings_fieldset" label="COM_LIVINGWORD_PLAN_READINGS">
@@ -117,6 +137,7 @@
             name="readings"
             type="subform"
             label="COM_LIVINGWORD_PLAN_READINGS"
+            hiddenLabel="true"
             formsource="reading_row"
             multiple="true"
             min="0"
