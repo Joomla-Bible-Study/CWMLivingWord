@@ -81,3 +81,26 @@ jobs:
           JTEST_DB_USER: livingword_test
           JTEST_DB_PASSWORD: livingword_test
           JTEST_DB_PREFIX: livingword_
+
+      - name: Build package
+        run: composer build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify package contents
+        run: |
+          VERSION=$(php -r '$x = simplexml_load_file("livingword.xml"); echo (string) $x->version;')
+          PKG="build/pkg_livingword-$VERSION.zip"
+          test -f "$PKG" || { echo "Package not built: $PKG"; exit 1; }
+          echo "Package contents:"
+          unzip -l "$PKG"
+          for inner in lib_cwmscripture.zip com_livingword.zip mod_livingword.zip plg_task_livingword.zip plg_content_scripturelinks.zip pkg_livingword.xml; do
+            unzip -l "$PKG" | grep -q "$inner" || { echo "Missing $inner in package"; exit 1; }
+          done
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg_livingword
+          path: build/pkg_livingword-*.zip
+          retention-days: 7

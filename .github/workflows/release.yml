@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, xml, zip, curl
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist
+
+      - name: Resolve version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag matches livingword.xml
+        run: |
+          XML_VERSION=$(php -r '$x = simplexml_load_file("livingword.xml"); echo (string) $x->version;')
+          if [ "$XML_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "Tag version (${{ steps.version.outputs.version }}) does not match livingword.xml (<version>$XML_VERSION</version>)"
+            exit 1
+          fi
+
+      - name: Build package
+        run: composer build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Record bundled scripture version
+        id: scripture
+        run: |
+          SCRIPTURE_VERSION=$(gh release view --repo Joomla-Bible-Study/CWMScriptureLinks --json tagName -q '.tagName' | sed 's/^v//')
+          echo "version=$SCRIPTURE_VERSION" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          SCRIPTURE="${{ steps.scripture.outputs.version }}"
+          PKG="build/pkg_livingword-$VERSION.zip"
+
+          gh release create "$TAG" "$PKG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "LivingWord $TAG" \
+            --notes "$(cat <<EOF
+          ## Install
+
+          Download \`pkg_livingword-$VERSION.zip\` and install via Joomla's Extension Manager.
+
+          ## Bundled
+
+          - \`com_livingword\` $VERSION — LivingWord component (admin + site + media)
+          - \`mod_livingword\` — Daily reading module
+          - \`plg_task_livingword\` — Scheduled email delivery task plugin
+          - \`lib_cwmscripture\` v$SCRIPTURE — Bible provider library
+          - \`plg_content_scripturelinks\` v$SCRIPTURE — Scripture linking content plugin
+
+          ## Requirements
+
+          - PHP 8.3+
+          - Joomla 5.x / 6.x
+          EOF
+          )"

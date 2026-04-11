@@ -11,7 +11,7 @@
     <namespace path="src">CWM\Module\Livingword\Site</namespace>
 
     <files>
-        <folder>services</folder>
+        <folder module="mod_livingword">services</folder>
         <folder>src</folder>
         <folder>tmpl</folder>
         <folder>language</folder>

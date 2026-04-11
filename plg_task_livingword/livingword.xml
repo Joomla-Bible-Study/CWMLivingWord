@@ -11,7 +11,7 @@
     <namespace path="src">CWM\Plugin\Task\Livingword</namespace>
 
     <files>
-        <folder>services</folder>
+        <folder plugin="livingword">services</folder>
         <folder>src</folder>
         <folder>language</folder>
     </files>

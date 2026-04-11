@@ -21,9 +21,21 @@
 
     <scriptfile>script.php</scriptfile>
 
-    <languages folder="admin">
-        <language tag="en-GB">language/en-GB/com_livingword.ini</language>
-        <language tag="en-GB">language/en-GB/com_livingword.sys.ini</language>
+    <languages folder="site/language">
+        <language tag="cs-CZ">cs-CZ/com_livingword.ini</language>
+        <language tag="de-DE">de-DE/com_livingword.ini</language>
+        <language tag="en-GB">en-GB/com_livingword.ini</language>
+        <language tag="es-ES">es-ES/com_livingword.ini</language>
+        <language tag="fr-FR">fr-FR/com_livingword.ini</language>
+        <language tag="hu-HU">hu-HU/com_livingword.ini</language>
+        <language tag="it-IT">it-IT/com_livingword.ini</language>
+        <language tag="ja-JP">ja-JP/com_livingword.ini</language>
+        <language tag="ko-KR">ko-KR/com_livingword.ini</language>
+        <language tag="nl-NL">nl-NL/com_livingword.ini</language>
+        <language tag="no-NO">no-NO/com_livingword.ini</language>
+        <language tag="pt-BR">pt-BR/com_livingword.ini</language>
+        <language tag="ru-RU">ru-RU/com_livingword.ini</language>
+        <language tag="zh-CN">zh-CN/com_livingword.ini</language>
     </languages>
 
     <install>
@@ -50,7 +62,6 @@
     </media>
 
     <files folder="site">
-        <folder>language</folder>
         <folder>src</folder>
         <folder>tmpl</folder>
     </files>
@@ -94,11 +105,41 @@
             <filename>access.xml</filename>
             <filename>config.xml</filename>
             <folder>forms</folder>
-            <folder>language</folder>
             <folder>services</folder>
             <folder>sql</folder>
             <folder>src</folder>
             <folder>tmpl</folder>
         </files>
+
+        <languages folder="admin/language">
+            <language tag="cs-CZ">cs-CZ/com_livingword.ini</language>
+            <language tag="cs-CZ">cs-CZ/com_livingword.sys.ini</language>
+            <language tag="de-DE">de-DE/com_livingword.ini</language>
+            <language tag="de-DE">de-DE/com_livingword.sys.ini</language>
+            <language tag="en-GB">en-GB/com_livingword.ini</language>
+            <language tag="en-GB">en-GB/com_livingword.sys.ini</language>
+            <language tag="es-ES">es-ES/com_livingword.ini</language>
+            <language tag="es-ES">es-ES/com_livingword.sys.ini</language>
+            <language tag="fr-FR">fr-FR/com_livingword.ini</language>
+            <language tag="fr-FR">fr-FR/com_livingword.sys.ini</language>
+            <language tag="hu-HU">hu-HU/com_livingword.ini</language>
+            <language tag="hu-HU">hu-HU/com_livingword.sys.ini</language>
+            <language tag="it-IT">it-IT/com_livingword.ini</language>
+            <language tag="it-IT">it-IT/com_livingword.sys.ini</language>
+            <language tag="ja-JP">ja-JP/com_livingword.ini</language>
+            <language tag="ja-JP">ja-JP/com_livingword.sys.ini</language>
+            <language tag="ko-KR">ko-KR/com_livingword.ini</language>
+            <language tag="ko-KR">ko-KR/com_livingword.sys.ini</language>
+            <language tag="nl-NL">nl-NL/com_livingword.ini</language>
+            <language tag="nl-NL">nl-NL/com_livingword.sys.ini</language>
+            <language tag="no-NO">no-NO/com_livingword.ini</language>
+            <language tag="no-NO">no-NO/com_livingword.sys.ini</language>
+            <language tag="pt-BR">pt-BR/com_livingword.ini</language>
+            <language tag="pt-BR">pt-BR/com_livingword.sys.ini</language>
+            <language tag="ru-RU">ru-RU/com_livingword.ini</language>
+            <language tag="ru-RU">ru-RU/com_livingword.sys.ini</language>
+            <language tag="zh-CN">zh-CN/com_livingword.ini</language>
+            <language tag="zh-CN">zh-CN/com_livingword.sys.ini</language>
+        </languages>
     </administration>
 </extension>

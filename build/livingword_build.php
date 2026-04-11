@@ -10,9 +10,14 @@
 const BASE_DIR        = __DIR__ . '/..';
 const BUILD_DIR       = BASE_DIR . '/build';
 const PROPERTIES_FILE = BASE_DIR . '/build.properties';
+const VENDOR_DIR      = BUILD_DIR . '/vendor';
+const PKG_MANIFEST    = BUILD_DIR . '/pkg_livingword.xml';
 
-$command = $argv[1] ?? 'help';
-$verbose = \in_array('--verbose', $argv, true) || \in_array('-v', $argv, true);
+require_once __DIR__ . '/fetch_dependencies.php';
+
+$command        = $argv[1] ?? 'help';
+$verbose        = \in_array('--verbose', $argv, true) || \in_array('-v', $argv, true);
+$localScripture = \in_array('--local-scripture', $argv, true);
 
 try {
     switch ($command) {
@@ -29,7 +34,7 @@ try {
             doClean($verbose);
             break;
         case 'build':
-            doBuild($verbose);
+            doBuild($verbose, $localScripture);
             break;
         case 'install-joomla':
             doInstallJoomla();
@@ -1193,12 +1198,191 @@ function updateNamespaceMap(string $joomlaPath, bool $verbose = false): void
  * @throws Exception If ZIP creation fails.
  * @since 5.0.0
  */
-function doBuild(bool $verbose = false): void
+function doBuild(bool $verbose = false, bool $localScripture = false): void
 {
-    // Get version from livingword.xml
+    $version = resolveBuildVersion();
+
+    echo "\nPackaging LivingWord v$version...\n";
+
+    if (!is_dir(VENDOR_DIR) && !mkdir(VENDOR_DIR, 0755, true) && !is_dir(VENDOR_DIR)) {
+        throw new \RuntimeException('Cannot create vendor directory: ' . VENDOR_DIR);
+    }
+
+    if ($localScripture) {
+        echo "\n[1/5] Building scripture dependencies from local sibling repos...\n";
+        $scripture = buildLocalScriptureDependencies($verbose);
+        echo "  lib_cwmscripture @ local ../lib_cwmscripture (v{$scripture['version']})\n";
+    } else {
+        echo "\n[1/5] Fetching scripture dependencies from GitHub...\n";
+        $scripture = fetchScriptureDependencies(VENDOR_DIR, $verbose);
+        echo "  lib_cwmscripture @ v{$scripture['version']} (from " . SCRIPTURE_REPO . ")\n";
+    }
+
+    echo "\n[2/5] Building com_livingword.zip...\n";
+    $componentZip = buildComponentZip($verbose);
+
+    echo "\n[3/5] Building mod_livingword.zip...\n";
+    $moduleZip = buildSubExtensionZip(
+        BASE_DIR . '/mod_livingword',
+        VENDOR_DIR . '/mod_livingword.zip',
+        $verbose
+    );
+
+    echo "\n[4/5] Building plg_task_livingword.zip...\n";
+    $taskPluginZip = buildSubExtensionZip(
+        BASE_DIR . '/plg_task_livingword',
+        VENDOR_DIR . '/plg_task_livingword.zip',
+        $verbose
+    );
+
+    echo "\n[5/5] Bundling pkg_livingword-$version.zip...\n";
+    $pkgZip = BUILD_DIR . "/pkg_livingword-$version.zip";
+
+    bundlePackage(
+        $version,
+        [
+            'lib_cwmscripture.zip'            => $scripture['zips']['lib_cwmscripture.zip'],
+            'com_livingword.zip'              => $componentZip,
+            'mod_livingword.zip'              => $moduleZip,
+            'plg_task_livingword.zip'         => $taskPluginZip,
+            'plg_content_scripturelinks.zip'  => $scripture['zips']['plg_content_scripturelinks.zip'],
+        ],
+        $pkgZip
+    );
+
+    echo "\nBuild complete: pkg_livingword-$version.zip\n";
+    echo "Location: $pkgZip\n";
+    echo "Bundled scripture library: v{$scripture['version']}\n";
+}
+
+/**
+ * Build the scripture library and content plugin zips from local sibling
+ * repositories instead of fetching the latest release from GitHub.
+ *
+ * Used for testing unreleased library changes end-to-end before cutting a
+ * real release.  Resolves lib_cwmscripture from ../lib_cwmscripture and
+ * plg_content_scripturelinks from ../CWMScriptureLinks.
+ *
+ * @return  array{version: string, zips: array<string, string>}
+ *
+ * @since 5.1.0
+ */
+function buildLocalScriptureDependencies(bool $verbose): array
+{
+    $libSource    = realpath(BASE_DIR . '/../lib_cwmscripture');
+    $pluginSource = realpath(BASE_DIR . '/../CWMScriptureLinks');
+
+    if ($libSource === false || !is_dir($libSource)) {
+        throw new \RuntimeException('Local lib_cwmscripture not found at ../lib_cwmscripture');
+    }
+
+    if ($pluginSource === false || !is_dir($pluginSource)) {
+        throw new \RuntimeException('Local CWMScriptureLinks not found at ../CWMScriptureLinks');
+    }
+
+    // Delegate to each repo's own build script — that's the authoritative
+    // way to produce a release zip with the correct layout and excludes.
+    runSubBuild($libSource, 'build/build-package.php', [], $verbose);
+    runSubBuild($pluginSource, 'build/build-package.php', ['--plugin-only'], $verbose);
+
+    $libDist    = $libSource . '/build/dist';
+    $pluginDist = $pluginSource . '/build/dist';
+
+    $libCandidates = glob($libDist . '/lib_cwmscripture-*.zip') ?: [];
+
+    if (empty($libCandidates)) {
+        throw new \RuntimeException("No lib_cwmscripture-*.zip produced in $libDist");
+    }
+
+    // Pick the most recently built candidate.
+    usort($libCandidates, static fn($a, $b) => filemtime($b) <=> filemtime($a));
+    $libZipSource = $libCandidates[0];
+    $pluginZipSource = $pluginDist . '/plg_content_scripturelinks.zip';
+
+    if (!file_exists($pluginZipSource)) {
+        throw new \RuntimeException("plg_content_scripturelinks.zip not produced in $pluginDist");
+    }
+
+    $libZip    = VENDOR_DIR . '/lib_cwmscripture.zip';
+    $pluginZip = VENDOR_DIR . '/plg_content_scripturelinks.zip';
+
+    copy($libZipSource, $libZip);
+    copy($pluginZipSource, $pluginZip);
+
+    $version = '0.0.0';
+    $xmlPath = $libSource . '/cwmscripture.xml';
+
+    if (file_exists($xmlPath)) {
+        $xml = simplexml_load_string(file_get_contents($xmlPath));
+
+        if ($xml && isset($xml->version)) {
+            $version = (string) $xml->version;
+        }
+    }
+
+    return [
+        'version' => $version,
+        'zips'    => [
+            'lib_cwmscripture.zip'           => $libZip,
+            'plg_content_scripturelinks.zip' => $pluginZip,
+        ],
+    ];
+}
+
+/**
+ * Run another repo's build script from its own directory, streaming output.
+ *
+ * @since 5.1.0
+ */
+function runSubBuild(string $repoDir, string $scriptRelative, array $args, bool $verbose): void
+{
+    $script = $repoDir . '/' . $scriptRelative;
+
+    if (!file_exists($script)) {
+        throw new \RuntimeException("Build script not found: $script");
+    }
+
+    $cmd = 'cd ' . escapeshellarg($repoDir)
+        . ' && php ' . escapeshellarg($scriptRelative);
+
+    foreach ($args as $arg) {
+        $cmd .= ' ' . escapeshellarg($arg);
+    }
+
+    $cmd .= ' 2>&1';
+
+    if ($verbose) {
+        echo "  $ $cmd\n";
+    }
+
+    $output = [];
+    $status = 0;
+    exec($cmd, $output, $status);
+
+    if ($status !== 0) {
+        echo implode("\n", $output) . "\n";
+        throw new \RuntimeException("Sub-build failed in $repoDir (exit $status)");
+    }
+
+    if ($verbose) {
+        foreach ($output as $line) {
+            echo "    $line\n";
+        }
+    }
+}
+
+/**
+ * Resolve the version to use for this build (interactive or from manifest).
+ *
+ * @since 5.1.0
+ */
+function resolveBuildVersion(): string
+{
     $xmlVersion = '5.0.0';
+
     if (file_exists(BASE_DIR . '/livingword.xml')) {
         $xml = simplexml_load_string(file_get_contents(BASE_DIR . '/livingword.xml'));
+
         if ($xml && isset($xml->version)) {
             $xmlVersion = (string) $xml->version;
         }
@@ -1206,154 +1390,215 @@ function doBuild(bool $verbose = false): void
 
     $dateVersion = date('Ymd');
 
-    if (stream_isatty(STDIN)) {
-        echo "\nSelect version to build:\n";
-        echo "  [1] XML Version ($xmlVersion) - Default\n";
-        echo "  [2] Date Version ($dateVersion)\n";
-        echo "  [3] Custom Version\n";
-
-        $choice = ask('Enter choice [1-3]', '1', 10);
-
-        switch ($choice) {
-            case '2':
-                $version = $dateVersion;
-                break;
-            case '3':
-                $version = ask('Enter custom version');
-                break;
-            case '1':
-            default:
-                $version = $xmlVersion;
-                break;
-        }
-    } else {
+    if (!stream_isatty(STDIN)) {
         echo "Non-interactive mode detected. Using XML version: $xmlVersion\n";
-        $version = $xmlVersion;
+
+        return $xmlVersion;
     }
 
-    echo "\nPackaging LivingWord v$version...\n";
+    echo "\nSelect version to build:\n";
+    echo "  [1] XML Version ($xmlVersion) - Default\n";
+    echo "  [2] Date Version ($dateVersion)\n";
+    echo "  [3] Custom Version\n";
 
-    $zipFile = BUILD_DIR . "/com_livingword-$version.zip";
+    $choice = ask('Enter choice [1-3]', '1', 10);
 
-    if (file_exists($zipFile)) {
-        unlink($zipFile);
+    return match ($choice) {
+        '2'     => $dateVersion,
+        '3'     => ask('Enter custom version'),
+        default => $xmlVersion,
+    };
+}
+
+/**
+ * Build com_livingword.zip — the component itself plus its media folder.
+ *
+ * The zip layout mirrors what Joomla's component installer expects: the
+ * livingword.xml manifest at the root, with admin/, site/, media/ and
+ * script.php as siblings.
+ *
+ * @since 5.1.0
+ */
+function buildComponentZip(bool $verbose): string
+{
+    $destZip = VENDOR_DIR . '/com_livingword.zip';
+
+    if (file_exists($destZip)) {
+        unlink($destZip);
     }
 
     $zip = new ZipArchive();
-    if ($zip->open($zipFile, ZipArchive::CREATE) !== true) {
-        throw new \RuntimeException("Cannot open <$zipFile>");
+
+    if ($zip->open($destZip, ZipArchive::CREATE) !== true) {
+        throw new \RuntimeException("Cannot open $destZip");
     }
 
-    $resolvedBase = realpath(BASE_DIR);
+    $rootFiles = ['livingword.xml', 'script.php', 'LICENSE', 'README.md'];
 
-    $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($resolvedBase, FilesystemIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::LEAVES_ONLY
-    );
+    foreach ($rootFiles as $file) {
+        $path = BASE_DIR . '/' . $file;
 
-    $excludes = [
-        'build.xml', 'build.properties', 'build.dist.properties', 'phpunit.xml', 'phpunit.xml.bak',
-        '.php-cs-fixer.dist.php', 'CLAUDE.md', '.editorconfig', '_config.yml',
-        '.git', '.vscode', '.idea', '.DS_Store', 'node_modules', 'composer.json', 'composer.lock',
-        'package.json', 'package-lock.json', 'build', 'tests',
-        // Exclude Composer vendor (dev-only)
-        'libraries/vendor',
+        if (file_exists($path)) {
+            $zip->addFile($path, $file);
+
+            if ($verbose) {
+                echo "  + $file\n";
+            }
+        }
+    }
+
+    foreach (['admin', 'site', 'media'] as $folder) {
+        addDirToZip($zip, BASE_DIR . '/' . $folder, $folder, $verbose);
+    }
+
+    $zip->close();
+
+    return $destZip;
+}
+
+/**
+ * Build a sub-extension zip (module or plugin) from a source directory.
+ *
+ * The directory's contents are copied into the zip root — the manifest XML
+ * sits at the top of the zip, matching Joomla's extension installer layout.
+ *
+ * @since 5.1.0
+ */
+function buildSubExtensionZip(string $sourceDir, string $destZip, bool $verbose): string
+{
+    if (!is_dir($sourceDir)) {
+        throw new \RuntimeException("Source directory not found: $sourceDir");
+    }
+
+    if (file_exists($destZip)) {
+        unlink($destZip);
+    }
+
+    $zip = new ZipArchive();
+
+    if ($zip->open($destZip, ZipArchive::CREATE) !== true) {
+        throw new \RuntimeException("Cannot open $destZip");
+    }
+
+    addDirToZip($zip, $sourceDir, '', $verbose);
+
+    $zip->close();
+
+    return $destZip;
+}
+
+/**
+ * Recursively add a directory's contents to a zip archive, applying the
+ * standard build exclusion rules (no .git, .idea, node_modules, maps, etc.).
+ *
+ * @since 5.1.0
+ */
+function addDirToZip(ZipArchive $zip, string $sourceDir, string $zipPrefix, bool $verbose): void
+{
+    $resolved = realpath($sourceDir);
+
+    if ($resolved === false) {
+        throw new \RuntimeException("Cannot resolve $sourceDir");
+    }
+
+    $excludeNames = [
+        '.git', '.vscode', '.idea', '.DS_Store', 'node_modules',
+        'build.properties', 'build.dist.properties', 'phpunit.xml',
+        '.php-cs-fixer.dist.php', '.editorconfig',
     ];
 
     $excludeExts = ['map'];
 
-    $includes    = ['admin/', 'media/', 'mod_livingword/', 'plg_task_livingword/', 'site/'];
-    $includeExts = ['php', 'xml', 'txt', 'md', 'ini', 'json', 'css', 'js'];
+    $files = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($resolved, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
 
-    $fileCount = 0;
-    foreach ($files as $name => $file) {
+    foreach ($files as $file) {
         if ($file->isDir()) {
             continue;
         }
 
         $filePath     = $file->getRealPath();
-        $relativePath = str_replace('\\', '/', substr($filePath, \strlen($resolvedBase) + 1));
+        $relativePath = str_replace('\\', '/', substr($filePath, \strlen($resolved) + 1));
 
-        $excludeFile = false;
-        foreach ($excludes as $exclude) {
-            $cleanExclude = rtrim($exclude, '/');
+        $basename = basename($relativePath);
 
-            if ($relativePath === $cleanExclude) {
-                $excludeFile = true;
-                break;
-            }
-
-            if (str_starts_with($relativePath, $cleanExclude . '/')) {
-                $excludeFile = true;
-                break;
-            }
-
-            if (str_contains($relativePath, '/' . $cleanExclude . '/')) {
-                $excludeFile = true;
-                break;
-            }
-
-            if (str_ends_with($relativePath, '/' . $cleanExclude)) {
-                $excludeFile = true;
-                break;
-            }
-        }
-
-        if (!$excludeFile) {
-            $ext = pathinfo($relativePath, PATHINFO_EXTENSION);
-            if (\in_array($ext, $excludeExts, true)) {
-                $excludeFile = true;
-            }
-        }
-
-        if (!$excludeFile && str_contains($relativePath, '/vendor/')) {
-            $basename  = basename($relativePath);
-            $upperBase = strtoupper(pathinfo($basename, PATHINFO_FILENAME));
-
-            if ($basename === 'installed.json' || $basename === 'installed.php') {
-                $excludeFile = true;
-            }
-
-            if (\in_array($upperBase, ['README', 'CHANGELOG', 'BACKERS', 'AUTHORS', 'CONTRIBUTING', 'UPGRADE', 'SECURITY'], true)) {
-                $excludeFile = true;
-            }
-
-            if ($upperBase === 'LICENSE' || $upperBase === 'COPYING') {
-                $excludeFile = true;
-            }
-        }
-
-        if ($excludeFile) {
+        if (\in_array($basename, $excludeNames, true)) {
             continue;
         }
 
-        $shouldInclude = false;
-        foreach ($includes as $include) {
-            if (str_starts_with($relativePath, $include)) {
-                $shouldInclude = true;
+        $skip = false;
+
+        foreach ($excludeNames as $name) {
+            if (str_contains('/' . $relativePath . '/', '/' . $name . '/')) {
+                $skip = true;
                 break;
             }
         }
-        if (!$shouldInclude) {
-            $ext = pathinfo($relativePath, PATHINFO_EXTENSION);
-            if (\in_array($ext, $includeExts, true) && !str_contains($relativePath, '/')) {
-                $shouldInclude = true;
-            }
+
+        if ($skip) {
+            continue;
         }
 
-        if ($shouldInclude) {
-            $zip->addFile($filePath, $relativePath);
-            $fileCount++;
-            if ($verbose) {
-                echo "  + $relativePath\n";
-            }
+        $ext = pathinfo($relativePath, PATHINFO_EXTENSION);
+
+        if (\in_array($ext, $excludeExts, true)) {
+            continue;
         }
+
+        $zipPath = $zipPrefix === '' ? $relativePath : $zipPrefix . '/' . $relativePath;
+        $zip->addFile($filePath, $zipPath);
+
+        if ($verbose) {
+            echo "  + $zipPath\n";
+        }
+    }
+}
+
+/**
+ * Bundle sub-extension zips into the final pkg_livingword package.
+ *
+ * Writes a concrete pkg manifest (with @VERSION@ / @DATE@ substituted)
+ * and the listed sub-zips at the root of the package zip.
+ *
+ * @param   array<string, string>  $subZips  Map of archive filename → source path.
+ *
+ * @since 5.1.0
+ */
+function bundlePackage(string $version, array $subZips, string $destZip): void
+{
+    if (!file_exists(PKG_MANIFEST)) {
+        throw new \RuntimeException('Package manifest template not found: ' . PKG_MANIFEST);
+    }
+
+    $manifest = file_get_contents(PKG_MANIFEST);
+    $manifest = strtr($manifest, [
+        '@VERSION@' => $version,
+        '@DATE@'    => date('Y-m-d'),
+    ]);
+
+    if (file_exists($destZip)) {
+        unlink($destZip);
+    }
+
+    $zip = new ZipArchive();
+
+    if ($zip->open($destZip, ZipArchive::CREATE) !== true) {
+        throw new \RuntimeException("Cannot open $destZip");
+    }
+
+    $zip->addFromString('pkg_livingword.xml', $manifest);
+
+    foreach ($subZips as $archiveName => $sourcePath) {
+        if (!file_exists($sourcePath)) {
+            throw new \RuntimeException("Missing sub-extension zip: $sourcePath");
+        }
+
+        $zip->addFile($sourcePath, $archiveName);
     }
 
     $zip->close();
-
-    echo "\nBuild complete: com_livingword-$version.zip ($fileCount files)\n";
-    echo "Location: $zipFile\n";
 }
 
 /**

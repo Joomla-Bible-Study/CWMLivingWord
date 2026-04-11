@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="package" method="upgrade">
+    <name>pkg_livingword</name>
+    <packagename>livingword</packagename>
+    <author>CWM Team</author>
+    <authorEmail>info@christianwebministries.org</authorEmail>
+    <authorUrl>https://www.christianwebministries.org</authorUrl>
+    <copyright>(C) 2026 CWM Team All rights reserved.</copyright>
+    <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+    <version>@VERSION@</version>
+    <creationDate>@DATE@</creationDate>
+    <description>CWM LivingWord package — Bible reading plans component, daily reading module, scheduled email task plugin, plus the CWM Scripture library and content plugin for in-article scripture rendering.</description>
+
+    <files>
+        <file type="library" id="cwmscripture">lib_cwmscripture.zip</file>
+        <file type="component" id="com_livingword">com_livingword.zip</file>
+        <file type="module" client="site" id="mod_livingword">mod_livingword.zip</file>
+        <file type="plugin" group="task" id="livingword">plg_task_livingword.zip</file>
+        <file type="plugin" group="content" id="scripturelinks">plg_content_scripturelinks.zip</file>
+    </files>
+</extension>
