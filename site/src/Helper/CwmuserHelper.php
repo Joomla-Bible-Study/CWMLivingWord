@@ -16,6 +16,7 @@ namespace CWM\Component\Livingword\Site\Helper;
 
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
 
@@ -26,6 +27,93 @@ use Joomla\Database\DatabaseInterface;
  */
 class CwmuserHelper
 {
+    /**
+     * Get user's LivingWord settings, or component defaults if not set.
+     *
+     * @param   DatabaseInterface  $db      Database instance
+     * @param   int                $userId  Joomla user ID
+     *
+     * @return  object  User settings object
+     *
+     * @since   5.0.0
+     */
+    /**
+     * Guard a restricted site view: redirect to cwmhome unless the current
+     * user has a real LivingWord subscription row.
+     *
+     * Called at the top of HtmlView::display() for views that assume a
+     * logged-in subscribed user (settings, plan view, groups, group
+     * detail).  Guests and logged-in users who haven't picked a plan yet
+     * are bounced to cwmhome where they see the onboarding picker.
+     *
+     * This method calls $app->redirect() which throws or exits — callers
+     * should treat the call as terminal when the guard fails.
+     *
+     * @return  void
+     *
+     * @since   5.5.0
+     */
+    public static function requireSubscription(): void
+    {
+        $app    = Factory::getApplication();
+        $userId = (int) $app->getIdentity()?->id;
+        $db     = Factory::getContainer()->get(DatabaseInterface::class);
+
+        $userData = self::getUserData($db, $userId);
+
+        if ((bool) ($userData->is_subscribed ?? false)) {
+            return;
+        }
+
+        $messageKey = $userId > 0
+            ? 'COM_LIVINGWORD_GUARD_PICK_PLAN_FIRST'
+            : 'COM_LIVINGWORD_GUARD_LOGIN_REQUIRED';
+
+        $app->enqueueMessage(Text::_($messageKey), 'warning');
+
+        // Build a redirect URL that always resolves: look up any menu item
+        // pointing at cwmhome and append its Itemid so the router can
+        // anchor to it.  On sites without a cwmhome menu item, fall back
+        // to the site root — still valid routing.
+        $redirectUrl = 'index.php?option=com_livingword&view=cwmhome';
+        $itemid      = self::resolveCwmhomeItemid($app);
+
+        if ($itemid > 0) {
+            $redirectUrl .= '&Itemid=' . $itemid;
+        } else {
+            // No cwmhome menu item at all → go to site root so we at
+            // least land on a routable page.
+            $redirectUrl = Uri::base();
+        }
+
+        $app->redirect($redirectUrl);
+    }
+
+    /**
+     * Find the Itemid of any published menu item pointing at cwmhome.
+     *
+     * @return  int  Menu item id, or 0 when no match exists.
+     *
+     * @since   5.5.0
+     */
+    private static function resolveCwmhomeItemid(\Joomla\CMS\Application\CMSApplicationInterface $app): int
+    {
+        try {
+            $menu  = $app->getMenu();
+            $items = $menu->getItems('link', 'index.php?option=com_livingword&view=cwmhome');
+
+            foreach ((array) $items as $item) {
+                if ((int) ($item->published ?? 1) === 1) {
+                    return (int) $item->id;
+                }
+            }
+        } catch (\Throwable) {
+            // Fall through — no menu available in this context.
+        }
+
+        return 0;
+    }
+
     /**
      * Get user's LivingWord settings, or component defaults if not set.
      *
@@ -53,6 +141,7 @@ class CwmuserHelper
             'plan_view'     => 0,
             'start_date'    => $params->get('config_global_startdate', date('Y-m-d')),
             'date_offset'   => 0,
+            'is_subscribed' => false,
         ];
 
         if ($userId === 0) {
@@ -67,7 +156,14 @@ class CwmuserHelper
         $db->setQuery($query);
         $row = $db->loadObject();
 
+        // A real #__livingword_users row is the only thing that counts as
+        // "subscribed".  A logged-in user with no row falls through to the
+        // defaults object and gets is_subscribed=false so the home view can
+        // render the onboarding plan picker instead of pretending they're
+        // already on the configured default plan.
         if ($row) {
+            $row->is_subscribed = (int) ($row->plan_id ?? 0) > 0;
+
             return $row;
         }
 

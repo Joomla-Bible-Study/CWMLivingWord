@@ -15,6 +15,7 @@ namespace CWM\Component\Livingword\Site\View\Cwmgroupdetail;
 // phpcs:enable PSR1.Files.SideEffects
 
 use CWM\Component\Livingword\Site\Helper\CwmmenuHelper;
+use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
@@ -52,6 +53,8 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
+        CwmuserHelper::requireSubscription();
+
         $app     = Factory::getApplication();
         $groupId = $app->getInput()->getInt('group_id', 0);
         $model   = $this->getModel();

@@ -23,6 +23,104 @@ $reading = $data->todayReading;
 $plan    = $data->planInfo;
 $user    = $data->userData;
 
+// Subscription state — distinguishes "has a real #__livingword_users row"
+// from "falling back to the configured default plan".  Drives the
+// onboarding branch below.
+$isLoggedIn      = (int) ($user->user_id ?? 0) > 0;
+$isSubscribed    = (bool) ($user->is_subscribed ?? false);
+$availablePlans  = $data->availablePlans ?? [];
+
+// Short-circuit straight to the onboarding picker for guests and
+// logged-in users who haven't picked a plan yet — the daily-reading
+// dashboard below would otherwise leak the configured default plan
+// and hide the real call to action.
+if (!$isSubscribed) :
+    $loginUrl = Route::_('index.php?option=com_users&view=login&return='
+        . base64_encode(Route::_('index.php?option=com_livingword&view=cwmhome', false)), false);
+    $registerUrl = Route::_('index.php?option=com_users&view=registration', false);
+    $subscribeUrl = Route::_('index.php?option=com_livingword&task=cwmsubscribe.start', false);
+    $formToken = Session::getFormToken();
+    ?>
+    <div class="com-livingword-home com-livingword-onboarding">
+        <?php echo $this->menu; ?>
+
+        <div class="livingword-onboarding-hero py-5 text-center">
+            <h1 class="display-5 mb-3"><?php echo Text::_('COM_LIVINGWORD_ONBOARDING_HEADLINE'); ?></h1>
+            <p class="lead text-muted mb-4"><?php echo Text::_('COM_LIVINGWORD_ONBOARDING_PITCH'); ?></p>
+            <?php if (!$isLoggedIn) : ?>
+                <div class="livingword-onboarding-cta mb-4">
+                    <a href="<?php echo $this->escape($loginUrl); ?>" class="btn btn-primary btn-lg me-2">
+                        <span class="icon-user" aria-hidden="true"></span>
+                        <?php echo Text::_('COM_LIVINGWORD_ONBOARDING_LOGIN'); ?>
+                    </a>
+                    <a href="<?php echo $this->escape($registerUrl); ?>" class="btn btn-outline-primary btn-lg">
+                        <?php echo Text::_('COM_LIVINGWORD_ONBOARDING_REGISTER'); ?>
+                    </a>
+                </div>
+                <p class="text-muted small">
+                    <?php echo Text::_('COM_LIVINGWORD_ONBOARDING_PREVIEW_HINT'); ?>
+                </p>
+            <?php endif; ?>
+        </div>
+
+        <?php if (!empty($availablePlans)) : ?>
+            <section class="livingword-onboarding-plans mb-5">
+                <h2 class="h4 mb-3"><?php echo Text::_('COM_LIVINGWORD_ONBOARDING_CHOOSE_PLAN'); ?></h2>
+                <div class="row g-3">
+                    <?php foreach ($availablePlans as $planRow) :
+                        $planDays = (int) ($planRow->total_days ?? 0);
+                        ?>
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm livingword-plan-card">
+                                <div class="card-body d-flex flex-column">
+                                    <h3 class="h5 card-title"><?php echo $this->escape($planRow->title); ?></h3>
+                                    <?php if (!empty($planRow->description)) : ?>
+                                        <p class="card-text text-muted flex-grow-1">
+                                            <?php echo $this->escape($planRow->description); ?>
+                                        </p>
+                                    <?php endif; ?>
+                                    <?php if ($planDays > 0) : ?>
+                                        <p class="card-text small text-muted mb-3">
+                                            <span class="icon-calendar" aria-hidden="true"></span>
+                                            <?php echo Text::sprintf('COM_LIVINGWORD_ONBOARDING_PLAN_DAYS', $planDays); ?>
+                                        </p>
+                                    <?php endif; ?>
+                                    <?php if ($isLoggedIn) : ?>
+                                        <form method="post"
+                                              action="<?php echo $this->escape($subscribeUrl); ?>"
+                                              class="mt-auto"
+                                              autocomplete="off"
+                                              data-1p-ignore="true"
+                                              data-lpignore="true"
+                                              data-form-type="other">
+                                            <input type="hidden" name="plan_id" value="<?php echo (int) $planRow->id; ?>">
+                                            <input type="hidden" name="<?php echo $formToken; ?>" value="1">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <?php echo Text::_('COM_LIVINGWORD_ONBOARDING_START_PLAN'); ?>
+                                            </button>
+                                        </form>
+                                    <?php else : ?>
+                                        <a href="<?php echo $this->escape($loginUrl); ?>"
+                                           class="btn btn-outline-primary mt-auto w-100">
+                                            <?php echo Text::_('COM_LIVINGWORD_ONBOARDING_SIGN_IN_TO_START'); ?>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php else : ?>
+            <div class="alert alert-info">
+                <?php echo Text::_('COM_LIVINGWORD_ONBOARDING_NO_PLANS'); ?>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
+    return;
+endif;
+
 // Progress tracking
 $isLoggedIn        = (int) ($user->user_id ?? 0) > 0;
 $isCompleted       = $data->isCompleted ?? false;

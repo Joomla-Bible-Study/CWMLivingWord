@@ -43,8 +43,39 @@ class CwmhomeModel extends BaseDatabaseModel
         $db     = $this->getDatabase();
         $userId = (int) Factory::getApplication()->getIdentity()->id;
 
-        $userData = CwmuserHelper::getUserData($db, $userId);
-        $planId   = (int) $userData->plan_id;
+        $userData      = CwmuserHelper::getUserData($db, $userId);
+        $isSubscribed  = (bool) ($userData->is_subscribed ?? false);
+        $planId        = $isSubscribed ? (int) $userData->plan_id : 0;
+
+        // Users without a real #__livingword_users row (guests and
+        // logged-in users who've never picked a plan) get the onboarding
+        // view — no progress, no today's-reading logic, just the plan
+        // picker.  Skip all the per-plan computation for them.
+        if (!$isSubscribed) {
+            $availablePlans  = self::getAvailablePlans($db);
+            $greetingContext = $userId > 0 ? 'unsubscribed' : 'guest_unsubscribed';
+
+            return (object) [
+                'userData'          => $userData,
+                'todayReading'      => null,
+                'planInfo'          => null,
+                'currentDay'        => 0,
+                'totalDays'         => 0,
+                'isCompleted'       => false,
+                'completedCount'    => 0,
+                'progressPercent'   => 0,
+                'passages'          => [],
+                'passageCount'      => 0,
+                'completedPassages' => [],
+                'partnerProgress'   => null,
+                'durationType'      => 'annual',
+                'todayNote'         => '',
+                'greetingContext'   => $greetingContext,
+                'weeklyProgress'    => 0,
+                'nextMilestone'     => null,
+                'availablePlans'    => $availablePlans,
+            ];
+        }
 
         $totalDays = CwmreadingHelper::getPlanTotalDays($db, $planId);
         $planInfo  = CwmreadingHelper::getPlanById($db, $planId);
@@ -60,51 +91,41 @@ class CwmhomeModel extends BaseDatabaseModel
 
         $todayReading = ($currentDay > 0) ? CwmreadingHelper::getReadingForDay($db, $planId, $currentDay) : null;
 
-        $isCompleted         = false;
-        $completedCount      = 0;
-        $passages            = [];
-        $completedPassages   = [];
-        $passageCount        = 1;
+        $isCompleted       = false;
+        $completedCount    = 0;
+        $passages          = [];
+        $completedPassages = [];
+        $passageCount      = 1;
 
         if ($todayReading) {
             $passages     = CwmprogressHelper::splitPassages($todayReading->reading);
             $passageCount = \count($passages);
         }
 
-        if ($userId > 0) {
-            $isCompleted       = CwmprogressHelper::isCompleted($db, $userId, $planId, $currentDay, $passageCount);
-            $completedCount    = CwmprogressHelper::getCompletedCount($db, $userId, $planId);
-            $completedPassages = CwmprogressHelper::getCompletedPassages($db, $userId, $planId, $currentDay);
-        }
+        $isCompleted       = CwmprogressHelper::isCompleted($db, $userId, $planId, $currentDay, $passageCount);
+        $completedCount    = CwmprogressHelper::getCompletedCount($db, $userId, $planId);
+        $completedPassages = CwmprogressHelper::getCompletedPassages($db, $userId, $planId, $currentDay);
 
         $progressPercent = ($totalDays > 0) ? round(($completedCount / $totalDays) * 100) : 0;
 
-        $partnerProgress = null;
-        $todayNote       = '';
-        $weeklyProgress  = 0;
-        $greetingContext = 'guest';
-        $nextMilestone   = null;
+        $partnerProgress = CwmpartnerHelper::getPartnerProgress($db, $userId);
+        $todayNote       = CwmnotesHelper::getNote($db, $userId, $planId, $currentDay) ?? '';
+        $weeklyProgress  = self::getWeeklyProgress($db, $userId, $planId);
 
-        if ($userId > 0) {
-            $partnerProgress = CwmpartnerHelper::getPartnerProgress($db, $userId);
-            $todayNote       = CwmnotesHelper::getNote($db, $userId, $planId, $currentDay) ?? '';
-            $weeklyProgress  = self::getWeeklyProgress($db, $userId, $planId);
-
-            if ($completedCount === 0) {
-                $greetingContext = 'new_user';
-            } elseif ($isCompleted) {
-                $greetingContext = 'completed_today';
-            } else {
-                $greetingContext = 'returning';
-            }
-
-            $nextMilestone = self::calculateMilestone(
-                $completedCount,
-                $totalDays,
-                (int) ($userData->streak_current ?? 0),
-                (int) ($userData->streak_best ?? 0)
-            );
+        if ($completedCount === 0) {
+            $greetingContext = 'new_user';
+        } elseif ($isCompleted) {
+            $greetingContext = 'completed_today';
+        } else {
+            $greetingContext = 'returning';
         }
+
+        $nextMilestone = self::calculateMilestone(
+            $completedCount,
+            $totalDays,
+            (int) ($userData->streak_current ?? 0),
+            (int) ($userData->streak_best ?? 0)
+        );
 
         return (object) [
             'userData'          => $userData,
@@ -124,7 +145,37 @@ class CwmhomeModel extends BaseDatabaseModel
             'greetingContext'   => $greetingContext,
             'weeklyProgress'    => $weeklyProgress,
             'nextMilestone'     => $nextMilestone,
+            'availablePlans'    => [],
         ];
+    }
+
+    /**
+     * Fetch published plans for the onboarding picker.
+     *
+     * @return  object[]  Plan rows ordered by the ordering column.
+     *
+     * @since   5.5.0
+     */
+    private static function getAvailablePlans(DatabaseInterface $db): array
+    {
+        $query = $db->getQuery(true)
+            ->select(
+                [
+                    $db->quoteName('id'),
+                    $db->quoteName('alias'),
+                    $db->quoteName('title'),
+                    $db->quoteName('description'),
+                    $db->quoteName('testament'),
+                    $db->quoteName('duration_type'),
+                    $db->quoteName('total_days'),
+                ]
+            )
+            ->from($db->quoteName('#__livingword_plans'))
+            ->where($db->quoteName('published') . ' = 1')
+            ->order($db->quoteName('ordering') . ' ASC');
+        $db->setQuery($query);
+
+        return $db->loadObjectList() ?: [];
     }
 
     /**

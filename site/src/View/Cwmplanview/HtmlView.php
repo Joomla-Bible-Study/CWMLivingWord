@@ -15,6 +15,7 @@ namespace CWM\Component\Livingword\Site\View\Cwmplanview;
 // phpcs:enable PSR1.Files.SideEffects
 
 use CWM\Component\Livingword\Site\Helper\CwmmenuHelper;
+use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
@@ -44,6 +45,8 @@ class HtmlView extends BaseHtmlView
     #[\Override]
     public function display($tpl = null): void
     {
+        CwmuserHelper::requireSubscription();
+
         $this->planData = $this->getModel()->getPlanViewData();
         $this->menu     = CwmmenuHelper::buildMenu();
 
