@@ -14,7 +14,6 @@ namespace CWM\Component\Livingword\Administrator\View\Cwmgroups;
 
 // phpcs:enable PSR1.Files.SideEffects
 
-use CWM\Component\Livingword\Administrator\Model\CwmgroupModel;
 use CWM\Component\Livingword\Administrator\Model\CwmgroupsModel;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Text;

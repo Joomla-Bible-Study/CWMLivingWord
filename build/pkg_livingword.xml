@@ -16,6 +16,7 @@
         <file type="component" id="com_livingword">com_livingword.zip</file>
         <file type="module" client="site" id="mod_livingword">mod_livingword.zip</file>
         <file type="plugin" group="task" id="livingword">plg_task_livingword.zip</file>
+        <file type="plugin" group="task" id="cwmscripture">plg_task_cwmscripture.zip</file>
         <file type="plugin" group="content" id="scripturelinks">plg_content_scripturelinks.zip</file>
     </files>
 </extension>

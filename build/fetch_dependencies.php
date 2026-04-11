@@ -16,6 +16,7 @@ const SCRIPTURE_PACKAGE_NAME = 'pkg_cwmscripture';
 const SCRIPTURE_INNER_ZIPS   = [
     'lib_cwmscripture.zip',
     'plg_content_scripturelinks.zip',
+    'plg_task_cwmscripture.zip',
 ];
 
 /**

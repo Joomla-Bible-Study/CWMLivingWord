@@ -1245,6 +1245,7 @@ function doBuild(bool $verbose = false, bool $localScripture = false): void
             'com_livingword.zip'              => $componentZip,
             'mod_livingword.zip'              => $moduleZip,
             'plg_task_livingword.zip'         => $taskPluginZip,
+            'plg_task_cwmscripture.zip'       => $scripture['zips']['plg_task_cwmscripture.zip'],
             'plg_content_scripturelinks.zip'  => $scripture['zips']['plg_content_scripturelinks.zip'],
         ],
         $pkgZip
@@ -1303,11 +1304,19 @@ function buildLocalScriptureDependencies(bool $verbose): array
         throw new \RuntimeException("plg_content_scripturelinks.zip not produced in $pluginDist");
     }
 
-    $libZip    = VENDOR_DIR . '/lib_cwmscripture.zip';
-    $pluginZip = VENDOR_DIR . '/plg_content_scripturelinks.zip';
+    $libZip        = VENDOR_DIR . '/lib_cwmscripture.zip';
+    $pluginZip     = VENDOR_DIR . '/plg_content_scripturelinks.zip';
+    $taskPluginZip = VENDOR_DIR . '/plg_task_cwmscripture.zip';
+
+    $taskPluginSource = $pluginDist . '/plg_task_cwmscripture.zip';
+
+    if (!file_exists($taskPluginSource)) {
+        throw new \RuntimeException("plg_task_cwmscripture.zip not produced in $pluginDist");
+    }
 
     copy($libZipSource, $libZip);
     copy($pluginZipSource, $pluginZip);
+    copy($taskPluginSource, $taskPluginZip);
 
     $version = '0.0.0';
     $xmlPath = $libSource . '/cwmscripture.xml';
@@ -1325,6 +1334,7 @@ function buildLocalScriptureDependencies(bool $verbose): array
         'zips'    => [
             'lib_cwmscripture.zip'           => $libZip,
             'plg_content_scripturelinks.zip' => $pluginZip,
+            'plg_task_cwmscripture.zip'      => $taskPluginZip,
         ],
     ];
 }
