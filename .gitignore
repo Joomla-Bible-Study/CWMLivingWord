@@ -25,10 +25,11 @@ bin/
 out/
 gen/
 
-# Build reports and output
+# Build reports, output, and caches
 build/reports/
 build/__pycache__/
 build/packages/
+build/.*_cache.json
 
 # Local configuration
 /build.properties

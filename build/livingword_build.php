@@ -169,7 +169,7 @@ function getAdminMenuData(): array
         return [];
     }
 
-    $xml = simplexml_load_file($xmlFile);
+    $xml = simplexml_load_string(file_get_contents($xmlFile));
 
     if (!$xml || !isset($xml->administration->menu)) {
         return [];
@@ -178,8 +178,8 @@ function getAdminMenuData(): array
     $menuData = [];
 
     // Root menu item
-    $rootMenu = $xml->administration->menu;
-    $rootImg  = (string) ($rootMenu['img'] ?? 'class:component');
+    $rootMenu   = $xml->administration->menu;
+    $rootImg    = (string) ($rootMenu['img'] ?? 'class:component');
     $menuData[] = [
         'title'  => trim((string) $rootMenu),
         'link'   => 'index.php?option=com_livingword',
@@ -261,7 +261,7 @@ function syncAdminMenus(PDO $pdo, string $prefix, int $extensionId, bool $verbos
         "SELECT id, link FROM {$prefix}menu WHERE menutype = 'main' AND parent_id = ? AND client_id = 1"
     );
     $stmt->execute([$parentMenuId]);
-    $existingMenus = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $existingMenus  = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $existingByLink = array_column($existingMenus, 'id', 'link');
 
     // Manifest links for cleanup
@@ -764,6 +764,191 @@ function getJoomlaDbConfig(string $joomlaPath): ?array
 }
 
 /**
+ * Build the manifest_cache JSON string from an extension's XML manifest.
+ *
+ * @param   string  $manifestPath  Absolute path to the XML manifest file
+ * @param   string  $type          Extension type (component, module, plugin)
+ * @param   string  $defaultName   Fallback name if XML has none
+ *
+ * @return  string  JSON-encoded manifest cache, or '{}' if manifest unreadable
+ *
+ * @since   5.0.0
+ */
+function buildManifestCache(string $manifestPath, string $type, string $defaultName): string
+{
+    if (!file_exists($manifestPath)) {
+        return '{}';
+    }
+
+    $xml = simplexml_load_string(file_get_contents($manifestPath));
+
+    if (!$xml) {
+        return '{}';
+    }
+
+    return json_encode([
+        'name'         => (string) ($xml->name ?? $defaultName),
+        'type'         => $type,
+        'creationDate' => (string) ($xml->creationDate ?? ''),
+        'author'       => (string) ($xml->author ?? ''),
+        'copyright'    => (string) ($xml->copyright ?? ''),
+        'authorEmail'  => (string) ($xml->authorEmail ?? ''),
+        'authorUrl'    => (string) ($xml->authorUrl ?? ''),
+        'version'      => (string) ($xml->version ?? '5.0.0'),
+        'description'  => (string) ($xml->description ?? ''),
+        'group'        => '',
+    ]);
+}
+
+/**
+ * Insert an extension row into #__extensions.
+ *
+ * Works for any extension type (component, module, plugin).
+ *
+ * @param   PDO     $pdo            Database connection
+ * @param   string  $prefix         Table prefix
+ * @param   bool    $hasNamespace   Whether the extensions table has a namespace column
+ * @param   array   $ext            Extension definition from the $expected array
+ * @param   string  $manifestCache  JSON manifest_cache string
+ *
+ * @return  int  The new extension_id
+ *
+ * @since   5.0.0
+ */
+function insertExtension(PDO $pdo, string $prefix, bool $hasNamespace, array $ext, string $manifestCache): int
+{
+    $columns = 'name, type, element, folder, client_id, enabled, access, locked, state, manifest_cache, params, custom_data';
+    $values  = '?, ?, ?, ?, ?, ?, 1, 0, 0, ?, ?, ?';
+    $params  = [
+        $ext['name'],
+        $ext['type'],
+        $ext['element'],
+        $ext['folder'],
+        $ext['client_id'],
+        $ext['enabled'],
+        $manifestCache,
+        '{}',
+        '',
+    ];
+
+    if ($hasNamespace && !empty($ext['namespace'])) {
+        $columns .= ', namespace';
+        $values  .= ', ?';
+        $params[] = str_replace('\\', '\\\\', $ext['namespace']);
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}extensions ($columns) VALUES ($values)");
+    $stmt->execute($params);
+
+    return (int) $pdo->lastInsertId();
+}
+
+/**
+ * Run CREATE TABLE IF NOT EXISTS statements from the install SQL file.
+ *
+ * Safe to call repeatedly — only creates missing tables.
+ *
+ * @param   PDO     $pdo      Database connection
+ * @param   string  $prefix   Table prefix
+ * @param   bool    $verbose  Show detailed output
+ *
+ * @return  void
+ *
+ * @since   5.0.0
+ */
+function runInstallSql(PDO $pdo, string $prefix, bool $verbose = false): void
+{
+    $sqlFile = BASE_DIR . '/admin/sql/install.mysql.utf8.sql';
+
+    if (!file_exists($sqlFile)) {
+        return;
+    }
+
+    $sqlContent = file_get_contents($sqlFile);
+    preg_match_all('/CREATE TABLE IF NOT EXISTS[^;]+;/si', $sqlContent, $matches);
+
+    $count = 0;
+
+    foreach ($matches[0] as $createSql) {
+        $createSql = str_replace('#__', $prefix, $createSql);
+
+        try {
+            $pdo->exec($createSql);
+            $count++;
+        } catch (PDOException) {
+            // Table already exists or other non-fatal issue
+        }
+    }
+
+    if ($verbose && $count > 0) {
+        echo "    tables: $count CREATE statements executed\n";
+    }
+}
+
+/**
+ * Ensure a site module has an instance row in #__modules and a menu assignment.
+ *
+ * Joomla requires a row in #__modules to make a module assignable to template
+ * positions, and a row in #__modules_menu (menuid=0) to show on all pages.
+ * Without these, the module appears in Extensions but can't actually be used.
+ *
+ * Safe to call repeatedly — only creates rows if missing.
+ *
+ * @param   PDO     $pdo      Database connection
+ * @param   string  $prefix   Table prefix
+ * @param   string  $element  Module element name (e.g. 'mod_livingword')
+ * @param   bool    $verbose  Show detailed output
+ *
+ * @return  void
+ *
+ * @since   5.0.0
+ */
+function ensureModuleInstance(PDO $pdo, string $prefix, string $element, bool $verbose = false): void
+{
+    // Check if a module instance already exists
+    $stmt = $pdo->prepare(
+        "SELECT id FROM {$prefix}modules WHERE module = ? AND client_id = 0"
+    );
+    $stmt->execute([$element]);
+    $moduleId = $stmt->fetchColumn();
+
+    if ($moduleId) {
+        if ($verbose) {
+            echo "    module instance: already exists (ID $moduleId)\n";
+        }
+    } else {
+        // Create an unpublished module instance — admin will set position and publish
+        $stmt = $pdo->prepare(
+            "INSERT INTO {$prefix}modules "
+            . "(title, module, position, published, access, ordering, client_id, language, params, note) "
+            . "VALUES (?, ?, '', 0, 1, 0, 0, '*', '{}', 'Created by composer verify — set position and publish to use.')"
+        );
+        $stmt->execute(['LivingWord Daily Reading', $element]);
+        $moduleId = (int) $pdo->lastInsertId();
+
+        if ($verbose) {
+            echo "    module instance: created (ID $moduleId, unpublished)\n";
+        }
+    }
+
+    // Ensure menu assignment exists (menuid=0 means "all pages")
+    $stmt = $pdo->prepare(
+        "SELECT moduleid FROM {$prefix}modules_menu WHERE moduleid = ?"
+    );
+    $stmt->execute([$moduleId]);
+
+    if (!$stmt->fetchColumn()) {
+        $pdo->prepare(
+            "INSERT INTO {$prefix}modules_menu (moduleid, menuid) VALUES (?, 0)"
+        )->execute([$moduleId]);
+
+        if ($verbose) {
+            echo "    module menu: assigned to all pages\n";
+        }
+    }
+}
+
+/**
  * Verify and register all LivingWord sub-extensions in each dev Joomla database.
  *
  * @param   bool  $verbose  Show detailed output
@@ -782,8 +967,24 @@ function doVerifyExtensions(bool $verbose = false): void
     }
 
     $expected = [
-        ['type' => 'plugin', 'element' => 'livingword', 'name' => 'plg_task_livingword', 'folder' => 'task', 'enabled' => 1, 'locked' => 0],
-        ['type' => 'component', 'element' => 'com_livingword', 'name' => 'com_livingword', 'folder' => '', 'enabled' => 1, 'locked' => 0],
+        [
+            'type' => 'module', 'element' => 'mod_livingword', 'name' => 'mod_livingword',
+            'folder' => '', 'enabled' => 1, 'locked' => 0, 'client_id' => 0,
+            'manifest' => 'mod_livingword/mod_livingword.xml',
+            'namespace' => 'CWM\\Module\\Livingword\\Site',
+        ],
+        [
+            'type' => 'plugin', 'element' => 'livingword', 'name' => 'plg_task_livingword',
+            'folder' => 'task', 'enabled' => 1, 'locked' => 0, 'client_id' => 0,
+            'manifest' => 'plg_task_livingword/livingword.xml',
+            'namespace' => 'CWM\\Plugin\\Task\\Livingword',
+        ],
+        [
+            'type' => 'component', 'element' => 'com_livingword', 'name' => 'com_livingword',
+            'folder' => '', 'enabled' => 1, 'locked' => 0, 'client_id' => 1,
+            'manifest' => 'livingword.xml',
+            'namespace' => 'CWM\\Component\\Livingword',
+        ],
     ];
 
     foreach ($joomlaPaths as $joomlaPath) {
@@ -827,7 +1028,11 @@ function doVerifyExtensions(bool $verbose = false): void
             $folder  = $ext['folder'];
             $name    = $ext['name'];
 
-            $sql    = "SELECT extension_id, enabled, locked FROM {$prefix}extensions WHERE type = ? AND element = ?";
+            $manifestPath = BASE_DIR . '/' . $ext['manifest'];
+            $mc           = buildManifestCache($manifestPath, $type, $name);
+
+            // Look up existing extension row
+            $sql    = "SELECT extension_id, enabled, locked, state FROM {$prefix}extensions WHERE type = ? AND element = ?";
             $params = [$type, $element];
 
             if ($type === 'plugin' && $folder !== '') {
@@ -840,8 +1045,9 @@ function doVerifyExtensions(bool $verbose = false): void
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($row) {
-                $needsUpdate = false;
-                $updates     = [];
+                // --- Extension exists: check for needed updates ---
+                $needsUpdate  = false;
+                $updates      = [];
                 $updateParams = [];
 
                 if ((int) $row['enabled'] !== $ext['enabled']) {
@@ -854,53 +1060,28 @@ function doVerifyExtensions(bool $verbose = false): void
                     $needsUpdate = true;
                 }
 
-                // Always refresh manifest_cache and menus for the component
+                // Fix state=-1 (discovered but not installed) → state=0 (installed)
+                if ((int) ($row['state'] ?? 0) === -1) {
+                    $updates[]   = 'state = 0';
+                    $needsUpdate = true;
+                }
+
+                // Module-specific: ensure #__modules instance and menu assignment exist
+                if ($type === 'module') {
+                    ensureModuleInstance($pdo, $prefix, $element, $verbose);
+                }
+
+                // Always refresh manifest_cache
+                if ($mc !== '{}') {
+                    $updates[]      = 'manifest_cache = ?';
+                    $updateParams[] = $mc;
+                    $needsUpdate    = true;
+                }
+
+                // Component-specific: sync menus and ensure tables exist
                 if ($type === 'component') {
-                    $manifestFile = BASE_DIR . '/livingword.xml';
-
-                    if (file_exists($manifestFile)) {
-                        $xml = simplexml_load_file($manifestFile);
-
-                        if ($xml) {
-                            $mc = json_encode([
-                                'name'         => (string) ($xml->name ?? 'com_livingword'),
-                                'type'         => 'component',
-                                'creationDate' => (string) ($xml->creationDate ?? ''),
-                                'author'       => (string) ($xml->author ?? ''),
-                                'copyright'    => (string) ($xml->copyright ?? ''),
-                                'authorEmail'  => (string) ($xml->authorEmail ?? ''),
-                                'authorUrl'    => (string) ($xml->authorUrl ?? ''),
-                                'version'      => (string) ($xml->version ?? '5.0.0'),
-                                'description'  => (string) ($xml->description ?? ''),
-                                'group'        => '',
-                            ]);
-                            $updates[]      = 'manifest_cache = ?';
-                            $updateParams[] = $mc;
-                            $needsUpdate    = true;
-                        }
-                    }
-
-                    // Sync admin menu items from manifest
                     syncAdminMenus($pdo, $prefix, (int) $row['extension_id'], $verbose);
-
-                    // Run install SQL to create any missing tables
-                    $sqlFile = BASE_DIR . '/admin/sql/install.mysql.utf8.sql';
-
-                    if (file_exists($sqlFile)) {
-                        $sqlContent = file_get_contents($sqlFile);
-                        // Only run CREATE TABLE statements (safe with IF NOT EXISTS)
-                        preg_match_all('/CREATE TABLE IF NOT EXISTS[^;]+;/si', $sqlContent, $matches);
-
-                        foreach ($matches[0] as $createSql) {
-                            $createSql = str_replace('#__', $prefix, $createSql);
-
-                            try {
-                                $pdo->exec($createSql);
-                            } catch (PDOException $e) {
-                                // Table already exists or other non-fatal issue
-                            }
-                        }
-                    }
+                    runInstallSql($pdo, $prefix, $verbose);
                 }
 
                 if ($needsUpdate) {
@@ -917,34 +1098,25 @@ function doVerifyExtensions(bool $verbose = false): void
                     $ok++;
                 }
             } else {
-                if ($type === 'plugin') {
-                    if ($hasNamespace) {
-                        $namespace = match ($folder) {
-                            'task' => 'CWM\\\\Plugin\\\\Task\\\\Livingword',
-                            default => '',
-                        };
-                        $insertSql = "INSERT INTO {$prefix}extensions "
-                            . "(name, type, element, folder, client_id, enabled, access, locked, manifest_cache, params, custom_data, namespace) "
-                            . "VALUES (?, 'plugin', ?, ?, 0, ?, 1, 0, '{}', '{}', '', ?)";
-                        $stmt = $pdo->prepare($insertSql);
-                        $stmt->execute([$name, $element, $folder, $ext['enabled'], $namespace]);
-                    } else {
-                        $insertSql = "INSERT INTO {$prefix}extensions "
-                            . "(name, type, element, folder, client_id, enabled, access, locked, manifest_cache, params, custom_data) "
-                            . "VALUES (?, 'plugin', ?, ?, 0, ?, 1, 0, '{}', '{}', '')";
-                        $stmt = $pdo->prepare($insertSql);
-                        $stmt->execute([$name, $element, $folder, $ext['enabled']]);
+                // --- Extension missing: register it ---
+                if ($type === 'component') {
+                    registerComponent($pdo, $prefix, $hasNamespace, $joomlaPath, $ext, $mc, $verbose);
+                } else {
+                    insertExtension($pdo, $prefix, $hasNamespace, $ext, $mc);
+
+                    if ($type === 'module') {
+                        ensureModuleInstance($pdo, $prefix, $element, $verbose);
                     }
-                    echo "  ADDED:  $name (plugin/$folder)\n";
-                    $fixed++;
-                } elseif ($type === 'component') {
-                    registerComponent($pdo, $prefix, $hasNamespace, $joomlaPath, $verbose);
-                    $fixed++;
+
+                    $label = $type === 'plugin' ? "plugin/$folder" : $type;
+                    echo "  ADDED:  $name ($label)\n";
                 }
+
+                $fixed++;
             }
         }
 
-        // Always ensure namespace map is up to date
+        // Always ensure the namespace map is up to date
         updateNamespaceMap($joomlaPath, $verbose);
 
         echo "  Summary: $ok OK, $fixed fixed, $errors errors\n";
@@ -959,57 +1131,23 @@ function doVerifyExtensions(bool $verbose = false): void
  * Creates the extensions row, asset record, admin menu items,
  * schema version entry, and runs the install SQL to create tables.
  *
- * @param   PDO     $pdo           Database connection
- * @param   string  $prefix        Table prefix
- * @param   bool    $hasNamespace  Whether the extensions table has a namespace column
- * @param   string  $joomlaPath    Path to the Joomla installation
- * @param   bool    $verbose       Show detailed output
+ * @param   PDO     $pdo            Database connection
+ * @param   string  $prefix         Table prefix
+ * @param   bool    $hasNamespace   Whether the extensions table has a namespace column
+ * @param   string  $joomlaPath     Path to the Joomla installation
+ * @param   array   $ext            Extension definition from the $expected array
+ * @param   string  $manifestCache  Pre-built manifest cache JSON
+ * @param   bool    $verbose        Show detailed output
  *
  * @return  void
  *
  * @since  5.0.0
  */
-function registerComponent(PDO $pdo, string $prefix, bool $hasNamespace, string $joomlaPath, bool $verbose = false): void
+function registerComponent(PDO $pdo, string $prefix, bool $hasNamespace, string $joomlaPath, array $ext, string $manifestCache, bool $verbose = false): void
 {
     try {
-        // Build manifest_cache from livingword.xml
-        $manifestFile = BASE_DIR . '/livingword.xml';
-        $manifestCache = '{}';
-
-        if (file_exists($manifestFile)) {
-            $xml = simplexml_load_file($manifestFile);
-
-            if ($xml) {
-                $manifestCache = json_encode([
-                    'name'         => (string) ($xml->name ?? 'com_livingword'),
-                    'type'         => 'component',
-                    'creationDate' => (string) ($xml->creationDate ?? ''),
-                    'author'       => (string) ($xml->author ?? ''),
-                    'copyright'    => (string) ($xml->copyright ?? ''),
-                    'authorEmail'  => (string) ($xml->authorEmail ?? ''),
-                    'authorUrl'    => (string) ($xml->authorUrl ?? ''),
-                    'version'      => (string) ($xml->version ?? '5.0.0'),
-                    'description'  => (string) ($xml->description ?? ''),
-                    'group'        => '',
-                ]);
-            }
-        }
-
-        // 1. Insert into #__extensions
-        $columns = 'name, type, element, folder, client_id, enabled, access, locked, manifest_cache, params, custom_data';
-        $values  = "?, 'component', 'com_livingword', '', 1, 1, 1, 0, ?, '{}', ''";
-
-        if ($hasNamespace) {
-            $columns .= ', namespace';
-            $values  .= ', ?';
-            $stmt = $pdo->prepare("INSERT INTO {$prefix}extensions ($columns) VALUES ($values)");
-            $stmt->execute(['com_livingword', $manifestCache, 'CWM\\Component\\Livingword']);
-        } else {
-            $stmt = $pdo->prepare("INSERT INTO {$prefix}extensions ($columns) VALUES ($values)");
-            $stmt->execute(['com_livingword', $manifestCache]);
-        }
-
-        $extensionId = (int) $pdo->lastInsertId();
+        // 1. Insert into #__extensions (uses shared helper)
+        $extensionId = insertExtension($pdo, $prefix, $hasNamespace, $ext, $manifestCache);
 
         if ($verbose) {
             echo "    extensions row: ID $extensionId\n";
@@ -1072,35 +1210,16 @@ function registerComponent(PDO $pdo, string $prefix, bool $hasNamespace, string 
             echo "    menu items: $menuCount created\n";
         }
 
-        // 4. Run install SQL to create tables (DDL auto-commits, so no transaction)
-        $sqlFile = BASE_DIR . '/admin/sql/install.mysql.utf8.sql';
-
-        if (file_exists($sqlFile)) {
-            $sql = file_get_contents($sqlFile);
-            $sql = str_replace('#__', $prefix, $sql);
-
-            $statements = array_filter(
-                array_map('trim', explode(';', $sql)),
-                fn(string $s): bool => $s !== ''
-            );
-
-            $tableCount = 0;
-            foreach ($statements as $statement) {
-                $pdo->exec($statement);
-                $tableCount++;
-            }
-
-            if ($verbose) {
-                echo "    tables: $tableCount statements executed\n";
-            }
-        }
+        // 4. Run install SQL to create tables
+        runInstallSql($pdo, $prefix, $verbose);
 
         // 5. Insert schema version
+        $manifestPath  = BASE_DIR . '/' . $ext['manifest'];
         $schemaVersion = '5.0.0';
-        $xmlFile       = BASE_DIR . '/livingword.xml';
 
-        if (file_exists($xmlFile)) {
-            $xml = simplexml_load_string(file_get_contents($xmlFile));
+        if (file_exists($manifestPath)) {
+            $xml = simplexml_load_string(file_get_contents($manifestPath));
+
             if ($xml && isset($xml->version)) {
                 $schemaVersion = (string) $xml->version;
             }
@@ -1146,6 +1265,7 @@ function updateNamespaceMap(string $joomlaPath, bool $verbose = false): void
     $entries = [
         "'CWM\\\\Component\\\\Livingword\\\\Administrator\\\\'" => "[JPATH_ADMINISTRATOR . '/components/com_livingword/src']",
         "'CWM\\\\Component\\\\Livingword\\\\Site\\\\'"          => "[JPATH_SITE . '/components/com_livingword/src']",
+        "'CWM\\\\Module\\\\Livingword\\\\Site\\\\'"             => "[JPATH_SITE . '/modules/mod_livingword/src']",
     ];
 
     if (!file_exists($mapFile)) {
@@ -1165,9 +1285,23 @@ function updateNamespaceMap(string $joomlaPath, bool $verbose = false): void
     }
 
     $content = file_get_contents($mapFile);
+    $added   = 0;
 
-    // Check if already registered
-    if (str_contains($content, 'Livingword')) {
+    // Check each entry individually and add any that are missing
+    foreach ($entries as $ns => $path) {
+        // Strip quotes from key for the contains check
+        $nsCheck = trim($ns, "'");
+
+        if (str_contains($content, $nsCheck)) {
+            continue;
+        }
+
+        $insertLine = "\t$ns => $path,\n";
+        $content    = str_replace('];', $insertLine . '];', $content);
+        $added++;
+    }
+
+    if ($added === 0) {
         if ($verbose) {
             echo "    namespace map: already registered\n";
         }
@@ -1175,17 +1309,10 @@ function updateNamespaceMap(string $joomlaPath, bool $verbose = false): void
         return;
     }
 
-    // Insert entries before the closing "];"
-    $insertBlock = '';
-    foreach ($entries as $ns => $path) {
-        $insertBlock .= "\t$ns => $path,\n";
-    }
-
-    $content = str_replace('];', $insertBlock . '];', $content);
     file_put_contents($mapFile, $content);
 
     if ($verbose) {
-        echo "    namespace map: added " . \count($entries) . " entries\n";
+        echo "    namespace map: added $added entries\n";
     }
 }
 
@@ -1241,12 +1368,12 @@ function doBuild(bool $verbose = false, bool $localScripture = false): void
     bundlePackage(
         $version,
         [
-            'lib_cwmscripture.zip'            => $scripture['zips']['lib_cwmscripture.zip'],
-            'com_livingword.zip'              => $componentZip,
-            'mod_livingword.zip'              => $moduleZip,
-            'plg_task_livingword.zip'         => $taskPluginZip,
-            'plg_task_cwmscripture.zip'       => $scripture['zips']['plg_task_cwmscripture.zip'],
-            'plg_content_scripturelinks.zip'  => $scripture['zips']['plg_content_scripturelinks.zip'],
+            'lib_cwmscripture.zip'           => $scripture['zips']['lib_cwmscripture.zip'],
+            'com_livingword.zip'             => $componentZip,
+            'mod_livingword.zip'             => $moduleZip,
+            'plg_task_livingword.zip'        => $taskPluginZip,
+            'plg_task_cwmscripture.zip'      => $scripture['zips']['plg_task_cwmscripture.zip'],
+            'plg_content_scripturelinks.zip' => $scripture['zips']['plg_content_scripturelinks.zip'],
         ],
         $pkgZip
     );
@@ -1270,8 +1397,8 @@ function doBuild(bool $verbose = false, bool $localScripture = false): void
  */
 function buildLocalScriptureDependencies(bool $verbose): array
 {
-    $libSource    = realpath(BASE_DIR . '/../lib_cwmscripture');
-    $pluginSource = realpath(BASE_DIR . '/../CWMScriptureLinks');
+    $libSource    = \dirname(BASE_DIR) . '/lib_cwmscripture';
+    $pluginSource = \dirname(BASE_DIR) . '/CWMScriptureLinks';
 
     if ($libSource === false || !is_dir($libSource)) {
         throw new \RuntimeException('Local lib_cwmscripture not found at ../lib_cwmscripture');
@@ -1296,8 +1423,8 @@ function buildLocalScriptureDependencies(bool $verbose): array
     }
 
     // Pick the most recently built candidate.
-    usort($libCandidates, static fn($a, $b) => filemtime($b) <=> filemtime($a));
-    $libZipSource = $libCandidates[0];
+    usort($libCandidates, static fn ($a, $b) => filemtime($b) <=> filemtime($a));
+    $libZipSource    = $libCandidates[0];
     $pluginZipSource = $pluginDist . '/plg_content_scripturelinks.zip';
 
     if (!file_exists($pluginZipSource)) {

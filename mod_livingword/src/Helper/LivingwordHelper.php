@@ -32,31 +32,67 @@ class LivingwordHelper implements DatabaseAwareInterface
     /**
      * Get today's reading data for the module display.
      *
+     * Returns an empty-state object when the user is a guest or has no plan
+     * subscription, so the template can show an appropriate message instead
+     * of crashing.
+     *
      * @param   Registry  $params  Module parameters
      *
-     * @return  object  Object with readingText, planDescription, currentDay, totalDays
+     * @return  object  Object with readingText, bible_version, planDescription, currentDay, totalDays, hasSubscription
      *
-     * @throws \Exception
      * @since   5.0.0
      */
     public function getTodayReading(Registry $params): object
     {
-        $db       = $this->getDatabase();
-        $userId   = (int) Factory::getApplication()->getIdentity()->id;
-        $userData = CwmuserHelper::getUserData($db, $userId);
-        $planId   = (int) $userData->plan_id;
+        $db     = $this->getDatabase();
+        $userId = (int) Factory::getApplication()->getIdentity()->id;
 
-        $totalDays  = CwmreadingHelper::getPlanTotalDays($db, $planId);
-        $currentDay = CwmreadingHelper::getCurrentReadingDay($userData->start_date ?? '', (int) $userData->date_offset, $totalDays ?: 365);
-        $reading    = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
-        $plan       = CwmreadingHelper::getPlanById($db, $planId);
-
-        return (object) [
-            'readingText'     => $reading->reading ?? '',
-            'bible_version'   => $userData->bible_version,
-            'planDescription' => $plan->description ?? '',
-            'currentDay'      => $currentDay,
-            'totalDays'       => $totalDays,
+        $empty = (object) [
+            'readingText'     => '',
+            'bible_version'   => 'kjv',
+            'planDescription' => '',
+            'currentDay'      => 0,
+            'totalDays'       => 0,
+            'hasSubscription' => false,
         ];
+
+        // Guest user or no subscription — return empty state
+        $userData = CwmuserHelper::getUserData($db, $userId);
+        $planId   = (int) ($userData->plan_id ?? 0);
+
+        if ($planId === 0) {
+            return $empty;
+        }
+
+        try {
+            $plan      = CwmreadingHelper::getPlanById($db, $planId);
+            $totalDays = CwmreadingHelper::getPlanTotalDays($db, $planId);
+
+            if ($totalDays === 0) {
+                return $empty;
+            }
+
+            $currentDay = CwmreadingHelper::getReadingDayForPlan(
+                $plan,
+                $userData->start_date ?? '',
+                (int) ($userData->date_offset ?? 0),
+                $totalDays,
+                $db,
+                $userId
+            );
+
+            $reading = CwmreadingHelper::getReadingForDay($db, $planId, $currentDay);
+
+            return (object) [
+                'readingText'     => $reading->reading ?? '',
+                'bible_version'   => $userData->bible_version ?? 'kjv',
+                'planDescription' => $plan->description ?? '',
+                'currentDay'      => $currentDay,
+                'totalDays'       => $totalDays,
+                'hasSubscription' => true,
+            ];
+        } catch (\Exception) {
+            return $empty;
+        }
     }
 }
