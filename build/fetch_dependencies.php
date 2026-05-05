@@ -125,6 +125,37 @@ function fetchScriptureDependencies(string $vendorDir, bool $verbose = false): a
 }
 
 /**
+ * Resolve a GitHub API token from the environment, falling back to the
+ * `gh` CLI's stored credential. Without a token the public API caps at
+ * 60 requests per hour per IP, which the build trips during scripture
+ * dependency fetch.
+ */
+function ghToken(): string
+{
+    $token = getenv('GITHUB_TOKEN') ?: getenv('GH_TOKEN') ?: '';
+
+    if ($token !== '') {
+        return $token;
+    }
+
+    $process = @proc_open(
+        ['gh', 'auth', 'token'],
+        [1 => ['pipe', 'w'], 2 => ['file', '/dev/null', 'w']],
+        $pipes
+    );
+
+    if (!\is_resource($process)) {
+        return '';
+    }
+
+    $output = stream_get_contents($pipes[1]) ?: '';
+    fclose($pipes[1]);
+    $code = proc_close($process);
+
+    return $code === 0 ? trim($output) : '';
+}
+
+/**
  * Call the GitHub REST API for the latest release of a repo.
  *
  * @param   string  $repo  owner/name
@@ -143,7 +174,7 @@ function ghFetchLatestRelease(string $repo): array
         'X-GitHub-Api-Version: 2022-11-28',
     ];
 
-    $token = getenv('GITHUB_TOKEN') ?: getenv('GH_TOKEN') ?: '';
+    $token = ghToken();
 
     if ($token !== '') {
         $headers[] = 'Authorization: Bearer ' . $token;
@@ -193,7 +224,7 @@ function ghDownload(string $url, string $destination): void
     }
 
     $headers = ['User-Agent: CWMLivingWord-Build'];
-    $token   = getenv('GITHUB_TOKEN') ?: getenv('GH_TOKEN') ?: '';
+    $token   = ghToken();
 
     if ($token !== '') {
         $headers[] = 'Authorization: Bearer ' . $token;
