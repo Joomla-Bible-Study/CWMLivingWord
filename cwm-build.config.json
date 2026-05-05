@@ -1,0 +1,33 @@
+{
+    "extension": {
+        "type": "package",
+        "name": "pkg_livingword"
+    },
+    "manifests": {
+        "_comment": "All four manifests bump in lockstep on a LivingWord release. The bundled CWM Scripture extensions (lib_cwmscripture, plg_task_cwmscripture, plg_content_scripturelinks) live in the CWMScriptureLinks repo and are versioned there — they are pulled in as build-time dependencies by livingword_build.php and are NOT listed here.",
+        "package": "build/pkg_livingword.xml",
+        "extensions": [
+            { "type": "component", "path": "livingword.xml" },
+            { "type": "module",    "path": "mod_livingword/mod_livingword.xml" },
+            { "type": "plugin",    "path": "plg_task_livingword/livingword.xml" }
+        ]
+    },
+    "build": {
+        "command": "php build/livingword_build.php build",
+        "outputGlob": "build/pkg_livingword-*.zip"
+    },
+    "ars": {
+        "endpoint": "https://www.christianwebministries.org",
+        "categoryId": 7,
+        "updateStreamId": 6,
+        "environments": ["45", "46", "48", "49", "50"],
+        "tokenItem": "CWM ARS API Token",
+        "tokenVault": "CWM",
+        "itemDescription": "CWM LivingWord package — Bible reading plans component, daily reading module, scheduled email task plugin, plus the bundled CWM Scripture library and content plugin for in-article scripture rendering."
+    },
+    "github": {
+        "owner": "Joomla-Bible-Study",
+        "repo": "CWMLivingWord",
+        "releaseBranch": "main"
+    }
+}

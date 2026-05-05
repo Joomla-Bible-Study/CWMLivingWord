@@ -48,6 +48,12 @@
       "CWM\\Component\\Livingword\\Tests\\": "tests/unit/"
     }
   },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/Joomla-Bible-Study/cwm-build-tools"
+    }
+  ],
   "require": {
     "php": "^8.3.0",
     "ext-mbstring": "*",
@@ -57,6 +63,7 @@
     "ext-zip": "*"
   },
   "require-dev": {
+    "cwm/build-tools": "^0.3.2@alpha",
     "phpunit/phpunit": "^11.0",
     "friendsofphp/php-cs-fixer": "^3.0",
     "roave/security-advisories": "dev-latest",
@@ -72,23 +79,30 @@
     "joomla/string": "^4.0"
   },
   "scripts": {
-    "test": "phpunit",
-    "test:unit": "phpunit --testsuite 'LivingWord Unit Tests'",
-    "test:integration": "phpunit --testsuite 'LivingWord Integration Tests'",
-    "lint:syntax": "php build/livingword_build.php lint-syntax",
-    "lint": "php-cs-fixer fix --dry-run --diff",
-    "lint:fix": "php-cs-fixer fix",
-    "check": ["@lint:syntax", "@lint", "@test"],
-    "setup": "php build/livingword_build.php setup",
-    "joomla-install": "php build/livingword_build.php install-joomla",
-    "joomla-latest": "php build/livingword_build.php joomla-latest",
-    "symlink": "php build/livingword_build.php link",
-    "symlink:check": "php build/livingword_build.php check",
-    "verify": "php build/livingword_build.php verify",
-    "clean": "php build/livingword_build.php clean",
-    "build": "php build/livingword_build.php build",
-    "sync-languages": "python3 build/sync_languages.py",
-    "sync-languages-force": "python3 build/sync_languages.py --force",
+    "test":               "phpunit",
+    "test:unit":          "phpunit --testsuite 'LivingWord Unit Tests'",
+    "test:integration":   "phpunit --testsuite 'LivingWord Integration Tests'",
+    "lint:syntax":        "php build/livingword_build.php lint-syntax",
+    "lint":               "php-cs-fixer fix --dry-run --diff",
+    "lint:fix":           "php-cs-fixer fix",
+    "check":              ["@lint:syntax", "@lint", "@test"],
+    "setup":              "php build/livingword_build.php setup",
+    "joomla-install":     "php build/livingword_build.php install-joomla",
+    "joomla-latest":      "php build/livingword_build.php joomla-latest",
+    "symlink":            "php build/livingword_build.php link",
+    "symlink:check":      "php build/livingword_build.php check",
+    "verify":             "php build/livingword_build.php verify",
+    "clean":              "php build/livingword_build.php clean",
+    "build":              "php build/livingword_build.php build",
+    "release":            "cwm-release",
+    "bump-version":       "cwm-bump",
+    "package":            "cwm-package",
+    "ars-publish":        "cwm-ars-publish",
+    "ars-list":           "cwm-ars-list",
+    "ars-create-stream":  "cwm-ars-create-stream",
+    "changelog":          "cwm-changelog",
+    "sync-configs":       "cwm-sync-configs",
+    "sync-languages":     "cwm-sync-languages",
     "post-install-cmd": [
       "@php -r \"if (!file_exists('build.properties')) { copy('build.dist.properties', 'build.properties'); echo 'Created build.properties from template. Run composer setup to configure.\\n'; }\""
     ]
