@@ -1,0 +1,32 @@
+{
+  "name": "com_livingword",
+  "version": "5.0.0",
+  "description": "CWM LivingWord - frontend asset build pipeline (CSS + ESLint)",
+  "license": "GPL-2.0-or-later",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Joomla-Bible-Study/CWMLivingWord.git"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "csso": "^5.0.5",
+    "eslint": "^10.0.1",
+    "globals": "^17.4.0",
+    "rollup": "^4.58.0",
+    "rollup-plugin-gzip": "^4.1.1"
+  },
+  "scripts": {
+    "build": "npm run build:js && npm run build:css",
+    "build:css": "SOURCE_DIR=build/media_source/css OUTPUT_DIR=media/com_livingword/css node libraries/vendor/cwm/build-tools/templates/build-css.js",
+    "build:js": "SOURCE_DIR=build/media_source/js OUTPUT_DIR=media/com_livingword/js rollup -c libraries/vendor/cwm/build-tools/templates/rollup.config.js",
+    "watch": "SOURCE_DIR=build/media_source/js OUTPUT_DIR=media/com_livingword/js rollup -c libraries/vendor/cwm/build-tools/templates/rollup.config.js -w",
+    "lint:js": "eslint --max-warnings=0 ."
+  }
+}

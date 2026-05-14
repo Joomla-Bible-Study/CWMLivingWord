@@ -1,0 +1,575 @@
+/**
+ * LivingWord Frontend Styles
+ *
+ * Mobile-first responsive design for daily Bible reading experience.
+ *
+ * @package  Livingword
+ * @since    5.7.0
+ */
+
+/* ── Base typography ── */
+.com-livingword-home,
+.com-livingword-planview,
+.com-livingword-planview-calendar {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ── Hero / Welcome ── */
+.livingword-hero {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(var(--bs-primary-rgb, 13, 110, 253), 0.06), rgba(var(--bs-primary-rgb, 13, 110, 253), 0.02));
+}
+
+.livingword-hero h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.livingword-hero-sub {
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.livingword-hero-message {
+  font-size: 0.9rem;
+  color: var(--bs-body-color, #212529);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.livingword-hero-completed_today {
+  background: linear-gradient(135deg, rgba(var(--bs-success-rgb, 25, 135, 84), 0.08), rgba(var(--bs-success-rgb, 25, 135, 84), 0.02));
+}
+
+.livingword-streak-badge {
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: 600;
+  padding: 0.2em 0.6em;
+  background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.15);
+  color: var(--bs-warning-text-emphasis, #664d03);
+  border-radius: 20px;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+}
+
+.livingword-cta {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  background: var(--bs-primary, #0d6efd);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.livingword-cta:hover {
+  background: var(--bs-primary, #0d6efd);
+  opacity: 0.9;
+  color: #fff;
+}
+
+/* ── Dashboard Stats Strip ── */
+.livingword-stats-strip {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.livingword-stat-item {
+  flex: 1 1 0;
+  min-width: 100px;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 8px;
+}
+
+.livingword-stat-value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--bs-body-color, #212529);
+  line-height: 1.2;
+}
+
+.livingword-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-top: 0.15rem;
+}
+
+.livingword-stats-guest .livingword-stat-item {
+  background: transparent;
+}
+
+/* ── Milestone nudge ── */
+.livingword-milestone {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--bs-warning-text-emphasis, #664d03);
+  background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+/* ── Navigation menu ── */
+.livingword-menu {
+  margin-bottom: 1.5rem;
+}
+
+/* ── Today's Reading Card ── */
+.livingword-reading-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.livingword-reading-card .card-body {
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .livingword-reading-card .card-body {
+    padding: 2rem;
+  }
+}
+
+/* ── Plan header ── */
+.livingword-plan-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.livingword-plan-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.livingword-plan-header .livingword-plan-message {
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+/* ── Day indicator ── */
+.livingword-day-indicator {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-primary, #0d6efd);
+}
+
+/* ── Scripture text ── */
+.livingword-scripture-container {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
+  line-height: 1.9;
+  color: var(--bs-body-color, #212529);
+}
+
+.livingword-scripture-container .scripture-passage h4 {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.livingword-scripture-container .scripture-passage:first-child h4 {
+  margin-top: 0;
+}
+
+/* ── Reading reference link ── */
+.livingword-reading-ref {
+  font-weight: 600;
+  color: var(--bs-primary, #0d6efd);
+  text-decoration: none;
+}
+
+.livingword-reading-ref:hover {
+  text-decoration: underline;
+}
+
+/* ── Passage checkmarks (multi-passage) ── */
+.livingword-passage-item {
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+
+.livingword-passage-item:hover {
+  background-color: var(--bs-light, #f8f9fa);
+}
+
+.livingword-passage-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Mark as Read button ── */
+.livingword-mark-read-btn {
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+/* ── Progress bar ── */
+.livingword-progress-info .progress {
+  border-radius: 4px;
+}
+
+/* ── Devotional card ── */
+/* ── Study/Devotional card ── */
+.livingword-study-card {
+  border: none;
+  border-left: 4px solid var(--bs-primary, #0d6efd);
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 0 8px 8px 0;
+}
+
+.livingword-study-content {
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.8;
+  font-size: 1.05rem;
+}
+
+.livingword-study-collapsed {
+  max-height: 12em;
+  overflow: hidden;
+  position: relative;
+}
+
+.livingword-study-collapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4em;
+  background: linear-gradient(transparent, var(--bs-light, #f8f9fa));
+  pointer-events: none;
+}
+
+.livingword-study-toggle {
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.livingword-study-inline {
+  padding: 0.75rem;
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* Deprecated — kept for template override compat */
+.livingword-devotional-card {
+  border: none;
+  border-left: 4px solid var(--bs-primary, #0d6efd);
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 0 8px 8px 0;
+}
+
+.livingword-devotional {
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+/* ── Journal card ── */
+.livingword-journal-card {
+  border: none;
+  border-left: 4px solid var(--bs-success, #198754);
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 0 8px 8px 0;
+}
+
+.livingword-notes-textarea {
+  border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.1));
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 80px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.livingword-notes-textarea:focus {
+  border-color: var(--bs-success, #198754);
+  box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.15);
+}
+
+/* ── Partner card ── */
+.livingword-partner-card {
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 8px;
+}
+
+/* ── Actions row ── */
+.livingword-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── Plan List View ── */
+.livingword-plan-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.livingword-plan-table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-secondary-color, #6c757d);
+  border-bottom: 2px solid var(--bs-border-color, #dee2e6);
+  padding: 0.5rem 0.75rem;
+}
+
+.livingword-plan-table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.05));
+}
+
+.livingword-plan-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Touch-friendly checkmarks */
+.livingword-plan-table .livingword-check-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.livingword-plan-table .livingword-day-cell {
+  width: 50px;
+  font-weight: 600;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+/* Current day highlight */
+.livingword-plan-table .livingword-current-row {
+  background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
+  border-radius: 8px;
+}
+
+.livingword-plan-table .livingword-current-row td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.livingword-plan-table .livingword-current-row td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Monthly Accordion ── */
+.livingword-month-accordion .accordion-item {
+  border: none;
+  border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.05));
+}
+
+.livingword-month-accordion .accordion-button {
+  font-weight: 600;
+  padding: 0.875rem 1rem;
+  background: transparent;
+}
+
+.livingword-month-accordion .accordion-button:not(.collapsed) {
+  background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.04);
+  color: inherit;
+  box-shadow: none;
+}
+
+.livingword-month-accordion .accordion-button:focus {
+  box-shadow: none;
+}
+
+.livingword-month-accordion .accordion-body .livingword-plan-table {
+  border-top: none;
+}
+
+.livingword-month-accordion .accordion-body .livingword-plan-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bs-body-bg, #fff);
+  z-index: 1;
+}
+
+/* ── Calendar View ── */
+.livingword-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.livingword-cal-header {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-secondary-color, #6c757d);
+  padding: 0.4rem 0;
+}
+
+.livingword-cal-cell {
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 6px;
+  padding: 0.3rem;
+  min-height: 52px;
+  transition: transform 0.1s, box-shadow 0.1s, border-color 0.1s;
+  cursor: default;
+}
+
+.livingword-cal-cell:hover:not(.livingword-cal-empty) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-color: var(--bs-primary, #0d6efd);
+}
+
+.livingword-cal-empty {
+  border: none;
+  background: transparent;
+}
+
+.livingword-cal-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+}
+
+.livingword-cal-reading {
+  font-size: 0.65rem;
+  color: var(--bs-secondary-color, #6c757d);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Current day */
+.livingword-cal-today {
+  border-color: var(--bs-primary, #0d6efd);
+  border-width: 2px;
+  background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.06);
+  box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb, 13, 110, 253), 0.15);
+}
+
+.livingword-cal-today .livingword-cal-date {
+  color: var(--bs-primary, #0d6efd);
+}
+
+/* Completed day */
+.livingword-cal-complete {
+  border-color: var(--bs-success, #198754);
+  background: rgba(var(--bs-success-rgb, 25, 135, 84), 0.06);
+}
+
+/* Partial completion */
+.livingword-cal-partial {
+  border-color: var(--bs-warning, #ffc107);
+  background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.06);
+}
+
+/* Responsive: smaller cells on mobile */
+@media (max-width: 575.98px) {
+  .livingword-cal-cell {
+    min-height: 42px;
+    padding: 0.2rem;
+  }
+
+  .livingword-cal-date {
+    font-size: 0.7rem;
+  }
+
+  .livingword-cal-reading {
+    font-size: 0.55rem;
+  }
+
+  .livingword-cal-header {
+    font-size: 0.6rem;
+  }
+}
+
+/* ── Audio player refinements ── */
+.livingword-audio-section {
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ── Resource / Tool Cards ── */
+.livingword-resource-card {
+  border-radius: 10px;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.livingword-resource-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--bs-primary, #0d6efd);
+}
+
+.livingword-resource-card .card-title {
+  color: var(--bs-body-color, #212529);
+}
+
+.livingword-resource-card:hover .card-title {
+  color: var(--bs-primary, #0d6efd);
+}
+
+/* ── Settings sections ── */
+.com-livingword-settings .card-title .icon-book,
+.com-livingword-settings .card-title .icon-mail,
+.com-livingword-settings .card-title .icon-compass,
+.com-livingword-settings .card-title .icon-fire,
+.com-livingword-settings .card-title .icon-users {
+  color: var(--bs-primary, #0d6efd);
+}
+
+/* ── Groups ── */
+.com-livingword-groups .livingword-plan-header,
+.com-livingword-groupdetail .livingword-plan-header {
+  margin-bottom: 1rem;
+}
+
+/* ── Max width for all views ── */
+.com-livingword-resources,
+.com-livingword-tools,
+.com-livingword-settings,
+.com-livingword-groups,
+.com-livingword-groupdetail {
+  max-width: 800px;
+  margin: 0 auto;
+}
