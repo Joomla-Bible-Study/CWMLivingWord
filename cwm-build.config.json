@@ -112,6 +112,12 @@
             ]
         }
     },
+    "dev": {
+        "_cwmSiblings_comment": "CWM sibling packages consumed via Composer path repositories. Used by cwm-setup (v1.2+) to prompt for each developer's local checkout path, write build.properties [paths], and sync composer.json's repositories[] block. The hardcoded path-repo URL in composer.json is the maintainer's default; cwm-setup adapts per-developer.",
+        "cwmSiblings": [
+            "joomla-bible-study/lib-cwmscripture"
+        ]
+    },
     "gitignore": {
         "_comment": "Override the auto-derived media paths — package wrappers normally don't own a /media/ dir, but com_livingword does, and its outputs are fully generated from build/media_source/ via npm run build. Also keep build/vendor/ (scripture zips) and build/dist/ (artifact outputs) ignored.",
         "mediaPaths": [
