@@ -73,57 +73,84 @@ CWM\Plugin\Task\Livingword\              → plg_task_livingword/src/
 
 ## Development Setup
 
+The build, dev, and release pipeline is driven entirely by [`cwm-build-tools`](https://github.com/Joomla-Bible-Study/cwm-build-tools) v1.0+, configured via `cwm-build.config.json`. The only project-specific build code is `build/fetch_dependencies.php` (downloads the latest `pkg_cwmscripture` release at build time).
+
 ### Prerequisites
 
 - PHP 8.3+
 - Composer
+- Node.js 20+ and npm 10+ (for frontend asset pipeline)
 - A local Joomla 5 (or 6) installation for symlinked development
 
 ### Quick Start
 
 ```bash
-# Install dependencies (auto-creates build.properties from template)
+# Install PHP + npm dependencies (auto-creates build.properties from template)
 composer install
+npm install
 
-# Interactive setup wizard (configure Joomla paths, dev site URLs, DB credentials)
+# Interactive setup wizard — writes build.properties with per-install [j5]/[j6] sections
 composer setup
 
-# Create symlinks to your local Joomla installation(s)
-composer symlink
+# Symlink the repo into your local Joomla install(s)
+composer link
 
-# Register extensions in Joomla database (creates tables, menus, namespace map)
+# Register libraries/plugins/modules in Joomla's #__extensions table
 composer verify
 ```
 
-After `symlink + verify`, the component is fully installed. No browser-based installation needed.
-
-### What `composer verify` Does
-
-1. Inserts `#__extensions` row for component and plugin
-2. Creates `#__assets` ACL record
-3. Creates admin menu items (dashboard, plans, links, subscribers)
-4. Runs `install.mysql.utf8.sql` to create all 4 database tables
-5. Inserts `#__schemas` version record
-6. Adds PSR-4 namespace entries to `administrator/cache/autoload_psr4.php`
+**One-time step after first `composer verify`:** install `com_livingword` itself via Joomla's Extension Manager (Admin → Extensions → Manage → Discover). `cwm-verify` reports missing components but doesn't auto-insert them — the rest of Joomla's component lifecycle (asset rows, menu items, install SQL) only fires through the Extension Manager. Subsequent `composer verify` runs reconcile drift; pass `--fix` to repair extension state.
 
 ### Build & Test Commands
 
-| Command | Description |
-|---------|-------------|
-| `composer test` | Run all PHPUnit tests |
-| `composer test:unit` | Run unit tests only |
-| `composer test:integration` | Run integration tests only |
-| `composer lint` | Check code style (PSR-12 + custom rules) |
-| `composer lint:fix` | Auto-fix code style |
-| `composer lint:syntax` | Check PHP syntax errors |
-| `composer check` | Run syntax check + lint + tests |
-| `composer build` | Build installable ZIP package |
-| `composer setup` | Interactive dev environment setup |
-| `composer symlink` | Create symlinks to Joomla |
-| `composer clean` | Remove symlinks |
-| `composer verify` | Verify/register extensions in Joomla DB |
-| `composer joomla-install` | Download and install Joomla |
-| `composer joomla-latest` | Show latest Joomla version |
+| Command | Backed by | Description |
+|---------|-----------|-------------|
+| `composer test` | phpunit | Run all PHPUnit tests |
+| `composer test:unit` | phpunit | Unit tests only |
+| `composer test:integration` | phpunit | Integration tests only |
+| `composer lint` | php-cs-fixer | Check code style (PSR-12 + custom rules) |
+| `composer lint:fix` | php-cs-fixer | Auto-fix code style |
+| `composer lint:syntax` | `find ... \| xargs php -l` | Parallel PHP syntax check across admin/site/mod/plugin source |
+| `composer lint:js` | eslint | Lint `build/media_source/js/*.es6.js` against the CWM shared base config |
+| `composer build:js` | rollup | Bundle `build/media_source/js/*.es6.js` → `media/com_livingword/js/*.{js,min.js,min.js.gz}` |
+| `composer build:css` | csso | Minify `build/media_source/css/*.css` → `media/com_livingword/css/*.min.css` |
+| `composer check` | composite | `lint:syntax` + `lint` + `test` |
+| `composer build` | cwm-package | Assemble `build/dist/pkg_livingword-{version}.zip` (see Build Flow below) |
+| `composer setup` | cwm-setup | Interactive build.properties wizard |
+| `composer link` | cwm-link | Symlink the repo into each configured Joomla install |
+| `composer link-check` | cwm-link-check | Verify symlinks are still healthy |
+| `composer clean` | cwm-clean | Remove symlinks |
+| `composer verify` | cwm-verify | Reconcile extension state in `#__extensions` (pass `--fix` to repair) |
+| `composer joomla-install` | cwm-joomla-install | Download + install Joomla into each configured path |
+| `composer joomla-latest` | cwm-joomla-latest | Print the latest stable Joomla tag |
+| `composer release` | cwm-release | Full release pipeline: bump → build → tag → GitHub release → ARS publish |
+
+### Build Flow
+
+`composer build` invokes `cwm-package`, which:
+
+1. Runs the `preBuild` hook: `npm install --no-audit --no-fund && npm run build && php build/fetch_dependencies.php`
+   - npm bundles JS (rollup) and minifies CSS (csso) into `media/com_livingword/{js,css}/` — these dirs are **gitignored**; only the sources in `build/media_source/` are tracked.
+   - `fetch_dependencies.php` downloads the latest `pkg_cwmscripture` release from GitHub and extracts its 3 inner zips into `build/vendor/` (also gitignored).
+2. Builds the **self** include (`com_livingword.zip`) from `admin/`, `site/`, `media/`, plus the root manifest/script files.
+3. Builds the **inline** includes — `mod_livingword.zip` and `plg_task_livingword.zip` — in-process from their source directories (no per-extension build script).
+4. Picks up the 3 **prebuilt** scripture zips from `build/vendor/`.
+5. Assembles all six into `pkg_livingword-{version}.zip` under `packages/`, with `build/pkg_livingword.xml` at the root.
+6. Self-verifies the output contains all 7 expected entries.
+
+To preview a version override without committing: `composer build -- --version 5.0.1`.
+
+### Build Properties
+
+`build.dist.properties` is the canonical template (INI format with one `[id]` section per Joomla install). Copy to `build.properties` for local config:
+
+```bash
+cp build.dist.properties build.properties
+# Then either edit by hand or run:
+composer setup
+```
+
+`build.properties` is gitignored — it carries DB and admin credentials. Section names (`j5`, `j6`, etc.) must match the comma-separated `installs = ...` list at the top.
 
 ### Code Style
 
@@ -131,16 +158,13 @@ After `symlink + verify`, the component is fully installed. No browser-based ins
 - **EditorConfig** for consistent formatting (`.editorconfig`)
 - PHP: 4-space indent; JS/JSON/CSS/YAML: 2-space indent; others: tabs
 - Unix line endings (LF), UTF-8, trim trailing whitespace
+- JS sources live in `build/media_source/js/*.es6.js`; never edit the generated bundles under `media/com_livingword/js/`.
 
 ### CI/CD
 
 - **GitHub Actions CI** (`.github/workflows/ci.yml`): PHP lint + PHPUnit on push/PR
 - **CodeQL** (`.github/workflows/codeql.yml`): Weekly security scanning
 - **Auto-assign** (`.github/auto-assign.yml`): Auto-assigns reviewers to PRs
-
-### Build Properties
-
-The `build.dist.properties` file is the template. Copy to `build.properties` (gitignored) for local config. Supports multiple Joomla installations (comma-separated paths) for simultaneous J5/J6 development.
 
 ## Coding Standards
 
