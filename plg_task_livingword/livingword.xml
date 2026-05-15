@@ -11,6 +11,14 @@
     <description>PLG_TASK_LIVINGWORD_XML_DESCRIPTION</description>
     <namespace path="src">CWM\Plugin\Task\Livingword</namespace>
 
+    <compatibility>
+        <cms>
+            <targetplatform name="joomla" version="5[.0-9]" />
+            <targetplatform name="joomla" version="6[.0-9]" />
+        </cms>
+        <php minimum="8.3.0" />
+    </compatibility>
+
     <files>
         <folder plugin="livingword">services</folder>
         <folder>src</folder>
