@@ -7,7 +7,7 @@
     <authorUrl>https://www.christianwebministries.org</authorUrl>
     <copyright>(C) 2026 CWM Team All rights reserved.</copyright>
     <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
-    <version>5.0.1</version>
+    <version>5.4.0</version>
     <creationDate>2026-05-15</creationDate>
     <description>CWM LivingWord package — Bible reading plans component, daily reading module, scheduled email task plugin, plus the CWM Scripture library and content plugin for in-article scripture rendering.</description>
 

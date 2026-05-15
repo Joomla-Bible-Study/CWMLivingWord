@@ -128,6 +128,8 @@ class Com_livingwordInstallerScript
      */
     public function postflight(string $route, InstallerAdapter $adapter): bool
     {
+        $version = (string) $adapter->getManifest()->version;
+
         if ($route === 'install') {
             // Seed a menu type + items so users just need to create an
             // mod_menu module and point it at "livingword-menu" to expose
@@ -135,7 +137,7 @@ class Com_livingwordInstallerScript
             $this->seedMenu();
 
             Factory::getApplication()->enqueueMessage(
-                'CWM LivingWord 5.0.0 has been installed successfully.',
+                sprintf('CWM LivingWord %s has been installed successfully.', $version),
                 'message'
             );
         }
@@ -146,7 +148,7 @@ class Com_livingwordInstallerScript
             $this->seedMenu();
 
             Factory::getApplication()->enqueueMessage(
-                'CWM LivingWord has been updated to version 5.0.0.',
+                sprintf('CWM LivingWord has been updated to version %s.', $version),
                 'message'
             );
         }
