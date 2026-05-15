@@ -43,9 +43,9 @@
         "includeRoots": ["admin/", "site/", "media/"],
         "includeRootExtensions": ["php", "xml", "txt", "md"],
         "preBuild": {
-            "_comment": "Runs once before cwm-package assembles the bundle: (1) installs npm deps if missing, (2) bundles JS via rollup and minifies CSS via csso into media/com_livingword/{js,css}/, (3) fetches the latest pkg_cwmscripture release from GitHub and extracts its 3 inner zips into build/vendor/ for the prebuilt includes below.",
+            "_comment": "Runs once before cwm-package assembles the bundle: (1) wipes build/dist and build/vendor so stale zips from prior builds can't be picked up by outputGlob (regression seen during v5.0.1 release where the stale 5.0.0 zip got published alongside 5.0.1), (2) installs npm deps if missing, (3) bundles JS via rollup and minifies CSS via csso into media/com_livingword/{js,css}/, (4) fetches the latest pkg_cwmscripture release from GitHub and extracts its 3 inner zips into build/vendor/ for the prebuilt includes below.",
             "mode": "run",
-            "command": "npm install --no-audit --no-fund && npm run build && php build/fetch_dependencies.php"
+            "command": "rm -rf build/dist build/vendor && npm install --no-audit --no-fund && npm run build && php build/fetch_dependencies.php"
         },
         "versionPrompt": { "enabled": true, "timeout": 10 }
     },
