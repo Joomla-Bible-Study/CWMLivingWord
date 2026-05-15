@@ -277,3 +277,25 @@ function rrmdir(string $dir): void
 
     rmdir($dir);
 }
+
+// CLI entry — fires only when invoked directly (php build/fetch_dependencies.php),
+// not when included via require_once. Writes the 3 scripture zips into build/vendor/
+// for cwm-package's `prebuilt` includes to pick up.
+if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
+    $vendorDir = __DIR__ . '/vendor';
+    $verbose   = in_array('--verbose', $argv ?? [], true) || in_array('-v', $argv ?? [], true);
+
+    echo "Fetching scripture dependencies into $vendorDir\n";
+
+    try {
+        $result = fetchScriptureDependencies($vendorDir, $verbose);
+        echo "  lib_cwmscripture @ v{$result['version']} (from " . SCRIPTURE_REPO . ")\n";
+
+        foreach ($result['zips'] as $name => $path) {
+            echo "  $name -> $path\n";
+        }
+    } catch (Throwable $e) {
+        fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
+        exit(1);
+    }
+}

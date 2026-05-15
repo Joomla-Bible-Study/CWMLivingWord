@@ -80,9 +80,9 @@ build.properties
 
 # === cwm-build-tools: extension paths (do not edit between markers) ===
 /build/dist/
-/media/com_livingword/js/*.min.js
-/media/com_livingword/js/*.min.js.map
-/media/com_livingword/js/*.min.js.gz
-/media/com_livingword/css/*.min.css
-/media/com_livingword/css/*.min.css.map
+/build/vendor/
+# Frontend assets are fully generated from build/media_source/ via npm run build.
+# composer build invokes this automatically; never commit anything in these dirs.
+/media/com_livingword/js/
+/media/com_livingword/css/
 # === cwm-build-tools: end extension paths ===

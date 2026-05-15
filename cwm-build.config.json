@@ -1,10 +1,12 @@
 {
     "extension": {
         "type": "package",
-        "name": "pkg_livingword"
+        "name": "pkg_livingword",
+        "displayName": "CWM LivingWord"
     },
+    "profile": "package-wrapper",
     "manifests": {
-        "_comment": "All four manifests bump in lockstep on a LivingWord release. The bundled CWM Scripture extensions (lib_cwmscripture, plg_task_cwmscripture, plg_content_scripturelinks) live in the CWMScriptureLinks repo and are versioned there — they are pulled in as build-time dependencies by livingword_build.php and are NOT listed here.",
+        "_comment": "All four manifests bump in lockstep on a LivingWord release. The bundled CWM Scripture extensions (lib_cwmscripture, plg_task_cwmscripture, plg_content_scripturelinks) live in the CWMScriptureLinks repo and are versioned there — they are pulled in as prebuilt zips by the preBuild hook (build/fetch_dependencies.php) and are NOT listed here.",
         "package": "build/pkg_livingword.xml",
         "extensions": [
             { "type": "component", "path": "livingword.xml" },
@@ -13,8 +15,119 @@
         ]
     },
     "build": {
-        "command": "php build/livingword_build.php build",
-        "outputGlob": "build/pkg_livingword-*.zip"
+        "_comment": "Builds com_livingword.zip — the component itself (admin/, site/, media/, livingword.xml, script.php). cwm-package runs this as the 'self' include, then bundles its output with the other 5 sub-zips into pkg_livingword-{version}.zip. The build.outputGlob points at the PACKAGE output (what cwm-release publishes), not the component output.",
+        "command":    "cwm-package",
+        "outputGlob": "build/dist/pkg_livingword-*.zip",
+        "outputDir":  "build/dist",
+        "outputName": "com_livingword-{version}.zip",
+        "manifest":   "livingword.xml",
+        "scriptFile": "script.php",
+        "sources":    [{ "from": ".", "to": "" }],
+        "excludeMatchMode": "strict",
+        "excludes": [
+            ".git", ".github", ".vscode", ".idea", ".DS_Store",
+            "node_modules", "build", "tests",
+            "build.properties", "build.dist.properties",
+            "composer.json", "composer.lock",
+            "package.json", "package-lock.json",
+            "eslint.config.mjs",
+            "phpunit.xml", "phpunit.xml.dist",
+            ".php-cs-fixer.dist.php", ".php-cs-fixer.cache",
+            "CLAUDE.md", "SECURITY.md", "README.md",
+            "libraries",
+            "mod_livingword", "plg_task_livingword",
+            "cwm-build.config.json"
+        ],
+        "excludeExtensions": ["map"],
+        "vendorPrune": true,
+        "includeRoots": ["admin/", "site/", "media/"],
+        "includeRootExtensions": ["php", "xml", "txt", "md"],
+        "preBuild": {
+            "_comment": "Runs once before cwm-package assembles the bundle: (1) installs npm deps if missing, (2) bundles JS via rollup and minifies CSS via csso into media/com_livingword/{js,css}/, (3) fetches the latest pkg_cwmscripture release from GitHub and extracts its 3 inner zips into build/vendor/ for the prebuilt includes below.",
+            "mode": "run",
+            "command": "npm install --no-audit --no-fund && npm run build && php build/fetch_dependencies.php"
+        },
+        "versionPrompt": { "enabled": true, "timeout": 10 }
+    },
+    "package": {
+        "_comment": "Assembles pkg_livingword-{version}.zip with 6 inner zips: com_livingword (self), mod_livingword + plg_task_livingword (inline — built from this repo), and 3 scripture zips (prebuilt — fetched from GitHub by the preBuild hook).",
+        "manifest":    "build/pkg_livingword.xml",
+        "outputDir":   "build/dist",
+        "outputName":  "pkg_livingword-{version}.zip",
+        "innerLayout": "packages-prefix",
+        "includes": [
+            {
+                "type": "self",
+                "outputName": "com_livingword.zip"
+            },
+            {
+                "type": "inline",
+                "outputName": "mod_livingword.zip",
+                "config": {
+                    "outputDir":  "build/dist",
+                    "outputName": "mod_livingword-{version}.zip",
+                    "manifest":   "mod_livingword/mod_livingword.xml",
+                    "sources":    [{ "from": "mod_livingword", "to": "" }],
+                    "excludeMatchMode": "strict",
+                    "excludes":   [".git", ".DS_Store", ".idea", "node_modules"]
+                }
+            },
+            {
+                "type": "inline",
+                "outputName": "plg_task_livingword.zip",
+                "config": {
+                    "outputDir":  "build/dist",
+                    "outputName": "plg_task_livingword-{version}.zip",
+                    "manifest":   "plg_task_livingword/livingword.xml",
+                    "sources":    [{ "from": "plg_task_livingword", "to": "" }],
+                    "excludeMatchMode": "strict",
+                    "excludes":   [".git", ".DS_Store", ".idea", "node_modules"]
+                }
+            },
+            {
+                "type": "prebuilt",
+                "outputName": "lib_cwmscripture.zip",
+                "distGlob":   "build/vendor/lib_cwmscripture.zip"
+            },
+            {
+                "type": "prebuilt",
+                "outputName": "plg_content_scripturelinks.zip",
+                "distGlob":   "build/vendor/plg_content_scripturelinks.zip"
+            },
+            {
+                "type": "prebuilt",
+                "outputName": "plg_task_cwmscripture.zip",
+                "distGlob":   "build/vendor/plg_task_cwmscripture.zip"
+            }
+        ],
+        "verify": {
+            "expectedEntries": [
+                "pkg_livingword.xml",
+                "packages/com_livingword.zip",
+                "packages/mod_livingword.zip",
+                "packages/plg_task_livingword.zip",
+                "packages/lib_cwmscripture.zip",
+                "packages/plg_content_scripturelinks.zip",
+                "packages/plg_task_cwmscripture.zip"
+            ]
+        }
+    },
+    "gitignore": {
+        "_comment": "Override the auto-derived media paths — package wrappers normally don't own a /media/ dir, but com_livingword does, and its outputs are fully generated from build/media_source/ via npm run build. Also keep build/vendor/ (scripture zips) and build/dist/ (artifact outputs) ignored.",
+        "mediaPaths": [
+            "/media/com_livingword/js/",
+            "/media/com_livingword/css/"
+        ]
+    },
+    "versionTracking": {
+        "_comment": "Override the package-wrapper profile's defaults: also sync versions.json + package.json:version, and broaden substituteTokens to LivingWord's actual source roots.",
+        "versionsJson": "build/versions.json",
+        "packageJson":  "package.json",
+        "substituteTokens": {
+            "token":      "__DEPLOY_VERSION__",
+            "paths":      ["admin/", "site/", "mod_livingword/", "plg_task_livingword/"],
+            "extensions": ["php"]
+        }
     },
     "ars": {
         "endpoint": "https://www.christianwebministries.org",
@@ -29,5 +142,9 @@
         "owner": "Joomla-Bible-Study",
         "repo": "CWMLivingWord",
         "releaseBranch": "main"
+    },
+    "changelog": {
+        "file": "build/livingword-changelog.xml",
+        "url":  "https://raw.githubusercontent.com/Joomla-Bible-Study/CWMLivingWord/main/build/livingword-changelog.xml"
     }
 }
