@@ -72,6 +72,11 @@ class Router extends RouterView
         $groupdetail->setKey('id');
         $this->registerView($groupdetail);
 
+        // The cwmcomplete and cwmunsubscribe views are intentionally not
+        // registered. They are reached only via tokenised links in outbound
+        // emails and never appear in menus, so SEF routing isn't needed and
+        // would just add empty URL segments.
+
         parent::__construct($app, $menu);
 
         $this->attachRule(new MenuRules($this));
