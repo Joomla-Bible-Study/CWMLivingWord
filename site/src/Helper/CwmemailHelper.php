@@ -237,8 +237,7 @@ class CwmemailHelper
         // Prevent header injection in subject
         $subject = str_replace(["\r", "\n"], '', $subject);
 
-        $app    = Factory::getApplication();
-        $mailer = $app->getContainer()->get(MailerFactoryInterface::class)->createMailer();
+        $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
 
         $mailer->addRecipient($to, $recipientName);
         $mailer->setSubject($subject);
