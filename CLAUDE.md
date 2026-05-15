@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LivingWord is a **Joomla 5/6 component** (`com_livingword`) that provides Bible reading plans and resources. The component includes an admin panel, a frontend site component, a Joomla module (`mod_livingword`), and a task plugin (`plg_task_livingword`) for scheduled email delivery.
+LivingWord is a **Joomla 5/6 component** (`com_livingword`) that provides Bible reading plans, study tools, group reading, and email delivery. The package ships a component (`com_livingword`), a Joomla module (`mod_livingword`) for daily reading display, and a task plugin (`plg_task_livingword`) with three scheduled routines: daily reading email, weekly progress digest, and accountability-partner digest.
 
-**Version:** 5.0.0 | **License:** GPL-2.0-or-later | **Maintained by:** CWM Team (Christian Web Ministries)
+**License:** GPL-2.0-or-later | **Maintained by:** CWM Team (Christian Web Ministries) | **Current version:** see `build/versions.json` (single source of truth)
 
 Originally created by Mike Leeper (MLWebTechnologies) as a Joomla 3.x component, migrated to Joomla 5 architecture with namespaced MVC, PSR-4 autoloading, and modern PHP 8.3+ patterns.
 
@@ -28,21 +28,47 @@ This follows the standard **Joomla 5/6 MVC component pattern** with namespaced c
 ### Component Structure (MVC)
 
 **Admin side** (`admin/src/`):
-- `Extension/LivingwordComponent.php` — Boot class with runtime PHP/Joomla version verification
-- `Controller/` — 10 controllers: DisplayController, Cwmcpanel, Cwmplans, Cwmplan, Cwmlinks, Cwmlink, Cwmplandetails, Cwmplandetail, Cwmusers, Cwmutilities
-- `Model/` — 8 models: CwmcpanelModel, CwmplansModel, CwmplanModel, CwmlinksModel, CwmlinkModel, CwmplandetailsModel, CwmplandetailModel, CwmusersModel
-- `View/` — 9 views: Cwmcpanel, Cwmplans, Cwmplan, Cwmlinks, Cwmlink, Cwmplandetails, Cwmplandetail, Cwmusers, Cwmutilities
-- `Table/` — 4 table classes: CwmplanTable, CwmlinkTable, CwmplandetailTable, CwmuserTable
+- `Extension/LivingwordComponent.php` — Boot class with runtime PHP/Joomla version verification + `CategoryServiceInterface` integration (study tools use `com_categories`)
+- `Controller/` — 15 controllers grouped by feature area:
+  - Plans: `Cwmplans`, `Cwmplan`, `Cwmplandetails`, `Cwmplandetail`
+  - Links: `Cwmlinks`, `Cwmlink`
+  - Tools (study-tool catalog): `Cwmtools`, `Cwmtool`
+  - Groups (reading-plan cohorts): `Cwmgroups`, `Cwmgroup`
+  - Subscribers: `Cwmusers`
+  - Dashboard: `Cwmcpanel`
+  - DB maintenance: `Cwmutilities`
+  - Audio preview endpoint: `Cwmaudio`
+  - Request router: `DisplayController`
+- `Model/` — 12 models, one per CRUD entity (no model for Audio, Utilities, or DisplayController)
+- `View/` — 13 views; each pairs `admin/src/View/Cwm*/HtmlView.php` with `admin/tmpl/cwm*/{default,edit}.php`
+- `Table/` — 6 table classes: `CwmplanTable`, `CwmplandetailTable`, `CwmlinkTable`, `CwmtoolTable`, `CwmgroupTable`, `CwmuserTable`
+- `Field/` — 5 custom form fields: `BibleVersionField`, `PlanField`, `PlanIdField`, `LinkCategoryField`, `LinkCategoryFilterField` (replace Joomla's `sql` field for J6 compatibility — see Key Patterns)
 - `Helper/CwmlivingwordHelper.php` — ACL helper
-- `Dispatcher/` — Admin request dispatcher
+- `Dispatcher/Dispatcher.php` — admin dispatcher; default controller = `cwmcpanel`
 
 **Site (frontend) side** (`site/src/`):
-- `Controller/DisplayController.php` — Routes to views, enables caching for guests
-- `Model/` — 5 models: CwmhomeModel, CwmplanviewModel, CwmresourcesModel, CwmsettingsModel, CwmtoolsModel
-- `View/` — 5 views with `prepareDocument()` for page titles: Cwmhome, Cwmplanview, Cwmresources, Cwmsettings, Cwmtools
-- `Helper/` — 4 helpers: CwmreadingHelper (date math), CwmbiblegatewayHelper (URLs), CwmuserHelper (prefs), CwmmenuHelper (nav)
-- `Service/Router.php` — URL routing
-- `Dispatcher/` — Site request dispatcher
+- `Controller/` — 8 controllers:
+  - `DisplayController` — view dispatcher with guest caching
+  - `CwmsubscribeController`, `CwmunsubscribeController` — email opt-in / token-based unsubscribe
+  - `CwmcompleteController` — one-click "mark as read" from email
+  - `CwmprogressController` — AJAX progress tracking
+  - `CwmnotesController` — per-day reflection notes
+  - `CwmgroupController` — group join/leave
+  - `CwmaudioController` — audio URL fetcher
+- `Model/` — 7 models: `CwmhomeModel`, `CwmplanviewModel`, `CwmresourcesModel`, `CwmsettingsModel`, `CwmtoolsModel`, `CwmgroupsModel`, `CwmgroupdetailModel`
+- `View/` — 9 views with `prepareDocument()` for page titles: `Cwmhome`, `Cwmplanview`, `Cwmresources`, `Cwmsettings`, `Cwmtools`, `Cwmgroups`, `Cwmgroupdetail`, plus `Cwmcomplete` and `Cwmunsubscribe` (email-only landing pages — intentionally unrouted)
+- `Helper/` — 9 helpers:
+  - `CwmreadingHelper` — date math, plan-day calculations
+  - `CwmuserHelper` — user prefs, token generation, action URLs
+  - `CwmmenuHelper` — navigation
+  - `CwmprogressHelper` — completion tracking, streaks
+  - `CwmscriptureHelper` — passage rendering via `lib_cwmscripture`
+  - `CwmemailHelper` — branded layout + `send()` mailer (shared by task plugin)
+  - `CwmnotesHelper` — note CRUD
+  - `CwmgroupHelper` — group queries
+  - `CwmpartnerHelper` — accountability-partner pairing
+- `Service/Router.php` — URL routing for the 7 menu-reachable views
+- `Dispatcher/Dispatcher.php` — site dispatcher; default controller = `display`
 
 ### Namespace Structure
 
@@ -57,10 +83,15 @@ CWM\Plugin\Task\Livingword\              → plg_task_livingword/src/
 
 | Table | Purpose |
 |-------|---------|
-| `#__livingword` | User settings (userid, bibleplan, bibleversion, startdate, email subscription, planview) |
+| `#__livingword_plans` | Reading plan definitions (alias, title, description, message, audio settings, testament filter, duration_type, total_days) |
+| `#__livingword_plans_details` | Daily readings per plan (plan FK, reading ref, optional audio override, devotional `descrip` text) |
+| `#__livingword_users` | Per-user settings: plan FK, bible/audio version, email opt-in, planview mode, start_date, streak tracking, accountability partner, unsubscribe + action tokens, timezone, preferred email hour |
+| `#__livingword_progress` | Completed readings (user FK, plan FK, day, passage_index, completed_at) |
 | `#__livingword_links` | Curated Bible resource links (name, url, category, target, published, ordering) |
-| `#__livingword_plans` | Reading plan definitions (name slug, description, message, audio, newtest flags) |
-| `#__livingword_plans_details` | Individual daily readings per plan (plan FK, reading ref, audio, ordering) |
+| `#__livingword_tools` | Study-tool catalog (name, description, url, icon, color, catid for `com_categories`) |
+| `#__livingword_groups` | Reading-plan groups (name, plan FK, start_date, invite_token, join_mode, created_by) |
+| `#__livingword_group_members` | Group membership (group FK, user FK, role: member or leader) |
+| `#__livingword_notes` | Per-day journal entries (user FK, plan FK, day, note_text) |
 
 ### Key Patterns
 
