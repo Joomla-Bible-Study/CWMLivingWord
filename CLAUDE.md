@@ -152,6 +152,21 @@ composer setup
 
 `build.properties` is gitignored — it carries DB and admin credentials. Section names (`j5`, `j6`, etc.) must match the comma-separated `installs = ...` list at the top.
 
+### Release Retention Policy
+
+Old releases are kept as historical / rollback records. The bar for removing a release artifact is a **breaking bug** or **CVE** — not "stale", "outdated", or "we don't want clutter". Users may need a specific older version for rollback, version pinning, or audit.
+
+**GitHub side — strongest preservation:**
+- Never delete an entire GitHub release or tag.
+- Never delete the canonical (correctly-named, correctly-versioned) asset of a release.
+- Removing a *misplaced duplicate* asset is OK — e.g. if a release-pipeline bug attaches a wrong-version zip to the wrong tag, the misfile can be removed without touching history.
+
+**ARS side — preserve by default, narrow cleanup acceptable:**
+- Default is to keep old ARS download items and releases.
+- Acceptable to remove only when an item/release is in a *broken state* (e.g. pointing at a deleted GitHub asset) AND the version it represents is functionally superseded by a successor release. In that case removing the whole broken ARS release is sometimes cleaner than repairing item by item. The GitHub release for the same version stays intact.
+
+When in doubt, ask before deleting.
+
 ### Code Style
 
 - **PSR-12** base with custom rules via `.php-cs-fixer.dist.php`
