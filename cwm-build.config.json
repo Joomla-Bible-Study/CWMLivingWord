@@ -6,7 +6,7 @@
     },
     "profile": "package-wrapper",
     "manifests": {
-        "_comment": "All four manifests bump in lockstep on a LivingWord release. The bundled CWM Scripture extensions (lib_cwmscripture, plg_task_cwmscripture, plg_content_scripturelinks) live in the CWMScriptureLinks repo and are versioned there — they are pulled in as prebuilt zips by the preBuild hook (build/fetch_dependencies.php) and are NOT listed here.",
+        "_comment": "All four manifests bump in lockstep on a LivingWord release. The bundled CWM Scripture extensions (lib_cwmscripture, plg_task_cwmscripture, plg_content_scripturelinks) live in the CWMScriptureLinks repo and are versioned there — they are pulled in as prebuilt zips by the preBuild hook (build/fetch_dependencies.php) and are NOT listed here. The scripture LIBRARY (joomla-bible-study/lib-cwmscripture) is pulled in as a Composer path repository from ../lib_cwmscripture; cwm-build-tools v1.1+ walks that dep's joomlaLinks and symlinks the library into the dev Joomla automatically (no dev.links[] entry required).",
         "package": "build/pkg_livingword.xml",
         "extensions": [
             { "type": "component", "path": "livingword.xml" },

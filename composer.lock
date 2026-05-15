@@ -4,8 +4,133 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7a8da0b6c6a954159e0089403646db73",
-    "packages": [],
+    "content-hash": "6838c129bb7ffcf42b33d3e9062230dc",
+    "packages": [
+        {
+            "name": "joomla-bible-study/lib-cwmscripture",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../lib_cwmscripture",
+                "reference": "c0e641b8cb36c7096431d4d259cf22eacce0cd20"
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": "^8.3.0"
+            },
+            "require-dev": {
+                "cwm/build-tools": "^1.1",
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpunit/phpunit": "^11.0"
+            },
+            "type": "joomla-library",
+            "extra": {
+                "cwm-build-tools": {
+                    "joomlaLinks": [
+                        {
+                            "type": "library",
+                            "name": "cwmscripture"
+                        }
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CWM\\Library\\Scripture\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "CWM\\Library\\Scripture\\Tests\\": "tests/unit/"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "php-cs-fixer fix --dry-run --diff"
+                ],
+                "lint:fix": [
+                    "php-cs-fixer fix"
+                ],
+                "test": [
+                    "phpunit"
+                ],
+                "test:unit": [
+                    "phpunit --testsuite unit"
+                ],
+                "build:package": [
+                    "cwm-build"
+                ],
+                "build:package:verbose": [
+                    "cwm-build -v"
+                ],
+                "release": [
+                    "cwm-release"
+                ],
+                "bump-version": [
+                    "cwm-bump"
+                ],
+                "ars-publish": [
+                    "cwm-ars-publish"
+                ],
+                "ars-list": [
+                    "cwm-ars-list"
+                ],
+                "changelog": [
+                    "cwm-changelog"
+                ],
+                "sync-languages": [
+                    "cwm-sync-languages"
+                ],
+                "sync-configs": [
+                    "cwm-sync-configs"
+                ],
+                "setup": [
+                    "cwm-setup"
+                ],
+                "link": [
+                    "cwm-link"
+                ],
+                "link-check": [
+                    "cwm-link-check"
+                ],
+                "clean": [
+                    "cwm-clean"
+                ],
+                "verify": [
+                    "cwm-verify"
+                ],
+                "joomla-install": [
+                    "cwm-joomla-install"
+                ],
+                "joomla-latest": [
+                    "cwm-joomla-latest"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "CWM Team",
+                    "email": "info@christianwebministries.org",
+                    "homepage": "https://www.christianwebministries.org"
+                }
+            ],
+            "description": "CWM Scripture Library - Bible scripture retrieval, parsing, rendering, and translation management for Joomla",
+            "homepage": "https://github.com/Joomla-Bible-Study/lib_cwmscripture",
+            "keywords": [
+                "bible",
+                "joomla",
+                "library",
+                "scripture"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        }
+    ],
     "packages-dev": [
         {
             "name": "clue/ndjson-react",
@@ -295,16 +420,16 @@
         },
         {
             "name": "cwm/build-tools",
-            "version": "v1.0.2",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Joomla-Bible-Study/cwm-build-tools.git",
-                "reference": "53ce4711301e52423104ea8032474861a87167cf"
+                "reference": "747fbd85d55dc413466c02c42934de2007e2227a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Joomla-Bible-Study/cwm-build-tools/zipball/53ce4711301e52423104ea8032474861a87167cf",
-                "reference": "53ce4711301e52423104ea8032474861a87167cf",
+                "url": "https://api.github.com/repos/Joomla-Bible-Study/cwm-build-tools/zipball/747fbd85d55dc413466c02c42934de2007e2227a",
+                "reference": "747fbd85d55dc413466c02c42934de2007e2227a",
                 "shasum": ""
             },
             "require": {
@@ -335,6 +460,7 @@
                 "bin/cwm-link-check",
                 "bin/cwm-clean",
                 "bin/cwm-verify",
+                "bin/cwm-install-zip",
                 "bin/cwm-joomla-install",
                 "bin/cwm-joomla-latest",
                 "bin/cwm-joomla-cms-deps"
@@ -389,10 +515,10 @@
                 "release"
             ],
             "support": {
-                "source": "https://github.com/Joomla-Bible-Study/cwm-build-tools/tree/v1.0.2",
+                "source": "https://github.com/Joomla-Bible-Study/cwm-build-tools/tree/v1.1.0",
                 "issues": "https://github.com/Joomla-Bible-Study/cwm-build-tools/issues"
             },
-            "time": "2026-05-14T23:29:56+00:00"
+            "time": "2026-05-15T18:07:30+00:00"
         },
         {
             "name": "ergebnis/agent-detector",
@@ -6339,6 +6465,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "joomla-bible-study/lib-cwmscripture": 20,
         "roave/security-advisories": 20
     },
     "prefer-stable": true,

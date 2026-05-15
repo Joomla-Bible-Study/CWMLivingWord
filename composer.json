@@ -39,8 +39,7 @@
   "autoload": {
     "psr-4": {
       "CWM\\Component\\Livingword\\Administrator\\": "admin/src/",
-      "CWM\\Component\\Livingword\\Site\\": "site/src/",
-      "CWM\\Library\\Scripture\\": "libraries/cwmscripture_src/lib_cwmscripture/src/"
+      "CWM\\Component\\Livingword\\Site\\": "site/src/"
     }
   },
   "autoload-dev": {
@@ -52,18 +51,33 @@
     {
       "type": "vcs",
       "url": "https://github.com/Joomla-Bible-Study/cwm-build-tools"
+    },
+    {
+      "type": "path",
+      "url": "../lib_cwmscripture",
+      "options": { "symlink": true }
     }
   ],
+  "extra": {
+    "cwm-build-tools": {
+      "joomlaLinks": [
+        { "type": "component", "name": "com_livingword" },
+        { "type": "module",    "name": "mod_livingword", "client": "site" },
+        { "type": "plugin",    "group": "task", "element": "livingword" }
+      ]
+    }
+  },
   "require": {
     "php": "^8.3.0",
     "ext-mbstring": "*",
     "ext-json": "*",
     "ext-simplexml": "*",
     "ext-pdo": "*",
-    "ext-zip": "*"
+    "ext-zip": "*",
+    "joomla-bible-study/lib-cwmscripture": "@dev"
   },
   "require-dev": {
-    "cwm/build-tools": "^1.0",
+    "cwm/build-tools": "^1.1",
     "phpunit/phpunit": "^12.5",
     "friendsofphp/php-cs-fixer": "^3.0",
     "roave/security-advisories": "dev-latest",
