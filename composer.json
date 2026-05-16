@@ -51,11 +51,6 @@
     {
       "type": "vcs",
       "url": "https://github.com/Joomla-Bible-Study/cwm-build-tools"
-    },
-    {
-      "type": "path",
-      "url": "../lib_cwmscripture",
-      "options": { "symlink": true }
     }
   ],
   "extra": {
@@ -73,8 +68,7 @@
     "ext-json": "*",
     "ext-simplexml": "*",
     "ext-pdo": "*",
-    "ext-zip": "*",
-    "joomla-bible-study/lib-cwmscripture": "@dev"
+    "ext-zip": "*"
   },
   "require-dev": {
     "cwm/build-tools": "^1.4",

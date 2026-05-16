@@ -2,14 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [ "master", "development" ]
+    branches: [ "main" ]
     paths-ignore:
       - '**.md'
       - 'admin/language/**'
       - 'site/language/**'
       - '.claude/**'
   pull_request:
-    branches: [ "master", "development" ]
+    branches: [ "main" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -90,7 +90,7 @@ jobs:
       - name: Verify package contents
         run: |
           VERSION=$(php -r '$x = simplexml_load_file("livingword.xml"); echo (string) $x->version;')
-          PKG="build/pkg_livingword-$VERSION.zip"
+          PKG="build/dist/pkg_livingword-$VERSION.zip"
           test -f "$PKG" || { echo "Package not built: $PKG"; exit 1; }
           echo "Package contents:"
           unzip -l "$PKG"
@@ -102,5 +102,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pkg_livingword
-          path: build/pkg_livingword-*.zip
+          path: build/dist/pkg_livingword-*.zip
           retention-days: 7

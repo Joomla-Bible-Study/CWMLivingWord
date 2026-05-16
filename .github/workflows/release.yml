@@ -25,7 +25,7 @@ jobs:
           coverage: none
 
       - name: Install Composer dependencies
-        run: composer install --no-dev --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist
 
       - name: Resolve version from tag
         id: version
@@ -63,7 +63,7 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           TAG="${{ steps.version.outputs.tag }}"
           SCRIPTURE="${{ steps.scripture.outputs.version }}"
-          PKG="build/pkg_livingword-$VERSION.zip"
+          PKG="build/dist/pkg_livingword-$VERSION.zip"
 
           gh release create "$TAG" "$PKG" \
             --repo "$GITHUB_REPOSITORY" \

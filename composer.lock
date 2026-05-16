@@ -4,133 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "edbffdc4b06f6dcd741abd6ee3a46ce8",
-    "packages": [
-        {
-            "name": "joomla-bible-study/lib-cwmscripture",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "../lib_cwmscripture",
-                "reference": "9c628862aaeed2086630596975728fde382c4147"
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": "^8.3.0"
-            },
-            "require-dev": {
-                "cwm/build-tools": "^1.4",
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "phpunit/phpunit": "^11.0"
-            },
-            "type": "joomla-library",
-            "extra": {
-                "cwm-build-tools": {
-                    "joomlaLinks": [
-                        {
-                            "type": "library",
-                            "name": "cwmscripture"
-                        }
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "CWM\\Library\\Scripture\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "CWM\\Library\\Scripture\\Tests\\": "tests/unit/"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "php-cs-fixer fix --dry-run --diff"
-                ],
-                "lint:fix": [
-                    "php-cs-fixer fix"
-                ],
-                "test": [
-                    "phpunit"
-                ],
-                "test:unit": [
-                    "phpunit --testsuite unit"
-                ],
-                "build:package": [
-                    "cwm-build"
-                ],
-                "build:package:verbose": [
-                    "cwm-build -v"
-                ],
-                "release": [
-                    "cwm-release"
-                ],
-                "bump-version": [
-                    "cwm-bump"
-                ],
-                "ars-publish": [
-                    "cwm-ars-publish"
-                ],
-                "ars-list": [
-                    "cwm-ars-list"
-                ],
-                "changelog": [
-                    "cwm-changelog"
-                ],
-                "sync-languages": [
-                    "cwm-sync-languages"
-                ],
-                "sync-configs": [
-                    "cwm-sync-configs"
-                ],
-                "setup": [
-                    "cwm-setup"
-                ],
-                "link": [
-                    "cwm-link"
-                ],
-                "link-check": [
-                    "cwm-link-check"
-                ],
-                "clean": [
-                    "cwm-clean"
-                ],
-                "verify": [
-                    "cwm-verify"
-                ],
-                "joomla-install": [
-                    "cwm-joomla-install"
-                ],
-                "joomla-latest": [
-                    "cwm-joomla-latest"
-                ]
-            },
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "CWM Team",
-                    "email": "info@christianwebministries.org",
-                    "homepage": "https://www.christianwebministries.org"
-                }
-            ],
-            "description": "CWM Scripture Library - Bible scripture retrieval, parsing, rendering, and translation management for Joomla",
-            "homepage": "https://github.com/Joomla-Bible-Study/lib_cwmscripture",
-            "keywords": [
-                "bible",
-                "joomla",
-                "library",
-                "scripture"
-            ],
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
-        }
-    ],
+    "content-hash": "17ef3ce93cf968aa5768c82167d4fe37",
+    "packages": [],
     "packages-dev": [
         {
             "name": "clue/ndjson-react",
@@ -6466,7 +6341,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "joomla-bible-study/lib-cwmscripture": 20,
         "roave/security-advisories": 20
     },
     "prefer-stable": true,
