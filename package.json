@@ -1,6 +1,6 @@
 {
   "name": "com_livingword",
-  "version": "5.4.0",
+  "version": "5.4.1",
   "description": "CWM LivingWord - frontend asset build pipeline (CSS + ESLint)",
   "license": "GPL-2.0-or-later",
   "private": true,
