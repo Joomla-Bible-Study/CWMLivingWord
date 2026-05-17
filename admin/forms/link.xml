@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<form addfieldprefix="CWM\Component\Livingword\Administrator\Field">
+<form>
     <fieldset>
         <field
             name="id"
@@ -25,12 +25,12 @@
             maxlength="200"
         />
         <field
-            name="category"
-            type="LinkCategory"
-            label="COM_LIVINGWORD_LINK_CATEGORY"
-            description="COM_LIVINGWORD_LINK_CATEGORY_DESC"
-            size="40"
-            maxlength="100"
+            name="catid"
+            type="categoryedit"
+            label="JCATEGORY"
+            extension="com_livingword.link"
+            addfieldprefix="Joomla\Component\Categories\Administrator\Field"
+            default=""
         />
         <field
             name="target"

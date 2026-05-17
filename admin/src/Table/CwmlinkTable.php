@@ -47,12 +47,12 @@ class CwmlinkTable extends Table
     public ?string $url = '';
 
     /**
-     * Link category
+     * Joomla category id (FK to #__categories, extension `com_livingword.link`)
      *
-     * @var string|null
-     * @since 5.0.0
+     * @var int|null
+     * @since 5.5.0
      */
-    public ?string $category = '';
+    public ?int $catid = 0;
 
     /**
      * Target window (0=same, 2=new)
@@ -134,7 +134,7 @@ class CwmlinkTable extends Table
     #[\Override]
     public function bind($src, $ignore = ''): bool
     {
-        foreach (['id', 'target', 'published', 'checked_out', 'ordering'] as $field) {
+        foreach (['id', 'catid', 'target', 'published', 'checked_out', 'ordering'] as $field) {
             if (isset($src[$field])) {
                 $src[$field] = $src[$field] !== '' ? (int) $src[$field] : null;
             }

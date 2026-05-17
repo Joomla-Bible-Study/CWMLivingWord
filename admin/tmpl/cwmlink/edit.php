@@ -27,7 +27,7 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
             </div>
             <div class="col-lg-3">
                 <?php echo $this->form->renderField('published'); ?>
-                <?php echo $this->form->renderField('category'); ?>
+                <?php echo $this->form->renderField('catid'); ?>
                 <?php echo $this->form->renderField('target'); ?>
                 <?php echo $this->form->renderField('ordering'); ?>
                 <?php echo $this->form->renderField('id'); ?>
