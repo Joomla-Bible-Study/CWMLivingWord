@@ -77,14 +77,15 @@ CREATE TABLE IF NOT EXISTS `#__livingword_links` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(200) NOT NULL DEFAULT '',
   `url` varchar(200) NOT NULL DEFAULT '',
-  `category` varchar(100) NOT NULL DEFAULT '',
+  `catid` int UNSIGNED NOT NULL DEFAULT 0,
   `target` tinyint NOT NULL DEFAULT 0 COMMENT '0=same window, 2=new window',
   `published` tinyint NOT NULL DEFAULT 0,
   `checked_out` int UNSIGNED DEFAULT NULL,
   `checked_out_time` datetime DEFAULT NULL,
   `ordering` int NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `idx_published` (`published`)
+  KEY `idx_published` (`published`),
+  KEY `idx_catid` (`catid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__livingword_tools` (
@@ -1914,16 +1915,18 @@ INSERT INTO `#__livingword_plans_details` (`plan_id`, `ordering`, `reading`, `au
 (5, 281, 'Malachi 1-2', ''),
 (5, 282, 'Malachi 3-4', '');
 
-INSERT INTO `#__livingword_links` (`name`, `url`, `category`, `target`, `published`, `ordering`) VALUES
-('Blue Letter Bible', 'https://www.blueletterbible.org', 'Bible Study', 2, 1, 1),
-('Bible Hub', 'https://biblehub.com', 'Bible Study', 2, 1, 2),
-('Bible Project', 'https://bibleproject.com', 'Bible Study', 2, 1, 3),
-('Got Questions', 'https://www.gotquestions.org', 'Bible Study', 2, 1, 4),
-('Enduring Word Commentary', 'https://enduringword.com', 'Bible Study', 2, 1, 5),
-('Bible For Children', 'https://www.bibleforchildren.org', 'Just For Kids', 2, 1, 1),
-('Keys for Kids', 'https://www.keysforkids.org', 'Just For Kids', 2, 1, 2),
-('Superbook Kids', 'https://www.superbook.cbn.com', 'Just For Kids', 2, 1, 3),
-('Bible App for Kids', 'https://bibleappforkids.com', 'Just For Kids', 2, 1, 4);
+-- Sample links land uncategorized (catid = 0). Categories are created by the
+-- admin via System → Categories → com_livingword.link after install.
+INSERT INTO `#__livingword_links` (`name`, `url`, `catid`, `target`, `published`, `ordering`) VALUES
+('Blue Letter Bible', 'https://www.blueletterbible.org', 0, 2, 1, 1),
+('Bible Hub', 'https://biblehub.com', 0, 2, 1, 2),
+('Bible Project', 'https://bibleproject.com', 0, 2, 1, 3),
+('Got Questions', 'https://www.gotquestions.org', 0, 2, 1, 4),
+('Enduring Word Commentary', 'https://enduringword.com', 0, 2, 1, 5),
+('Bible For Children', 'https://www.bibleforchildren.org', 0, 2, 1, 6),
+('Keys for Kids', 'https://www.keysforkids.org', 0, 2, 1, 7),
+('Superbook Kids', 'https://www.superbook.cbn.com', 0, 2, 1, 8),
+('Bible App for Kids', 'https://bibleappforkids.com', 0, 2, 1, 9);
 
 INSERT INTO `#__livingword_tools` (`name`, `description`, `url`, `icon`, `color`, `published`, `ordering`) VALUES
 ('Bible Dictionary', 'Look up definitions of Bible words and terms.', 'https://www.blueletterbible.org/lexicon/', 'icon-book', 'text-primary', 1, 1),

@@ -71,6 +71,7 @@ class LivingwordComponent extends MVCComponent implements
     {
         return match ($section) {
             'tool'  => 'livingword_tools',
+            'link'  => 'livingword_links',
             default => '',
         };
     }

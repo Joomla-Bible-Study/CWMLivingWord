@@ -20,7 +20,7 @@ use Joomla\CMS\Router\Route;
 
 $listOrder = $this->escape($this->state->get('list.ordering'));
 $listDirn  = $this->escape($this->state->get('list.direction'));
-$saveOrder = ($listOrder === 'a.ordering' || $listOrder === 'a.category, a.ordering');
+$saveOrder = ($listOrder === 'a.ordering' || $listOrder === 'c.title, a.ordering');
 
 if ($saveOrder && !empty($this->items)) {
     $saveOrderingUrl = 'index.php?option=com_livingword&task=cwmlinks.saveOrderAjax&tmpl=component&' . \Joomla\CMS\Session\Session::getFormToken() . '=1';
@@ -58,7 +58,7 @@ if ($saveOrder && !empty($this->items)) {
                                     <?php echo Text::_('COM_LIVINGWORD_LINK_URL'); ?>
                                 </th>
                                 <th scope="col" class="d-none d-md-table-cell">
-                                    <?php echo HTMLHelper::_('searchtools.sort', 'COM_LIVINGWORD_LINK_CATEGORY', 'a.category', $listDirn, $listOrder); ?>
+                                    <?php echo HTMLHelper::_('searchtools.sort', 'JCATEGORY', 'c.title', $listDirn, $listOrder); ?>
                                 </th>
                                 <th scope="col" class="w-5 text-center">
                                     <?php echo HTMLHelper::_('searchtools.sort', 'JGRID_HEADING_ID', 'a.id', $listDirn, $listOrder); ?>
@@ -67,7 +67,7 @@ if ($saveOrder && !empty($this->items)) {
                         </thead>
                         <tbody <?php if ($saveOrder) : ?>class="js-draggable" data-url="<?php echo $saveOrderingUrl; ?>" data-direction="<?php echo strtolower($listDirn); ?>" data-nested="true"<?php endif; ?>>
                             <?php foreach ($this->items as $i => $item) : ?>
-                                <tr class="row<?php echo $i % 2; ?>" data-draggable-group="<?php echo $this->escape($item->category); ?>">
+                                <tr class="row<?php echo $i % 2; ?>" data-draggable-group="<?php echo (int) $item->catid; ?>">
                                     <td class="text-center">
                                         <?php echo HTMLHelper::_('grid.id', $i, $item->id, false, 'cid', 'cb', $item->name); ?>
                                     </td>
@@ -99,7 +99,7 @@ if ($saveOrder && !empty($this->items)) {
                                         <?php echo $this->escape($item->url); ?>
                                     </td>
                                     <td class="d-none d-md-table-cell">
-                                        <?php echo $this->escape($item->category); ?>
+                                        <?php echo $this->escape($item->category_title ?? ''); ?>
                                     </td>
                                     <td class="text-center">
                                         <?php echo (int) $item->id; ?>

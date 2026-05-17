@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Site\Model;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 
 /**
@@ -24,9 +25,9 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 class CwmresourcesModel extends BaseDatabaseModel
 {
     /**
-     * Get published resource links grouped by category.
+     * Get published resource links grouped by category title.
      *
-     * @return  array  Associative array keyed by category name
+     * @return  array  Associative array keyed by category title
      *
      * @since   5.0.0
      */
@@ -34,18 +35,27 @@ class CwmresourcesModel extends BaseDatabaseModel
     {
         $db    = $this->getDatabase();
         $query = $db->getQuery(true)
-            ->select('*')
-            ->from($db->quoteName('#__livingword_links'))
-            ->where($db->quoteName('published') . ' = 1')
-            ->order($db->quoteName('category') . ' ASC, ' . $db->quoteName('ordering') . ' ASC');
+            ->select($db->quoteName('a') . '.*')
+            ->select($db->quoteName('c.title', 'category_title'))
+            ->from($db->quoteName('#__livingword_links', 'a'))
+            ->join(
+                'LEFT',
+                $db->quoteName('#__categories', 'c')
+                    . ' ON ' . $db->quoteName('c.id') . ' = ' . $db->quoteName('a.catid')
+            )
+            ->where($db->quoteName('a.published') . ' = 1')
+            ->order($db->quoteName('c.lft') . ' ASC, ' . $db->quoteName('a.ordering') . ' ASC');
 
         $db->setQuery($query);
         $rows = $db->loadObjectList();
 
-        $grouped = [];
+        $uncategorized = Text::_('COM_LIVINGWORD_UNCATEGORIZED');
+        $grouped       = [];
 
         foreach ($rows as $row) {
-            $cat             = $row->category ?: 'Uncategorized';
+            $cat             = $row->category_title !== null && $row->category_title !== ''
+                ? $row->category_title
+                : $uncategorized;
             $grouped[$cat][] = $row;
         }
 
