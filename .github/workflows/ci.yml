@@ -69,6 +69,9 @@ jobs:
           sed 's/#__/livingword_/g' admin/sql/install.mysql.utf8.sql > /tmp/schema.sql
           mysql --force -h 127.0.0.1 -u livingword_test -plivingword_test livingword_test < /tmp/schema.sql 2>&1 | grep -v "doesn't exist" || true
 
+      - name: Ensure integration test dir exists
+        run: mkdir -p tests/integration
+
       - name: Check PHP syntax
         run: composer lint:syntax
 
