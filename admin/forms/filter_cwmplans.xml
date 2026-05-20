@@ -16,6 +16,15 @@
         >
             <option value="">JOPTION_SELECT_PUBLISHED</option>
         </field>
+        <field
+            name="tag"
+            type="tag"
+            label="JTAG"
+            mode="nested"
+            onchange="this.form.submit();"
+        >
+            <option value="">JOPTION_SELECT_TAG</option>
+        </field>
     </fields>
 
     <fields name="list">

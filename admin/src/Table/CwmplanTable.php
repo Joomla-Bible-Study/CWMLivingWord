@@ -15,6 +15,8 @@ namespace CWM\Component\Livingword\Administrator\Table;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\Table\Table;
+use Joomla\CMS\Tag\TaggableTableInterface;
+use Joomla\CMS\Tag\TaggableTableTrait;
 use Joomla\Database\DatabaseInterface;
 
 /**
@@ -22,8 +24,10 @@ use Joomla\Database\DatabaseInterface;
  *
  * @since  5.0.0
  */
-class CwmplanTable extends Table
+class CwmplanTable extends Table implements TaggableTableInterface
 {
+    use TaggableTableTrait;
+
     /**
      * @var int|null
      * @since 5.0.0
@@ -146,7 +150,21 @@ class CwmplanTable extends Table
      */
     public function __construct(&$db)
     {
+        $this->typeAlias = 'com_livingword.plan';
+
         parent::__construct('#__livingword_plans', 'id', $db);
+    }
+
+    /**
+     * Get the type alias for this taggable table.
+     *
+     * @return  string
+     *
+     * @since   5.6.0
+     */
+    public function getTypeAlias(): string
+    {
+        return $this->typeAlias;
     }
 
     /**

@@ -44,6 +44,7 @@ class CwmplansModel extends ListModel
                 'testament', 'a.testament',
                 'published', 'a.published',
                 'ordering', 'a.ordering',
+                'tag',
             ];
         }
 
@@ -66,6 +67,9 @@ class CwmplansModel extends ListModel
         $published = $this->getUserStateFromRequest($this->context . '.filter.published', 'filter_published', '');
         $this->setState('filter.published', $published);
 
+        $tag = $this->getUserStateFromRequest($this->context . '.filter.tag', 'filter_tag', '');
+        $this->setState('filter.tag', $tag);
+
         parent::populateState($ordering, $direction);
     }
 
@@ -80,6 +84,7 @@ class CwmplansModel extends ListModel
     {
         $id .= ':' . $this->getState('filter.search');
         $id .= ':' . $this->getState('filter.published');
+        $id .= ':' . serialize($this->getState('filter.tag'));
 
         return parent::getStoreId($id);
     }
@@ -129,6 +134,23 @@ class CwmplansModel extends ListModel
             $query->where($db->quoteName('a.published') . ' = ' . (int) $published);
         } elseif ($published === '') {
             $query->where($db->quoteName('a.published') . ' IN (0, 1)');
+        }
+
+        // Filter by tag (com_tags integration)
+        $tagId = $this->getState('filter.tag');
+
+        if (!empty($tagId) && (is_numeric($tagId) || \is_array($tagId))) {
+            $tagIds = array_filter(array_map('intval', (array) $tagId));
+
+            if (!empty($tagIds)) {
+                $query->join(
+                    'INNER',
+                    $db->quoteName('#__contentitem_tag_map', 'tagmap')
+                    . ' ON ' . $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
+                    . ' AND ' . $db->quoteName('tagmap.type_alias') . ' = ' . $db->quote('com_livingword.plan')
+                );
+                $query->where($db->quoteName('tagmap.tag_id') . ' IN (' . implode(',', $tagIds) . ')');
+            }
         }
 
         $orderCol  = $this->state->get('list.ordering', 'a.ordering');

@@ -44,6 +44,13 @@ $this->getDocument()->getWebAssetManager()
                                 <div>
                                     <h5 class="card-title mb-0"><?php echo $this->escape($link->name); ?></h5>
                                     <small class="text-muted"><?php echo $this->escape(parse_url($link->url, PHP_URL_HOST)); ?></small>
+                                    <?php if (!empty($link->tags)) : ?>
+                                        <div class="livingword-resource-tags mt-1">
+                                            <?php foreach ($link->tags as $tag) : ?>
+                                                <span class="badge bg-light text-dark border me-1"><?php echo $this->escape($tag->title); ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <?php if ($link->target == 2) : ?>
                                     <span class="icon-out-2 text-muted ms-auto flex-shrink-0" aria-hidden="true"></span>

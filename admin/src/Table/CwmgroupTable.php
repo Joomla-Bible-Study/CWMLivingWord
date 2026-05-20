@@ -15,6 +15,8 @@ namespace CWM\Component\Livingword\Administrator\Table;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\Table\Table;
+use Joomla\CMS\Tag\TaggableTableInterface;
+use Joomla\CMS\Tag\TaggableTableTrait;
 use Joomla\Database\DatabaseInterface;
 
 /**
@@ -22,8 +24,10 @@ use Joomla\Database\DatabaseInterface;
  *
  * @since  5.7.0
  */
-class CwmgroupTable extends Table
+class CwmgroupTable extends Table implements TaggableTableInterface
 {
+    use TaggableTableTrait;
+
     /**
      * @var int|null
      * @since 5.7.0
@@ -130,7 +134,21 @@ class CwmgroupTable extends Table
      */
     public function __construct(&$db)
     {
+        $this->typeAlias = 'com_livingword.group';
+
         parent::__construct('#__livingword_groups', 'id', $db);
+    }
+
+    /**
+     * Get the type alias for this taggable table.
+     *
+     * @return  string
+     *
+     * @since   5.6.0
+     */
+    public function getTypeAlias(): string
+    {
+        return $this->typeAlias;
     }
 
     /**

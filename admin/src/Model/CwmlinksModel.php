@@ -43,6 +43,7 @@ class CwmlinksModel extends ListModel
                 'category_title', 'c.title',
                 'published', 'a.published',
                 'ordering', 'a.ordering',
+                'tag',
             ];
         }
 
@@ -68,6 +69,9 @@ class CwmlinksModel extends ListModel
         $catid = $this->getUserStateFromRequest($this->context . '.filter.catid', 'filter_catid', '');
         $this->setState('filter.catid', $catid);
 
+        $tag = $this->getUserStateFromRequest($this->context . '.filter.tag', 'filter_tag', '');
+        $this->setState('filter.tag', $tag);
+
         parent::populateState($ordering, $direction);
     }
 
@@ -83,6 +87,7 @@ class CwmlinksModel extends ListModel
         $id .= ':' . $this->getState('filter.search');
         $id .= ':' . $this->getState('filter.published');
         $id .= ':' . $this->getState('filter.catid');
+        $id .= ':' . serialize($this->getState('filter.tag'));
 
         return parent::getStoreId($id);
     }
@@ -137,6 +142,23 @@ class CwmlinksModel extends ListModel
 
         if (is_numeric($catid)) {
             $query->where($db->quoteName('a.catid') . ' = ' . (int) $catid);
+        }
+
+        // Filter by tag (com_tags integration)
+        $tagId = $this->getState('filter.tag');
+
+        if (!empty($tagId) && (is_numeric($tagId) || \is_array($tagId))) {
+            $tagIds = array_filter(array_map('intval', (array) $tagId));
+
+            if (!empty($tagIds)) {
+                $query->join(
+                    'INNER',
+                    $db->quoteName('#__contentitem_tag_map', 'tagmap')
+                    . ' ON ' . $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
+                    . ' AND ' . $db->quoteName('tagmap.type_alias') . ' = ' . $db->quote('com_livingword.link')
+                );
+                $query->where($db->quoteName('tagmap.tag_id') . ' IN (' . implode(',', $tagIds) . ')');
+            }
         }
 
         $orderCol  = $this->state->get('list.ordering', 'c.title, a.ordering');

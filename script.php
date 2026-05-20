@@ -138,6 +138,10 @@ class Com_livingwordInstallerScript
             // the component to the front end.
             $this->seedMenu();
 
+            // Register #__content_types rows so com_tags can tag plans,
+            // links, and groups.
+            $this->registerContentTypes();
+
             Factory::getApplication()->enqueueMessage(
                 sprintf('CWM LivingWord %s has been installed successfully.', $version),
                 'message'
@@ -152,6 +156,10 @@ class Com_livingwordInstallerScript
             // Migrate legacy free-text link categories into #__categories.
             // Safe no-op once the legacy column is gone (5.6.0+).
             $this->migrateLinkCategories();
+
+            // Re-seed content types on every update so newly added entities
+            // (or field-mapping tweaks) reach existing installs.
+            $this->registerContentTypes();
 
             Factory::getApplication()->enqueueMessage(
                 sprintf('CWM LivingWord has been updated to version %s.', $version),
@@ -394,6 +402,212 @@ class Com_livingwordInstallerScript
         } catch (\Throwable $e) {
             Factory::getApplication()->enqueueMessage(
                 'LivingWord: link category migration failed — ' . $e->getMessage(),
+                'warning'
+            );
+        }
+    }
+
+    /**
+     * Seed (or refresh) #__content_types rows for our taggable entities so
+     * com_tags can list/route them. Idempotent — UPDATEs on re-run so we
+     * never duplicate, and so field-mapping changes ship automatically.
+     *
+     * @return  void
+     *
+     * @since   5.6.0
+     */
+    private function registerContentTypes(): void
+    {
+        $namespace = 'CWM\\\\Component\\\\Livingword\\\\Administrator\\\\Table\\\\';
+        $corePrefix = 'Joomla\\\\CMS\\\\Table\\\\';
+
+        $entities = [
+            [
+                'alias'      => 'com_livingword.plan',
+                'title'      => 'Plan',
+                'tableClass' => 'CwmplanTable',
+                'dbTable'    => '#__livingword_plans',
+                'mappings'   => [
+                    'core_content_item_id' => 'id',
+                    'core_title'           => 'title',
+                    'core_state'           => 'published',
+                    'core_alias'           => 'alias',
+                    'core_created_time'    => 'created',
+                    'core_modified_time'   => 'modified',
+                    'core_body'            => 'description',
+                    'core_hits'            => 'null',
+                    'core_publish_up'      => 'null',
+                    'core_publish_down'    => 'null',
+                    'core_access'          => 'null',
+                    'core_params'          => 'null',
+                    'core_featured'        => 'null',
+                    'core_metadata'        => 'null',
+                    'core_language'        => 'null',
+                    'core_images'          => 'null',
+                    'core_urls'            => 'null',
+                    'core_version'         => 'null',
+                    'core_ordering'        => 'ordering',
+                    'core_metakey'         => 'null',
+                    'core_metadesc'        => 'null',
+                    'core_catid'           => 'null',
+                    'asset_id'             => 'null',
+                ],
+                'formFile'   => 'administrator/components/com_livingword/forms/plan.xml',
+            ],
+            [
+                'alias'      => 'com_livingword.link',
+                'title'      => 'Link',
+                'tableClass' => 'CwmlinkTable',
+                'dbTable'    => '#__livingword_links',
+                'mappings'   => [
+                    'core_content_item_id' => 'id',
+                    'core_title'           => 'name',
+                    'core_state'           => 'published',
+                    'core_alias'           => 'null',
+                    'core_created_time'    => 'null',
+                    'core_modified_time'   => 'null',
+                    'core_body'            => 'null',
+                    'core_hits'            => 'null',
+                    'core_publish_up'      => 'null',
+                    'core_publish_down'    => 'null',
+                    'core_access'          => 'null',
+                    'core_params'          => 'null',
+                    'core_featured'        => 'null',
+                    'core_metadata'        => 'null',
+                    'core_language'        => 'null',
+                    'core_images'          => 'null',
+                    'core_urls'            => 'url',
+                    'core_version'         => 'null',
+                    'core_ordering'        => 'ordering',
+                    'core_metakey'         => 'null',
+                    'core_metadesc'        => 'null',
+                    'core_catid'           => 'catid',
+                    'asset_id'             => 'null',
+                ],
+                'formFile'   => 'administrator/components/com_livingword/forms/link.xml',
+            ],
+            [
+                'alias'      => 'com_livingword.group',
+                'title'      => 'Group',
+                'tableClass' => 'CwmgroupTable',
+                'dbTable'    => '#__livingword_groups',
+                'mappings'   => [
+                    'core_content_item_id' => 'id',
+                    'core_title'           => 'name',
+                    'core_state'           => 'published',
+                    'core_alias'           => 'null',
+                    'core_created_time'    => 'created',
+                    'core_modified_time'   => 'modified',
+                    'core_body'            => 'description',
+                    'core_hits'            => 'null',
+                    'core_publish_up'      => 'null',
+                    'core_publish_down'    => 'null',
+                    'core_access'          => 'null',
+                    'core_params'          => 'null',
+                    'core_featured'        => 'null',
+                    'core_metadata'        => 'null',
+                    'core_language'        => 'null',
+                    'core_images'          => 'null',
+                    'core_urls'            => 'null',
+                    'core_version'         => 'null',
+                    'core_ordering'        => 'ordering',
+                    'core_metakey'         => 'null',
+                    'core_metadesc'        => 'null',
+                    'core_catid'           => 'null',
+                    'asset_id'             => 'null',
+                ],
+                'formFile'   => 'administrator/components/com_livingword/forms/group.xml',
+            ],
+        ];
+
+        try {
+            $db = Factory::getContainer()->get(DatabaseInterface::class);
+
+            foreach ($entities as $entity) {
+                $tableJson = json_encode([
+                    'special' => [
+                        'dbtable' => $entity['dbTable'],
+                        'key'     => 'id',
+                        'type'    => $entity['tableClass'],
+                        'prefix'  => $namespace,
+                        'config'  => 'array()',
+                    ],
+                    'common' => [
+                        'dbtable' => '#__ucm_content',
+                        'key'     => 'ucm_id',
+                        'type'    => 'Corecontent',
+                        'prefix'  => $corePrefix,
+                        'config'  => 'array()',
+                    ],
+                ]);
+
+                $fieldMappings = json_encode([
+                    'common'  => $entity['mappings'],
+                    'special' => new \stdClass(),
+                ]);
+
+                $historyOptions = json_encode([
+                    'formFile'      => $entity['formFile'],
+                    'hideFields'    => ['checked_out', 'checked_out_time'],
+                    'ignoreChanges' => ['modified', 'checked_out', 'checked_out_time'],
+                    'convertToInt'  => ['ordering', 'published'],
+                    'displayLookup' => [
+                        [
+                            'sourceColumn' => 'tags',
+                            'targetTable'  => '#__tags',
+                            'targetColumn' => 'id',
+                            'displayColumn' => 'title',
+                        ],
+                    ],
+                ]);
+
+                $existingId = (int) $db->setQuery(
+                    $db->getQuery(true)
+                        ->select($db->quoteName('type_id'))
+                        ->from($db->quoteName('#__content_types'))
+                        ->where($db->quoteName('type_alias') . ' = ' . $db->quote($entity['alias']))
+                )->loadResult();
+
+                if ($existingId > 0) {
+                    $update = $db->getQuery(true)
+                        ->update($db->quoteName('#__content_types'))
+                        ->set($db->quoteName('type_title') . ' = ' . $db->quote($entity['title']))
+                        ->set($db->quoteName('table') . ' = ' . $db->quote($tableJson))
+                        ->set($db->quoteName('rules') . ' = ' . $db->quote(''))
+                        ->set($db->quoteName('field_mappings') . ' = ' . $db->quote($fieldMappings))
+                        ->set($db->quoteName('router') . ' = ' . $db->quote(''))
+                        ->set($db->quoteName('content_history_options') . ' = ' . $db->quote($historyOptions))
+                        ->where($db->quoteName('type_id') . ' = ' . $existingId);
+                    $db->setQuery($update)->execute();
+
+                    continue;
+                }
+
+                $insert = $db->getQuery(true)
+                    ->insert($db->quoteName('#__content_types'))
+                    ->columns($db->quoteName([
+                        'type_title',
+                        'type_alias',
+                        'table',
+                        'rules',
+                        'field_mappings',
+                        'router',
+                        'content_history_options',
+                    ]))
+                    ->values(implode(',', [
+                        $db->quote($entity['title']),
+                        $db->quote($entity['alias']),
+                        $db->quote($tableJson),
+                        $db->quote(''),
+                        $db->quote($fieldMappings),
+                        $db->quote(''),
+                        $db->quote($historyOptions),
+                    ]));
+                $db->setQuery($insert)->execute();
+            }
+        } catch (\Throwable $e) {
+            Factory::getApplication()->enqueueMessage(
+                'LivingWord: could not register content types — ' . $e->getMessage(),
                 'warning'
             );
         }

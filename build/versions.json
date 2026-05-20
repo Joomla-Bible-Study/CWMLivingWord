@@ -1,17 +1,17 @@
 {
     "_comment": "Development version tracking - semantic versioning: major.minor.patch. Updated by cwm-release after each successful release; serves as the source of truth for @since tags during active development.",
-    "_updated": "2026-05-15",
+    "_updated": "2026-05-19",
     "current": {
-        "version": "5.4.0",
+        "version": "5.5.0",
         "description": "Last stable release (from GitHub releases)"
     },
     "next": {
-        "patch": "5.4.1",
-        "minor": "5.5.0",
+        "patch": "5.5.1",
+        "minor": "5.6.0",
         "major": "6.0.0"
     },
     "active_development": {
-        "version": "5.5.0",
+        "version": "5.6.0",
         "description": "Use this for @since tags and migrations during in-progress work"
     },
     "notes": {
