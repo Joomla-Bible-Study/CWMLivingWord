@@ -52,6 +52,7 @@ $this->getDocument()->getWebAssetManager()
                     </div>
                 <?php endif; ?>
                 <?php echo $this->form->renderField('testament'); ?>
+                <?php echo $this->form->renderField('tags'); ?>
                 <?php echo $this->form->renderField('id'); ?>
             </div>
         </div>

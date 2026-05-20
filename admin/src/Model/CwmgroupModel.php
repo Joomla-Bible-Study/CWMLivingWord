@@ -15,6 +15,7 @@ namespace CWM\Component\Livingword\Administrator\Model;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Helper\TagsHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Model\AdminModel;
 use Joomla\CMS\Table\Table;
@@ -67,6 +68,30 @@ class CwmgroupModel extends AdminModel
     public function getTable($name = 'Cwmgroup', $prefix = '', $options = []): Table
     {
         return parent::getTable($name, $prefix, $options);
+    }
+
+    /**
+     * Load a single group and attach its current tag IDs so the edit form's
+     * tag field pre-populates. AdminModel::save() handles tag persistence
+     * automatically via plg_behaviour_taggable.
+     *
+     * @param   int|null  $pk  The id of the row to fetch.
+     *
+     * @return  mixed  Group object on success, false on failure.
+     *
+     * @since   5.6.0
+     */
+    #[\Override]
+    public function getItem($pk = null): mixed
+    {
+        $item = parent::getItem($pk);
+
+        if ($item && !empty($item->id)) {
+            $item->tags = new TagsHelper();
+            $item->tags->getTagIds((int) $item->id, 'com_livingword.group');
+        }
+
+        return $item;
     }
 
     /**

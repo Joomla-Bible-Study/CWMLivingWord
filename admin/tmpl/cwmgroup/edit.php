@@ -123,6 +123,7 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
             <div class="col-lg-3">
                 <?php echo $this->form->renderField('join_mode'); ?>
                 <?php echo $this->form->renderField('published'); ?>
+                <?php echo $this->form->renderField('tags'); ?>
                 <?php echo $this->form->renderField('ordering'); ?>
                 <?php echo $this->form->renderField('id'); ?>
             </div>

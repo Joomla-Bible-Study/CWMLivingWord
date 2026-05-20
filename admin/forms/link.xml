@@ -44,6 +44,15 @@
             <option value="2">COM_LIVINGWORD_LINK_TARGET_NEW</option>
         </field>
         <field
+            name="tags"
+            type="tag"
+            label="JTAG"
+            description="JTAG_DESC"
+            mode="nested"
+            multiple="true"
+            custom="true"
+        />
+        <field
             name="published"
             type="list"
             label="JSTATUS"

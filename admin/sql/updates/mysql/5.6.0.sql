@@ -1,0 +1,7 @@
+-- 5.6.0: tagging support (com_tags integration).
+--
+-- No schema changes — tag persistence uses the shared #__contentitem_tag_map
+-- table that Joomla core already provides. The #__content_types rows for
+-- com_livingword.{plan,link,group} are seeded in script.php postflight()
+-- because their JSON payloads reference admin form paths and are cleaner to
+-- maintain idempotently in PHP than as raw INSERTs.

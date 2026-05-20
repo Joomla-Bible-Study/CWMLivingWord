@@ -104,6 +104,15 @@
             showon="duration_type!:annual"
         />
         <field
+            name="tags"
+            type="tag"
+            label="JTAG"
+            description="JTAG_DESC"
+            mode="nested"
+            multiple="true"
+            custom="true"
+        />
+        <field
             name="published"
             type="list"
             label="JSTATUS"

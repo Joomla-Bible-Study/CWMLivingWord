@@ -22,6 +22,8 @@ use Joomla\CMS\Extension\BootableExtensionInterface;
 use Joomla\CMS\Extension\MVCComponent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Tag\TagServiceInterface;
+use Joomla\CMS\Tag\TagServiceTrait;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -32,10 +34,14 @@ use Psr\Container\ContainerInterface;
 class LivingwordComponent extends MVCComponent implements
     BootableExtensionInterface,
     CategoryServiceInterface,
-    RouterServiceInterface
+    RouterServiceInterface,
+    TagServiceInterface
 {
-    use CategoryServiceTrait;
     use RouterServiceTrait;
+    use CategoryServiceTrait, TagServiceTrait {
+        CategoryServiceTrait::getTableNameForSection insteadof TagServiceTrait;
+        CategoryServiceTrait::getStateColumnForSection insteadof TagServiceTrait;
+    }
 
     /**
      * Minimum PHP version ID required (8.3.0 = 80300).
@@ -72,6 +78,8 @@ class LivingwordComponent extends MVCComponent implements
         return match ($section) {
             'tool'  => 'livingword_tools',
             'link'  => 'livingword_links',
+            'plan'  => 'livingword_plans',
+            'group' => 'livingword_groups',
             default => '',
         };
     }

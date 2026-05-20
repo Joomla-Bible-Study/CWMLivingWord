@@ -61,6 +61,15 @@
             <option value="private">COM_LIVINGWORD_GROUP_JOIN_PRIVATE</option>
         </field>
         <field
+            name="tags"
+            type="tag"
+            label="JTAG"
+            description="JTAG_DESC"
+            mode="nested"
+            multiple="true"
+            custom="true"
+        />
+        <field
             name="published"
             type="list"
             label="JSTATUS"
