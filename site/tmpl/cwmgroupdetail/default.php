@@ -174,7 +174,7 @@ $this->getDocument()->getWebAssetManager()
                     </h5>
                     <p class="text-muted small"><?php echo Text::_('COM_LIVINGWORD_GROUP_INVITE_DESC'); ?></p>
                     <?php
-                    $inviteUrl = Uri::root() . 'index.php?option=com_livingword&task=cwmgroup.join&token='
+                    $inviteUrl = Uri::root() . 'index.php?option=com_livingword&view=cwminvite&token='
                         . urlencode($group->invite_token);
                     ?>
                     <div class="input-group">

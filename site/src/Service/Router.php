@@ -76,6 +76,10 @@ class Router extends RouterView
         // registered. They are reached only via tokenised links in outbound
         // emails and never appear in menus, so SEF routing isn't needed and
         // would just add empty URL segments.
+        //
+        // cwminvite (the public group-invitation landing page) is also
+        // unregistered for the same reason: it's only reached via a shareable
+        // invite URL carrying the token query parameter.
 
         parent::__construct($app, $menu);
 

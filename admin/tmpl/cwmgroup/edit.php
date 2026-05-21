@@ -37,7 +37,7 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
                 <?php echo $this->form->renderField('start_date'); ?>
                 <?php echo $this->form->renderField('invite_token'); ?>
                 <?php if (!$isNew && !empty($this->item->invite_token)) :
-                    $inviteUrl = Uri::root() . 'index.php?option=com_livingword&task=cwmgroup.join&token=' . $this->escape($this->item->invite_token);
+                    $inviteUrl = Uri::root() . 'index.php?option=com_livingword&view=cwminvite&token=' . $this->escape($this->item->invite_token);
                 ?>
                     <div class="control-group">
                         <div class="control-label">

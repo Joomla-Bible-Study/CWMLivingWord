@@ -109,7 +109,7 @@ class CwmgroupController extends FormController
             $app->close();
         }
 
-        $inviteUrl = Uri::root() . 'index.php?option=com_livingword&task=cwmgroup.join&token=' . urlencode($group->invite_token);
+        $inviteUrl = Uri::root() . 'index.php?option=com_livingword&view=cwminvite&token=' . urlencode($group->invite_token);
         $siteName  = $app->get('sitename');
 
         // Parse and validate email addresses
