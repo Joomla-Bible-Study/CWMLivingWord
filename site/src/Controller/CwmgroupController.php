@@ -41,18 +41,26 @@ class CwmgroupController extends BaseController
     {
         Session::checkToken() || Session::checkToken('get') || die(Text::_('JINVALID_TOKEN'));
 
-        $userId = (int) $this->app->getIdentity()->id;
+        $userId  = (int) $this->app->getIdentity()->id;
+        $groupId = $this->input->getInt('group_id', 0);
+        $token   = $this->input->getString('token', '');
 
         if ($userId === 0) {
+            if ($token !== '') {
+                $this->setRedirect(
+                    Route::_('index.php?option=com_livingword&view=cwminvite&token=' . urlencode($token), false)
+                );
+
+                return;
+            }
+
             $this->app->enqueueMessage(Text::_('JGLOBAL_YOU_MUST_LOGIN_FIRST'), 'warning');
             $this->setRedirect(Route::_('index.php?option=com_users&view=login', false));
 
             return;
         }
 
-        $db      = Factory::getContainer()->get(DatabaseInterface::class);
-        $groupId = $this->input->getInt('group_id', 0);
-        $token   = $this->input->getString('token', '');
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
 
         // Resolve group from invite token if no group_id provided
         if ($groupId === 0 && !empty($token)) {
