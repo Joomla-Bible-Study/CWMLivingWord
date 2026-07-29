@@ -1,5 +1,24 @@
 name: CI
 
+# The lint, test and build steps live in cwm-build-tools so every CWM
+# extension runs the same pipeline and a fix lands everywhere at once. What
+# stays here is when CI runs, and the values that differ from the shared
+# defaults.
+#
+# The reusable workflow is .github/workflows/joomla-package-ci.yml in
+# Joomla-Bible-Study/cwm-build-tools. To see what the inputs do, or to change
+# a step, edit it there.
+#
+# Removed in the migration, and worth recording so it is not re-added by
+# reflex: a MySQL 8.4 service container, a full shallow clone of joomla-cms
+# 5.4.3, a schema import, `mkdir -p tests/integration`, and the JTEST_DB_* /
+# JOOMLA_CMS_PATH environment. All of it existed for integration tests that
+# do not exist — tests/integration is empty, and nothing in the repository
+# reads any of those variables. The mkdir was there so PHPUnit would not
+# error on the missing directory. If integration tests are written later,
+# that scaffolding needs to come back deliberately, in a job of its own,
+# rather than as dead weight on every run.
+
 on:
   push:
     branches: [ "main" ]
@@ -16,94 +35,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  php-checks:
+  ci:
     name: PHP Lint & Tests
-    runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_USER: livingword_test
-          MYSQL_PASSWORD: livingword_test
-          MYSQL_ROOT_PASSWORD: livingword_test
-          MYSQL_DATABASE: livingword_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: mbstring, json, xml, mysqli
-          coverage: none
-
-      - name: Get Composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Clone joomla-cms for test framework
-        run: git clone --depth 1 --branch 5.4.3 https://github.com/joomla/joomla-cms.git $GITHUB_WORKSPACE/../joomla-cms
-
-      - name: Install Composer dependencies
-        run: composer install --dev --no-interaction --prefer-dist
-
-      - name: Import database schema
-        run: |
-          sed 's/#__/livingword_/g' admin/sql/install.mysql.utf8.sql > /tmp/schema.sql
-          mysql --force -h 127.0.0.1 -u livingword_test -plivingword_test livingword_test < /tmp/schema.sql 2>&1 | grep -v "doesn't exist" || true
-
-      - name: Ensure integration test dir exists
-        run: mkdir -p tests/integration
-
-      - name: Check PHP syntax
-        run: composer lint:syntax
-
-      - name: Run PHPUnit tests
-        run: composer test
-        env:
-          JOOMLA_CMS_PATH: /home/runner/work/CWMLivingWord/joomla-cms
-          JTEST_DB_HOST: 127.0.0.1
-          JTEST_DB_NAME: livingword_test
-          JTEST_DB_USER: livingword_test
-          JTEST_DB_PASSWORD: livingword_test
-          JTEST_DB_PREFIX: livingword_
-
-      - name: Build package
-        run: composer build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify package contents
-        run: |
-          VERSION=$(php -r '$x = simplexml_load_file("livingword.xml"); echo (string) $x->version;')
-          PKG="build/dist/pkg_livingword-$VERSION.zip"
-          test -f "$PKG" || { echo "Package not built: $PKG"; exit 1; }
-          echo "Package contents:"
-          unzip -l "$PKG"
-          for inner in lib_cwmscripture.zip com_livingword.zip mod_livingword.zip plg_task_livingword.zip plg_content_scripturelinks.zip pkg_livingword.xml; do
-            unzip -l "$PKG" | grep -q "$inner" || { echo "Missing $inner in package"; exit 1; }
-          done
-
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pkg_livingword
-          path: build/dist/pkg_livingword-*.zip
-          retention-days: 7
+    # `v1` is a moving tag on cwm-build-tools, re-pointed at each release —
+    # the CI equivalent of the `^1.4` Composer constraint in composer.json.
+    uses: Joomla-Bible-Study/cwm-build-tools/.github/workflows/joomla-package-ci.yml@v1
+    with:
+      php-version: '8.3'
+      # PHP CS Fixer is off, matching what this project ran before the
+      # migration: `composer lint` has never been part of CI here and the
+      # tree has formatting it would reject. Turn it on in its own change,
+      # after `composer lint:fix` — not as a side effect of adopting the
+      # shared pipeline. The syntax check (`lint:syntax`) still runs.
+      run-lint: false
+      run-lint-syntax: true
+      build-command: 'composer build'
+      package-glob: 'build/dist/pkg_livingword-*.zip'
