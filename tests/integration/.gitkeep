@@ -1,0 +1,9 @@
+Keeps this directory in the repository while it holds no tests.
+
+phpunit.xml declares a "LivingWord Integration Tests" suite pointing here, and
+PHPUnit exits 2 on a missing test directory — so without this file a fresh
+clone cannot run `composer test` at all. CI used to paper over that with a
+`mkdir -p tests/integration` step, which meant the suite worked on the runner
+and nowhere else.
+
+Delete this file when the first integration test lands.
