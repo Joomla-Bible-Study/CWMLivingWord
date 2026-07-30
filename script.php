@@ -142,6 +142,8 @@ class Com_livingwordInstallerScript
             // links, and groups.
             $this->registerContentTypes();
 
+            $this->ensureActionTokenIndex();
+
             Factory::getApplication()->enqueueMessage(
                 sprintf('CWM LivingWord %s has been installed successfully.', $version),
                 'message'
@@ -161,6 +163,8 @@ class Com_livingwordInstallerScript
             // (or field-mapping tweaks) reach existing installs.
             $this->registerContentTypes();
 
+            $this->ensureActionTokenIndex();
+
             Factory::getApplication()->enqueueMessage(
                 sprintf('CWM LivingWord has been updated to version %s.', $version),
                 'message'
@@ -168,6 +172,59 @@ class Com_livingwordInstallerScript
         }
 
         return true;
+    }
+
+    /**
+     * Ensure #__livingword_users carries the idx_action_token index.
+     *
+     * install.mysql.utf8.sql created the action_token column without its index
+     * while 5.3.0.sql added both, so any site installed fresh from the shipped
+     * package has the column and not the index. Update SQL cannot repair them:
+     * Joomla only runs files newer than the recorded #__schemas version, so
+     * 5.3.0.sql never fires for a site that installed at 5.6.0.
+     *
+     * CwmuserHelper::findByActionToken() filters on the column directly — the
+     * one-click "mark as read" link in every reading email — so without the
+     * index each click is a full scan of the users table.
+     *
+     * Idempotent: checks information_schema first, because MySQL has no
+     * ADD KEY IF NOT EXISTS and a duplicate-key error would surface as a
+     * failed install.
+     *
+     * @return  void
+     *
+     * @since   5.6.0
+     */
+    private function ensureActionTokenIndex(): void
+    {
+        try {
+            $db    = Factory::getContainer()->get(DatabaseInterface::class);
+            $table = $db->replacePrefix('#__livingword_users');
+
+            $query = $db->getQuery(true)
+                ->select('COUNT(*)')
+                ->from($db->quoteName('information_schema.statistics'))
+                ->where($db->quoteName('table_schema') . ' = DATABASE()')
+                ->where($db->quoteName('table_name') . ' = ' . $db->quote($table))
+                ->where($db->quoteName('index_name') . ' = ' . $db->quote('idx_action_token'));
+
+            if ((int) $db->setQuery($query)->loadResult() > 0) {
+                return;
+            }
+
+            $db->setQuery(
+                'ALTER TABLE ' . $db->quoteName($table)
+                . ' ADD KEY ' . $db->quoteName('idx_action_token')
+                . ' (' . $db->quoteName('action_token') . ')'
+            )->execute();
+        } catch (\Throwable $e) {
+            // A missing index costs performance, never correctness. Failing the
+            // install over it would be the worse outcome.
+            Factory::getApplication()->enqueueMessage(
+                'CWM LivingWord: could not create idx_action_token — ' . $e->getMessage(),
+                'warning'
+            );
+        }
     }
 
     /**
