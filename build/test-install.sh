@@ -37,10 +37,10 @@ echo "========================================================================"
 echo " CLEAN-INSTALL TEST — pkg_livingword ${VERSION}"
 echo "========================================================================"
 
-echo "-- [1/4] reset test site(s) to a clean slate"
+echo "-- [1/5] reset test site(s) to a clean slate"
 php build/reset-testsite.php
 
-echo "-- [2/4] build package ${VERSION}"
+echo "-- [2/5] build package ${VERSION}"
 composer build -- --version "$VERSION"
 
 if [ ! -f "$ZIP" ]; then
@@ -48,11 +48,27 @@ if [ ! -f "$ZIP" ]; then
     exit 1
 fi
 
-echo "-- [3/4] install ${ZIP} (fresh)"
+echo "-- [3/5] install ${ZIP} (fresh)"
 "$BIN/cwm-install-zip" --zip "$ZIP"
 
-echo "-- [4/4] verify extension registration"
-"$BIN/cwm-verify" --target test
+# Verification steps record their result and carry on. Aborting at the first
+# failure hides every later check behind whichever one happened to be first —
+# a known registration drift would mask an unrelated schema regression.
+FAILURES=()
+
+echo "-- [4/5] verify extension registration"
+"$BIN/cwm-verify" --target test || FAILURES+=("extension registration (cwm-verify)")
+
+echo "-- [5/5] verify the schema landed"
+php build/verify-migrations.php "$VERSION" || FAILURES+=("schema (verify-migrations)")
 
 echo
+if [ ${#FAILURES[@]} -gt 0 ]; then
+    echo "CLEAN-INSTALL TEST FAILED for ${VERSION}:"
+    for f in "${FAILURES[@]}"; do
+        echo "  - ${f}"
+    done
+    exit 1
+fi
+
 echo "CLEAN-INSTALL TEST PASSED for ${VERSION}."
