@@ -54,6 +54,13 @@ Desktop.ini
 # Local Claude Code config — personal settings, local permission hooks
 .claude/
 
+# Playwright. .auth holds a live Joomla administrator session cookie, written
+# by global-setup; test-results holds screenshots and video of the admin UI on
+# failure. Neither belongs in the repository.
+tests/e2e/.auth/
+/build/test-results/
+/playwright-report/
+
 # === cwm-build-tools: managed (do not edit between markers) ===
 # Dependencies
 /vendor/

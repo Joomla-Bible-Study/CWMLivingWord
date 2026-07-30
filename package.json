@@ -13,7 +13,9 @@
     "npm": ">=10.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "csso": "^5.0.5",
@@ -27,6 +29,8 @@
     "build:css": "SOURCE_DIR=build/media_source/css OUTPUT_DIR=media/com_livingword/css node libraries/vendor/cwm/build-tools/templates/build-css.js",
     "build:js": "SOURCE_DIR=build/media_source/js OUTPUT_DIR=media/com_livingword/js rollup -c libraries/vendor/cwm/build-tools/templates/rollup.config.js",
     "watch": "SOURCE_DIR=build/media_source/js OUTPUT_DIR=media/com_livingword/js rollup -c libraries/vendor/cwm/build-tools/templates/rollup.config.js -w",
-    "lint:js": "eslint --max-warnings=0 ."
+    "lint:js": "eslint --max-warnings=0 .",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test --grep @a11y"
   }
 }

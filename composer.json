@@ -101,6 +101,8 @@
     "test:reset-testsite": "@php build/reset-testsite.php",
     "test:install":       "bash build/test-install.sh",
     "test:migrations":    "@php build/verify-migrations.php",
+    "test:a11y":          "npm run test:a11y",
+    "test:e2e":           "npm run test:e2e",
     "test:upgrade":       "bash build/test-upgrade.sh",
     "test:release":       "bash build/test-release.sh",
     "setup":              "cwm-setup",
