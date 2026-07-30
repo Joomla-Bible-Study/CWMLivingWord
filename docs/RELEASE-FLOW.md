@@ -1,8 +1,8 @@
 # CWMLivingWord — Branching & Release Flow
 
 **Repository:** [`Joomla-Bible-Study/CWMLivingWord`](https://github.com/Joomla-Bible-Study/CWMLivingWord)
-**Applies to:** `CWMLivingWord`, `CWMScriptureLinks`, `lib_cwmscripture`, `cwm-build-tools`, `CWMPrayerCenter`
-**Does not apply to:** `Proclaim` — see [Why Proclaim is excluded](#why-proclaim-is-excluded)
+**Applies to:** `CWMLivingWord`, `CWMScriptureLinks`, `lib_cwmscripture`, `cwm-build-tools`, `CWMPrayerCenter`, `Proclaim`
+**Proclaim differs in one step only** — see [§8](#8-proclaim)
 **Status:** Draft for review
 **Last updated:** 2026-07-30
 
@@ -186,6 +186,27 @@ One case only: **6.0 has shipped and 5.x still needs patches.**
 Then cut `support/5.x` from the last 5.x tag, backport there, and release 5.6.1 from it. Borrowing Joomla's discipline: fix in the **oldest** supported line and merge *forward*, rather than fixing on `main` and cherry-picking back. Forward merges are routine; backports are an afterthought and get dropped.
 
 Do not create this branch preemptively.
+
+Proclaim already does this correctly: `9.x` and `10.x` sit dead at 2,286 and 1,633 commits behind, as honest markers of lines that were once supported. That is the pattern, not clutter.
+
+---
+
+## 8. Proclaim
+
+Proclaim follows everything above. Its trunk is named `development` rather than `main`, and PRs squash-merge into it with the same conventional, issue-linked commits.
+
+**The one difference — and the one open item.** At release time Proclaim merges `development` into `main`, then commits the version bump and changelog *on `main`* and tags there. Because those commits never return, the branches drift permanently:
+
+```
+main   18 commits ahead of development   (5 releases of bump/changelog/merge)
+       1 commit behind                   (a hand-reconciled versions.json)
+```
+
+Every release widens the gap by three or four commits. `main` isn't serving as a separate supported line — `9.x`/`10.x` do that — so it only relocates the version bump, at the cost of permanent divergence, a manual backflow, and a branch name that invites contributors to treat it as trunk.
+
+**Preferred:** bump and changelog on `development`, tag there, then fast-forward `main` to the tag. `main` becomes a pointer that cannot diverge, and the name stays available for anyone who expects it.
+
+This is a change to Proclaim's release step, not to its contribution flow, which needs nothing.
 
 ---
 
