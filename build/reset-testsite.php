@@ -140,6 +140,7 @@ foreach ($installs as $install) {
     );
 
     // 3. Rows that reference the component by name rather than by id.
+    $db->query("DELETE FROM `{$prefix}menu` WHERE link LIKE '%option=com\\_livingword%'");
     $db->query("DELETE FROM `{$prefix}assets` WHERE name = 'com_livingword' OR name LIKE 'com\\_livingword.%'");
     $db->query("DELETE FROM `{$prefix}categories` WHERE extension LIKE 'com\\_livingword%'");
     $db->query("DELETE FROM `{$prefix}content_types` WHERE type_alias LIKE 'com\\_livingword.%'");
@@ -177,7 +178,99 @@ foreach ($installs as $install) {
 
     $db->close();
 
+    // 5. Remove the files. Clearing #__extensions alone is not a reset: Joomla
+    //    refuses to install into a directory that already exists without a
+    //    matching extension row, so the next install aborts on the first child
+    //    whose folder survived — with only "[ERROR] Unable to install
+    //    extension" to go on, and the package half-installed.
+    $paths = [
+        'administrator/components/com_livingword',
+        'components/com_livingword',
+        'api/components/com_livingword',
+        'modules/mod_livingword',
+        'plugins/task/livingword',
+        'media/com_livingword',
+        'media/mod_livingword',
+        'administrator/manifests/packages/pkg_livingword.xml',
+        'administrator/manifests/packages/livingword',
+    ];
+
+    $removed  = 0;
+    $symlinks = 0;
+
+    foreach ($paths as $rel) {
+        $abs = $install->path . '/' . $rel;
+
+        // is_dir() follows symlinks, so test for the link first — recursing
+        // through one would delete the working tree it points at.
+        if (is_link($abs)) {
+            @unlink($abs);
+            $symlinks++;
+            $removed++;
+
+            continue;
+        }
+
+        if (is_file($abs)) {
+            @unlink($abs);
+            $removed++;
+
+            continue;
+        }
+
+        if (is_dir($abs)) {
+            rrmdir($abs);
+            $removed++;
+        }
+    }
+
+    // Stray language files from installs predating per-extension language dirs.
+    foreach (glob($install->path . '/administrator/language/*/com_livingword.*') ?: [] as $file) {
+        @unlink($file);
+        $removed++;
+    }
+
+    foreach (glob($install->path . '/language/*/com_livingword.*') ?: [] as $file) {
+        @unlink($file);
+        $removed++;
+    }
+
+    echo "  removed {$removed} path(s)\n";
+
+    if ($symlinks > 0) {
+        fwrite(
+            STDERR,
+            "  NOTE: unlinked {$symlinks} symlink(s) — this install was symlinked as if it were role=dev.\n"
+        );
+    }
+
     echo "  clean.\n";
+}
+
+/**
+ * Recursively remove a directory. Does not descend into symlinks.
+ */
+function rrmdir(string $dir): void
+{
+    foreach (scandir($dir) ?: [] as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+
+        $path = $dir . '/' . $entry;
+
+        if (is_link($path) || is_file($path)) {
+            @unlink($path);
+
+            continue;
+        }
+
+        if (is_dir($path)) {
+            rrmdir($path);
+        }
+    }
+
+    @rmdir($dir);
 }
 
 if ($failed > 0) {
