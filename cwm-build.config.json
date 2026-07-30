@@ -149,6 +149,10 @@
         "repo": "CWMLivingWord",
         "releaseBranch": "main"
     },
+    "release": {
+        "_comment": "Hand-written notes lead the GitHub release body, with the generated pull-request list kept beneath. These are also what ARS republishes on the download page — the only changelog a site administrator following an update link ever sees. Use the headings cwm-changelog recognises (## New features, ## Fixes, ## Changes, ## Notes) so the same file also produces a real Joomla changelog entry instead of the install boilerplate that generated ones produced.",
+        "notesFile": "build/release-notes-{version}.md"
+    },
     "changelog": {
         "file": "build/livingword-changelog.xml",
         "url":  "https://raw.githubusercontent.com/Joomla-Bible-Study/CWMLivingWord/main/build/livingword-changelog.xml"
