@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Joomla update changelog for pkg_livingword.
+
+    New entries are inserted at the top by the `composer changelog` command,
+    passing the version, which fetches the GitHub release notes for the tag
+    and converts headings (### Fixes, ### Features, ### Changes, etc.) into
+    Joomla changelog types. Release notes with no recognised headings fall
+    back to <note>.
+
+    Two things this comment must not contain, both of which silently break
+    the file:
+
+      * A double hyphen. XML forbids it inside a comment, so the command
+        cannot be written here with its argument separator. That defect is
+        live in CWMScriptureLinks' changelog, which Joomla cannot parse.
+
+      * The literal name of this file's root element in angle brackets.
+        cwm-changelog inserts each new entry after the first occurrence of
+        that string, and does not skip comments — so writing it above would
+        splice the entry into the middle of this comment.
+
+    For that to produce a useful entry, write release notes under those
+    headings. Notes that are only install instructions generate entries
+    listing the system requirements as though they were changes — the
+    entries below for 5.0.0 through 5.5.0 were written by hand from the
+    commit history for exactly that reason.
+
+    Hosted at:
+    https://raw.githubusercontent.com/Joomla-Bible-Study/CWMLivingWord/main/build/livingword-changelog.xml
+
+    Joomla reads this file via the `<changelogurl>` element in the package
+    manifest (build/pkg_livingword.xml) when checking for updates. The URL is
+    also recorded in cwm-build.config.json under `changelog.url` for tooling
+    reference; modern Akeeba ARS does not expose a changelog field on its
+    update streams, so the manifest element is the load-bearing wiring.
+
+    This file must exist, with its root element in place, before a release
+    runs. cwm-changelog refuses to create it, and release.sh silently skips
+    step 6 when it is missing.
+-->
+<changelogs>
+
+    <!-- ============================================================ -->
+    <!-- 5.6.0-beta1                                              -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.6.0-beta1</version>
+        <date>2026-07-30</date>
+        <addition>
+            <item>Joomla tagging (com_tags) support for reading plans, resource links and groups. Tag persistence uses the core #__contentitem_tag_map table; content-type rows are seeded on install.</item>
+            <item>Public group invitation landing page, so an invite link works for visitors who do not yet have an account instead of bouncing them at the controller.</item>
+        </addition>
+        <fix>
+            <item>The package manifest now declares an update server. Installed sites previously never saw LivingWord updates in the Extension Manager because no update server was declared at all.</item>
+            <item>Group member-count strings now use Joomla's _N plural suffixes. The previous pipe-separated form crashed with a 500 error when rendered.</item>
+        </fix>
+        <note>
+            <item>Pre-release. Offered only to sites that lower Minimum Stability to Beta in the Joomla Update options.</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
+    <!-- 5.5.0                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.5.0</version>
+        <date>2026-05-16</date>
+        <change>
+            <item>Resource links now use Joomla categories (com_categories) instead of free-text category strings. Existing link categories are migrated to category IDs automatically on update; links with no category are shown as "Uncategorized".</item>
+        </change>
+    </changelog>
+
+    <!-- ============================================================ -->
+    <!-- 5.4.1                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.4.1</version>
+        <date>2026-05-16</date>
+        <note>
+            <item>Maintenance release. Build and continuous-integration fixes only; no functional changes to the component, module or plugin.</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
+    <!-- 5.4.0                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.4.0</version>
+        <date>2026-05-15</date>
+        <fix>
+            <item>Email sending now resolves services through Factory::getContainer() for Joomla 6 compatibility. The previous call used a container accessor that is protected in Joomla 6.</item>
+        </fix>
+        <change>
+            <item>The daily reading module and task plugin manifests now declare compatibility blocks for Joomla 5 and 6.</item>
+            <item>Version realigned from 5.0.1 to 5.4.0 to match the database schema version.</item>
+            <item>The bundled scripture library is consumed as a Composer path repository rather than a git submodule.</item>
+        </change>
+    </changelog>
+
+    <!-- ============================================================ -->
+    <!-- 5.0.1                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.0.1</version>
+        <date>2026-05-14</date>
+        <change>
+            <item>Build and release pipeline migrated to cwm-build-tools, including the frontend asset pipeline. No functional change to the installed extension.</item>
+        </change>
+    </changelog>
+
+    <!-- ============================================================ -->
+    <!-- 5.0.0                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.0.0</version>
+        <date>2026-05-05</date>
+        <note>
+            <item>First Joomla 5 release. Migrated from the original Joomla 3 component to namespaced MVC with PSR-4 autoloading and PHP 8.3+.</item>
+        </note>
+    </changelog>
+
+</changelogs>
