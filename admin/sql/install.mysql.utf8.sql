@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS `#__livingword_users` (
   `modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_user_id` (`user_id`),
-  KEY `idx_plan_id` (`plan_id`)
+  KEY `idx_plan_id` (`plan_id`),
+  KEY `idx_action_token` (`action_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__livingword_progress` (
