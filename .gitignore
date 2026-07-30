@@ -50,7 +50,9 @@ Desktop.ini
 
 # Never ignore
 !/.gitignore
-.claude/worktrees/
+
+# Local Claude Code config — personal settings, local permission hooks
+.claude/
 
 # === cwm-build-tools: managed (do not edit between markers) ===
 # Dependencies
