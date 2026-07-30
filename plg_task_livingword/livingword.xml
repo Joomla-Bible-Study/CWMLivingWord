@@ -19,9 +19,12 @@
         <php minimum="8.3.0" />
     </compatibility>
 
+    <scriptfile>script.php</scriptfile>
+
     <files>
         <folder plugin="livingword">services</folder>
         <folder>src</folder>
         <folder>language</folder>
+        <filename>script.php</filename>
     </files>
 </extension>
