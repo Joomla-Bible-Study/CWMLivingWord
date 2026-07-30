@@ -11,6 +11,8 @@
     <creationDate>2026-07-30</creationDate>
     <description>CWM LivingWord package — Bible reading plans component, daily reading module, scheduled email task plugin, plus the CWM Scripture library and content plugin for in-article scripture rendering.</description>
 
+    <changelogurl>https://raw.githubusercontent.com/Joomla-Bible-Study/CWMLivingWord/main/build/livingword-changelog.xml</changelogurl>
+
     <!-- ARS update stream 6 (see cwm-build.config.json ars.updateStreamId).
          The task=stream parameter is required — without it ARS falls back to
          task=all and returns an <extensionset> category index instead of the
