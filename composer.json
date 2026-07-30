@@ -102,7 +102,7 @@
     "test:install":       "bash build/test-install.sh",
     "test:migrations":    "@php build/verify-migrations.php",
     "test:upgrade":       "bash build/test-upgrade.sh",
-    "test:release":       ["@test:install", "@test:upgrade"],
+    "test:release":       "bash build/test-release.sh",
     "setup":              "cwm-setup",
     "joomla-install":     "cwm-joomla-install",
     "joomla-latest":      "cwm-joomla-latest",
