@@ -42,6 +42,23 @@
 <changelogs>
 
     <!-- ============================================================ -->
+    <!-- 5.6.0-beta2                                              -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.6.0-beta2</version>
+        <date>2026-07-30</date>
+        <note>
+            <item>chore(changelog): add the changelog file and wire it into the manifest by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/88</item>
+            <item>chore(deps): adopt cwm/build-tools ^1.13 by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/89</item>
+            <item>chore(ci): enable Dependabot version updates by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/90</item>
+            <item>fix(package): make pkg_livingword installable, and add a clean-install test by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/94</item>
+            <item>fix(test): tear down files and menu rows in the test-site reset by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/100</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
     <!-- 5.6.0-beta1                                              -->
     <!-- ============================================================ -->
     <changelog>
