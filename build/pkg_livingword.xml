@@ -11,6 +11,17 @@
     <creationDate>2026-05-19</creationDate>
     <description>CWM LivingWord package — Bible reading plans component, daily reading module, scheduled email task plugin, plus the CWM Scripture library and content plugin for in-article scripture rendering.</description>
 
+    <!-- ARS update stream 6 (see cwm-build.config.json ars.updateStreamId).
+         The task=stream parameter is required — without it ARS falls back to
+         task=all and returns an <extensionset> category index instead of the
+         <updates> document Joomla's extension update adapter expects.
+         The trailing dummy=extension.xml is ignored by ARS; it exists so
+         proxies and caches that sniff the URL extension see an .xml file.
+         Matches pkg_proclaim.xml. -->
+    <updateservers>
+        <server type="extension" name="CWM LivingWord Package">https://www.christianwebministries.org/index.php?option=com_ars&amp;view=update&amp;task=stream&amp;format=xml&amp;id=6&amp;dummy=extension.xml</server>
+    </updateservers>
+
     <files>
         <file type="library" id="cwmscripture">lib_cwmscripture.zip</file>
         <file type="component" id="com_livingword">com_livingword.zip</file>
