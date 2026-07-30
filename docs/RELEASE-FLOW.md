@@ -38,6 +38,8 @@ ci/use-reusable-workflow
 docs/release-flow
 ```
 
+The full prefix list lives in [CONTRIBUTING.md](../CONTRIBUTING.md#branch-naming-conventions) — this document owns the rules, that one owns the contributor-facing detail.
+
 ### Rules
 
 1. **Branch from `origin/main`, never from local `main`.**

@@ -24,28 +24,52 @@ composer verify      # register extensions in Joomla database
 
 ## Development workflow
 
-1. Fork the repository
-2. Create a branch from `master`:
+1. Fork the repository (outside contributors) — maintainers branch directly
+2. Create a branch from `origin/main`:
    ```bash
-   git checkout -b feature/your-feature-name
+   git fetch origin
+   git switch -c feat/your-feature-name origin/main
    ```
+   Branch from `origin/main`, not your local `main` — a stale local branch point still merges cleanly, so nothing warns you.
 3. Make your changes, following the code style guidelines below
 4. Write or update tests if applicable
 5. Run the full check before pushing:
    ```bash
    composer check    # syntax + lint + tests
    ```
-6. Open a pull request against `master` using the PR template
+6. Open a pull request against `main` using the PR template
+
+PRs are squash-merged and the branch is deleted. Don't reuse a branch after its PR merges — see [docs/RELEASE-FLOW.md](docs/RELEASE-FLOW.md#1-branching) for why.
+
+## Where does my change go?
+
+Everything targets `main`. What changes is which *release* your work ships in — decided by the kind of change it is, and tracked in `build/versions.json`:
+
+| Your change | Ships in | Bucket |
+|-------------|----------|--------|
+| Bug fix, no behavior change beyond the fix | Next patch | `next.patch` |
+| New feature, backward compatible | Next minor | `next.minor` |
+| Anything that breaks backward compatibility | Next major | `next.major` |
+
+Two rules worth knowing before you start:
+
+- **Schema changes ship with a pre-release.** If your PR adds a file under `admin/sql/updates/` or touches the install script, the release carrying it goes out as `-beta1` or `-rc1` first. Migrations are the one thing that can't be fixed forward on a live site.
+- **Breaking changes need discussion first.** Open a [Discussion](../../discussions) before building — they may need to wait for the next major.
+
+The full release process is in [docs/RELEASE-FLOW.md](docs/RELEASE-FLOW.md).
 
 ## Branch naming conventions
 
+`<type>/<issue-number>-<short-slug>`, where `<type>` matches the commit type your work will land as — e.g. `feat/55-group-invitation-flow`, `fix/85-scripture-registration`.
+
 | Prefix | Use for |
 |--------|---------|
-| `feature/` | New functionality |
+| `feat/` | New functionality |
 | `fix/` | Bug fixes |
 | `refactor/` | Code improvement, no behavior change |
 | `docs/` | Documentation only |
 | `chore/` | Tooling, CI, infrastructure |
+| `ci/` | Workflow and pipeline changes |
 | `test/` | Test coverage additions |
 
 ## Commit message format
