@@ -24,7 +24,14 @@
         <server type="extension" name="CWM LivingWord Package">https://www.christianwebministries.org/index.php?option=com_ars&amp;view=update&amp;task=stream&amp;format=xml&amp;id=6&amp;dummy=extension.xml</server>
     </updateservers>
 
-    <files>
+    <!-- folder must match package.innerLayout in cwm-build.config.json, which
+         is "packages-prefix" — the inner zips are assembled under packages/.
+         Without it Joomla looks for them at the archive root, InstallerHelper::
+         unpack() returns false, and PackageAdapter aborts with "Unable to
+         install extension" after a "Trying to access array offset on false"
+         warning. Compare pkg_proclaim.xml (packages-prefix + folder) and
+         pkg_cwmscripture.xml (root layout + no folder). -->
+    <files folder="packages">
         <file type="library" id="cwmscripture">lib_cwmscripture.zip</file>
         <file type="component" id="com_livingword">com_livingword.zip</file>
         <file type="module" client="site" id="mod_livingword">mod_livingword.zip</file>
