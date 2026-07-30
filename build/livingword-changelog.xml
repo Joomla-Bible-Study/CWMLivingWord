@@ -42,6 +42,32 @@
 <changelogs>
 
     <!-- ============================================================ -->
+    <!-- 5.6.0                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.6.0</version>
+        <date>2026-07-30</date>
+        <fix>
+            <item>The package installs. The package manifest now points at the folder its inner extensions are actually assembled into.</item>
+            <item>Updates appear in the Extension Manager. The package shipped with no update server declared at all, so no site was ever notified of a new version. It is now wired to the CWM update stream, and a Changelog tab appears alongside the update.</item>
+            <item>Scheduled emails no longer need the plugin switched on by hand. Joomla registers new plugins disabled, so the daily reading email, weekly progress digest and accountability-partner digest never ran until an admin found the plugin and enabled it — with nothing to indicate that was the problem. It is now enabled on install, and existing sites get it enabled once when they update.</item>
+            <item>The one-click &quot;mark as read&quot; link in reading emails is no longer a full table scan. Fresh installs were missing an index that upgraded sites had.</item>
+            <item>Group member counts no longer break the page. The member-count text used a plural form Joomla does not support, which produced a 500 error where the count was shown.</item>
+        </fix>
+        <addition>
+            <item>Tagging for reading plans, resource links and groups. Uses Joomla&#x27;s own tag system, so tags are shared with the rest of your site and work with existing tag modules and searches. Tag fields appear on the edit screens for all three.</item>
+            <item>Invitation links now work for people without an account. Previously an invite link bounced anyone who was not already logged in, which is most people receiving one. Visitors now get a landing page describing the group, with the invitation preserved through registration or login so they land in the right group afterwards.</item>
+        </addition>
+        <note>
+            <item>Requires PHP 8.3 or later and Joomla 5 or 6.</item>
+            <item>If you tested 5.6.0-beta1 or beta2, updating applies the missing index and enables the task plugin automatically. Nothing to do by hand.</item>
+            <item>Enabling the task plugin does not by itself send anything. The routines still need a task created under System → Scheduled Tasks.</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
     <!-- 5.6.0-beta2                                              -->
     <!-- ============================================================ -->
     <changelog>
