@@ -36,12 +36,22 @@ if [ -z "$NEWVER" ] || [ -z "$BASEVER" ]; then
     exit 1
 fi
 
+# Exit 3 means "not applicable", as distinct from "failed". Immediately after a
+# release the active-development version IS the last release, so there is
+# nothing newer to upgrade to and the update() path cannot fire. That is not a
+# defect, and failing the release gate for it would leave the gate red between
+# every release and the next bump — which teaches people to ignore it.
+#
+# test-release.sh maps 3 to a loud SKIPPED. It stays loud deliberately: a
+# silently skipped phase reads as a pass, which is how an ungated release
+# happens.
 if [ "$NEWVER" = "$BASEVER" ]; then
-    echo "ERROR: active-development version ($NEWVER) equals the baseline ($BASEVER)." >&2
-    echo "       The upgrade path only fires when the new build is newer. Bump the" >&2
-    echo "       active-development version first, or pass an older baseline:" >&2
-    echo "         composer test:upgrade -- 5.6.0-beta2" >&2
-    exit 1
+    echo "NOT APPLICABLE: active-development version ($NEWVER) equals the baseline." >&2
+    echo "                The upgrade path only fires when the new build is newer," >&2
+    echo "                so there is nothing to test until the next version bump." >&2
+    echo "                To test against an older release explicitly:" >&2
+    echo "                  composer test:upgrade -- 5.6.0-beta2" >&2
+    exit 3
 fi
 
 BASEZIP="build/dist/pkg_livingword-${BASEVER}.zip"

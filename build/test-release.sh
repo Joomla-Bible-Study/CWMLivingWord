@@ -18,26 +18,54 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 FAILED=()
+SKIPPED=()
+
+# Exit 3 from a phase means "not applicable here", not "passed" and not
+# "failed" — see the note in test-upgrade.sh. Reported loudly at the end so a
+# skipped phase can never be mistaken for a green one.
+run_phase() {
+    local label="$1"
+    shift
+
+    "$@"
+    local status=$?
+
+    if [ "$status" -eq 0 ]; then
+        return 0
+    fi
+
+    if [ "$status" -eq 3 ]; then
+        SKIPPED+=("$label")
+
+        return 0
+    fi
+
+    FAILED+=("$label")
+}
 
 echo "########################################################################"
 echo "# 1/3  CLEAN INSTALL"
 echo "########################################################################"
-bash build/test-install.sh || FAILED+=("clean install")
+run_phase "clean install" bash build/test-install.sh
 
 echo
 echo "########################################################################"
 echo "# 2/3  UPGRADE FROM LAST RELEASE"
 echo "########################################################################"
-bash build/test-upgrade.sh || FAILED+=("upgrade")
+run_phase "upgrade" bash build/test-upgrade.sh
 
 echo
 echo "########################################################################"
 echo "# 3/3  ACCESSIBILITY (WCAG 2.2 AA)"
 echo "########################################################################"
-npm run --silent test:a11y || FAILED+=("accessibility")
+run_phase "accessibility" npm run --silent test:a11y
 
 echo
 echo "========================================================================"
+
+for s in "${SKIPPED[@]:-}"; do
+    [ -n "$s" ] && echo " SKIPPED (not applicable): ${s}"
+done
 
 if [ ${#FAILED[@]} -gt 0 ]; then
     echo " RELEASE GATE FAILED:"
@@ -48,5 +76,10 @@ if [ ${#FAILED[@]} -gt 0 ]; then
     exit 1
 fi
 
-echo " RELEASE GATE PASSED — clean install and upgrade both verified."
+if [ ${#SKIPPED[@]} -gt 0 ]; then
+    echo " RELEASE GATE PASSED — with the phase(s) above not applicable."
+else
+    echo " RELEASE GATE PASSED — install, upgrade and accessibility all verified."
+fi
+
 echo "========================================================================"
