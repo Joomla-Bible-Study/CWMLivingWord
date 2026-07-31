@@ -37,7 +37,8 @@ class CwmplandetailsModel extends ListModel
         if (empty($config['filter_fields'])) {
             $config['filter_fields'] = [
                 'id', 'a.id',
-                'plan', 'a.plan',
+                'plan', 'p.title',
+                'plan_id', 'a.plan_id',
                 'reading', 'a.reading',
                 'ordering', 'a.ordering',
             ];
@@ -90,25 +91,40 @@ class CwmplandetailsModel extends ListModel
         $db    = Factory::getContainer()->get(DatabaseInterface::class);
         $query = $db->getQuery(true);
 
+        // Columns are those #__livingword_plans_details actually has. The list
+        // previously selected a.plan, a.figure, a.checked_out and
+        // a.checked_out_time — none of which exist on the table — so every
+        // request to this view ended in "Unknown column 'a.plan' in 'field
+        // list'" and a 500. There is no check-out support on plan days, so the
+        // editor join goes with them.
         $query->select(
             $this->getState(
                 'list.select',
                 implode(', ', $db->quoteName([
-                    'a.id', 'a.plan', 'a.reading', 'a.audio', 'a.figure',
-                    'a.descrip', 'a.checked_out', 'a.checked_out_time', 'a.ordering',
+                    'a.id', 'a.plan_id', 'a.reading', 'a.audio', 'a.descrip', 'a.ordering',
                 ]))
             )
         );
         $query->from($db->quoteName('#__livingword_plans_details', 'a'));
 
-        $query->select($db->quoteName('uc.name', 'editor'))
-            ->join('LEFT', $db->quoteName('#__users', 'uc') . ' ON ' . $db->quoteName('uc.id') . ' = ' . $db->quoteName('a.checked_out'));
+        // The list shows the plan a day belongs to, and the table stores only
+        // its id. Aliased to `plan` because that is what the template renders,
+        // and a title is more use there than a number.
+        $query->select($db->quoteName('p.title', 'plan'))
+            ->join(
+                'LEFT',
+                $db->quoteName('#__livingword_plans', 'p')
+                . ' ON ' . $db->quoteName('p.id') . ' = ' . $db->quoteName('a.plan_id')
+            );
 
-        // Filter by plan name
+        // Filter by plan. The filter is a free-text field, so it matches the
+        // plan title rather than requiring an id the user cannot see.
         $plan = $this->getState('filter.plan');
 
         if (!empty($plan)) {
-            $query->where($db->quoteName('a.plan') . ' = ' . $db->quote($plan));
+            $query->where(
+                $db->quoteName('p.title') . ' LIKE ' . $db->quote('%' . $db->escape($plan, true) . '%')
+            );
         }
 
         $search = $this->getState('filter.search');
