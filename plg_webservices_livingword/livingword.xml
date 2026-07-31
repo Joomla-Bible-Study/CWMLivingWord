@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="webservices" method="upgrade">
+    <name>plg_webservices_livingword</name>
+    <author>CWM Team</author>
+    <authorEmail>info@christianwebministries.org</authorEmail>
+    <authorUrl>www.christianwebministries.org</authorUrl>
+    <copyright>(C) 2026 CWM Team All rights reserved.</copyright>
+    <creationDate>2026-07-30</creationDate>
+    <version>5.7.0</version>
+    <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+    <description>PLG_WEBSERVICES_LIVINGWORD_XML_DESCRIPTION</description>
+    <namespace path="src">CWM\Plugin\WebServices\Livingword</namespace>
+
+    <compatibility>
+        <cms>
+            <targetplatform name="joomla" version="5[.0-9]" />
+            <targetplatform name="joomla" version="6[.0-9]" />
+        </cms>
+        <php minimum="8.3.0" />
+    </compatibility>
+
+    <files>
+        <folder plugin="livingword">services</folder>
+        <folder>src</folder>
+        <folder>language</folder>
+    </files>
+
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                <field
+                    name="public_reads"
+                    type="radio"
+                    layout="joomla.form.field.radio.switcher"
+                    label="PLG_WEBSERVICES_LIVINGWORD_PUBLIC_READS_LABEL"
+                    description="PLG_WEBSERVICES_LIVINGWORD_PUBLIC_READS_DESC"
+                    default="0"
+                    >
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+            </fieldset>
+        </fields>
+    </config>
+</extension>
