@@ -68,7 +68,7 @@ $token = Session::getFormToken();
                 <form action="<?php echo Route::_('index.php?option=com_livingword&task=cwmutilities.csvimport'); ?>"
                       method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label for="plan_id" class="form-label"><?php echo Text::_('COM_LIVINGWORD_CSV_SELECT_PLAN'); ?></label>
+                        <label for="csv_plan_id" class="form-label"><?php echo Text::_('COM_LIVINGWORD_CSV_SELECT_PLAN'); ?></label>
                         <select name="plan_id" id="csv_plan_id" class="form-select" required>
                             <option value=""><?php echo Text::_('COM_LIVINGWORD_SELECT_PLAN'); ?></option>
                             <?php foreach ($this->plans as $csvPlan) : ?>
@@ -81,7 +81,7 @@ $token = Session::getFormToken();
                     <div class="mb-3">
                         <label for="csv_file" class="form-label"><?php echo Text::_('COM_LIVINGWORD_CSV_FILE'); ?></label>
                         <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv,.txt" required>
-                        <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_CSV_FORMAT'); ?></small>
+                        <small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_CSV_FORMAT'); ?></small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label"><?php echo Text::_('COM_LIVINGWORD_CSV_MODE'); ?></label>

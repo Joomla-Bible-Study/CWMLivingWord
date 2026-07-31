@@ -48,7 +48,7 @@ $this->getDocument()->getWebAssetManager()
                             <?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO'); ?>
                         </button>
                         <audio id="testAudioPlayer" preload="none" class="d-none"></audio>
-                        <small id="testAudioStatus" class="d-block mt-1 text-muted"></small>
+                        <small id="testAudioStatus" class="d-block mt-1 text-body-secondary"></small>
                     </div>
                 <?php endif; ?>
                 <?php echo $this->form->renderField('testament'); ?>
@@ -105,7 +105,7 @@ $this->getDocument()->getWebAssetManager()
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted"><?php echo Text::_('COM_LIVINGWORD_BULK_IMPORT_DESC'); ?></p>
+                <p class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_BULK_IMPORT_DESC'); ?></p>
                 <textarea id="bulkImportText" class="form-control" rows="15" placeholder="<?php echo Text::_('COM_LIVINGWORD_BULK_IMPORT_PLACEHOLDER'); ?>"></textarea>
             </div>
             <div class="modal-footer">
@@ -150,7 +150,7 @@ $this->getDocument()->getWebAssetManager()
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted" id="batchMoveInfo"></p>
+                <p class="text-body-secondary" id="batchMoveInfo"></p>
                 <label for="batchMovePosition" class="form-label"><?php echo Text::_('COM_LIVINGWORD_TARGET_POSITION'); ?></label>
                 <input type="number" id="batchMovePosition" class="form-control" min="1" value="1">
             </div>
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             testBtn.disabled = true;
             testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_AUDIO_LOADING', true); ?>';
-            testStatus.className = 'd-block mt-1 text-muted';
+            testStatus.className = 'd-block mt-1 text-body-secondary';
 
             var url = '<?php echo \Joomla\CMS\Router\Route::_('index.php?option=com_livingword&task=cwmaudio.getAudio&format=json', false); ?>'
                 + '&reading=' + encodeURIComponent(reading)

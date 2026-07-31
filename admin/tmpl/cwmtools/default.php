@@ -98,7 +98,7 @@ if ($saveOrder && !empty($this->items)) {
                                             <?php echo $this->escape($item->name); ?>
                                         </a>
                                         <?php if (!empty($item->description)) : ?>
-                                            <div class="small text-muted"><?php echo $this->escape($item->description); ?></div>
+                                            <div class="small text-body-secondary"><?php echo $this->escape($item->description); ?></div>
                                         <?php endif; ?>
                                     </td>
                                     <td class="d-none d-md-table-cell small break-word">

@@ -83,7 +83,7 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                     <td>
                                         <strong><?php echo $this->escape($item->username ?? Text::_('COM_LIVINGWORD_USER_UNKNOWN')); ?></strong>
                                         <?php if (!empty($item->user_email)) : ?>
-                                            <br><small class="text-muted"><?php echo $this->escape($item->user_email); ?></small>
+                                            <br><small class="text-body-secondary"><?php echo $this->escape($item->user_email); ?></small>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -94,9 +94,9 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                             <div class="progress" style="height:6px;min-width:80px;" title="<?php echo $completedCount . ' / ' . $totalDays; ?>">
                                                 <div class="progress-bar <?php echo $progressPct >= 100 ? 'bg-success' : 'bg-primary'; ?>" style="width:<?php echo $progressPct; ?>%"></div>
                                             </div>
-                                            <small class="text-muted"><?php echo $completedCount; ?>/<?php echo $totalDays; ?> (<?php echo $progressPct; ?>%)</small>
+                                            <small class="text-body-secondary"><?php echo $completedCount; ?>/<?php echo $totalDays; ?> (<?php echo $progressPct; ?>%)</small>
                                         <?php else : ?>
-                                            <small class="text-muted">—</small>
+                                            <small class="text-body-secondary">—</small>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
@@ -105,7 +105,7 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                                 <?php echo $streak; ?>
                                             </span>
                                         <?php else : ?>
-                                            <small class="text-muted">0</small>
+                                            <small class="text-body-secondary">0</small>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
@@ -113,7 +113,7 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                             <span class="icon-publish text-success" aria-hidden="true"></span>
                                             <span class="visually-hidden"><?php echo Text::_('COM_LIVINGWORD_FILTER_SUBSCRIBED'); ?></span>
                                         <?php else : ?>
-                                            <span class="icon-unpublish text-muted" aria-hidden="true"></span>
+                                            <span class="icon-unpublish text-body-secondary" aria-hidden="true"></span>
                                             <span class="visually-hidden"><?php echo Text::_('COM_LIVINGWORD_FILTER_UNSUBSCRIBED'); ?></span>
                                         <?php endif; ?>
                                     </td>
@@ -125,9 +125,9 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
                                     </td>
                                     <td class="text-center d-none d-lg-table-cell">
                                         <?php if (!empty($item->streak_last_date)) : ?>
-                                            <small class="text-muted"><?php echo HTMLHelper::_('date', $item->streak_last_date, Text::_('DATE_FORMAT_LC4')); ?></small>
+                                            <small class="text-body-secondary"><?php echo HTMLHelper::_('date', $item->streak_last_date, Text::_('DATE_FORMAT_LC4')); ?></small>
                                         <?php else : ?>
-                                            <small class="text-muted">—</small>
+                                            <small class="text-body-secondary">—</small>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">

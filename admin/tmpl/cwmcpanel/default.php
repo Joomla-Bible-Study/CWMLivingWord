@@ -58,7 +58,7 @@ if ($scriptureAvailable) {
                 <div class="card-body">
                     <span class="icon-book fa-2x text-primary mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['plans'] ?? 0; ?></h4>
-                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_PLANS'); ?></small>
+                    <small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_MANAGE_PLANS'); ?></small>
                 </div>
             </a>
         </div>
@@ -67,7 +67,7 @@ if ($scriptureAvailable) {
                 <div class="card-body">
                     <span class="icon-users fa-2x text-info mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['groups'] ?? 0; ?></h4>
-                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_GROUPS'); ?></small>
+                    <small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_MANAGE_GROUPS'); ?></small>
                 </div>
             </a>
         </div>
@@ -76,7 +76,7 @@ if ($scriptureAvailable) {
                 <div class="card-body">
                     <span class="icon-user fa-2x text-success mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['users'] ?? 0; ?></h4>
-                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_SUBSCRIBERS'); ?></small>
+                    <small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_MANAGE_SUBSCRIBERS'); ?></small>
                 </div>
             </a>
         </div>
@@ -85,7 +85,7 @@ if ($scriptureAvailable) {
                 <div class="card-body">
                     <span class="icon-link fa-2x text-warning mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0"><?php echo $counts['links'] ?? 0; ?></h4>
-                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_MANAGE_LINKS'); ?></small>
+                    <small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_MANAGE_LINKS'); ?></small>
                 </div>
             </a>
         </div>
@@ -94,7 +94,7 @@ if ($scriptureAvailable) {
                 <div class="card-body">
                     <span class="icon-wrench fa-2x text-secondary mb-2 d-block" aria-hidden="true"></span>
                     <h4 class="mb-0">&nbsp;</h4>
-                    <small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_UTILITIES'); ?></small>
+                    <small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_UTILITIES'); ?></small>
                 </div>
             </a>
         </div>
@@ -125,13 +125,13 @@ if ($scriptureAvailable) {
                             <span class="icon-checkmark-circle text-success fs-4" aria-hidden="true"></span>
                             <div>
                                 <strong><?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_LIBRARY_OK'); ?></strong>
-                                <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_LIBRARY_OK_DESC'); ?></small>
+                                <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_LIBRARY_OK_DESC'); ?></small>
                             </div>
                         <?php else : ?>
                             <span class="icon-warning text-warning fs-4" aria-hidden="true"></span>
                             <div>
                                 <strong><?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_LIBRARY_MISSING'); ?></strong>
-                                <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_LIBRARY_MISSING_DESC'); ?></small>
+                                <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_SCRIPTURE_LIBRARY_MISSING_DESC'); ?></small>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -142,19 +142,19 @@ if ($scriptureAvailable) {
                             <span class="icon-checkmark-circle text-success fs-4" aria-hidden="true"></span>
                             <div>
                                 <strong><?php echo Text::_('COM_LIVINGWORD_AUDIO_CONFIGURED'); ?></strong>
-                                <br><small class="text-muted"><?php echo Text::sprintf('COM_LIVINGWORD_AUDIO_PLANS_ENABLED', $audioPlansCount); ?></small>
+                                <br><small class="text-body-secondary"><?php echo Text::sprintf('COM_LIVINGWORD_AUDIO_PLANS_ENABLED', $audioPlansCount); ?></small>
                             </div>
                         <?php elseif ($scriptureAvailable && !$bbKeyConfigured) : ?>
                             <span class="icon-info-circle text-info fs-4" aria-hidden="true"></span>
                             <div>
                                 <strong><?php echo Text::_('COM_LIVINGWORD_AUDIO_STATUS'); ?></strong>
-                                <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_AUDIO_NO_KEY'); ?></small>
+                                <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_AUDIO_NO_KEY'); ?></small>
                             </div>
                         <?php else : ?>
                             <span class="icon-minus-circle text-secondary fs-4" aria-hidden="true"></span>
                             <div>
                                 <strong><?php echo Text::_('COM_LIVINGWORD_AUDIO_STATUS'); ?></strong>
-                                <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_AUDIO_REQUIRES_LIBRARY'); ?></small>
+                                <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_AUDIO_REQUIRES_LIBRARY'); ?></small>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -172,15 +172,15 @@ if ($scriptureAvailable) {
                     <div class="d-flex justify-content-around text-center mt-3">
                         <div>
                             <span class="fs-2 fw-bold text-primary"><?php echo $stats->totalSubscribers; ?></span>
-                            <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_TOTAL'); ?></small>
+                            <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_TOTAL'); ?></small>
                         </div>
                         <div>
                             <span class="fs-2 fw-bold text-success"><?php echo $stats->activeUsers; ?></span>
-                            <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_ACTIVE_7D'); ?></small>
+                            <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_ACTIVE_7D'); ?></small>
                         </div>
                         <div>
-                            <span class="fs-2 fw-bold <?php echo $stats->inactiveUsers > 0 ? 'text-warning' : 'text-muted'; ?>"><?php echo $stats->inactiveUsers; ?></span>
-                            <br><small class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE'); ?></small>
+                            <span class="fs-2 fw-bold <?php echo $stats->inactiveUsers > 0 ? 'text-warning' : 'text-body-secondary'; ?>"><?php echo $stats->inactiveUsers; ?></span>
+                            <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE'); ?></small>
                         </div>
                     </div>
                 </div>
@@ -192,7 +192,7 @@ if ($scriptureAvailable) {
                 <div class="card-body">
                     <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_STATS_PLAN_ENROLLMENT'); ?></h5>
                     <?php if (empty($stats->planEnrollment)) : ?>
-                        <p class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_NO_DATA'); ?></p>
+                        <p class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_NO_DATA'); ?></p>
                     <?php else : ?>
                         <table class="table table-sm mt-2 mb-0">
                             <tbody>
@@ -214,7 +214,7 @@ if ($scriptureAvailable) {
                 <div class="card-body">
                     <h5 class="card-title"><?php echo Text::_('COM_LIVINGWORD_STATS_AVG_PROGRESS'); ?></h5>
                     <?php if (empty($stats->planProgress)) : ?>
-                        <p class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_NO_DATA'); ?></p>
+                        <p class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_NO_DATA'); ?></p>
                     <?php else : ?>
                         <?php foreach ($stats->planProgress as $plan) : ?>
                             <div class="mb-2">
@@ -236,7 +236,7 @@ if ($scriptureAvailable) {
                                     ?>
                                     <div class="progress-bar <?php echo $barClass; ?>" style="width: <?php echo $plan->avg_percent; ?>%"></div>
                                 </div>
-                                <small class="text-muted"><?php echo $plan->user_count; ?> <?php echo Text::_('COM_LIVINGWORD_STATS_READERS'); ?></small>
+                                <small class="text-body-secondary"><?php echo $plan->user_count; ?> <?php echo Text::_('COM_LIVINGWORD_STATS_READERS'); ?></small>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -297,7 +297,7 @@ if ($scriptureAvailable) {
                     <span class="icon-warning text-warning" aria-hidden="true"></span>
                     <?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE_USERS'); ?>
                 </h5>
-                <p class="text-muted small"><?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE_DESC'); ?></p>
+                <p class="text-body-secondary small"><?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE_DESC'); ?></p>
                 <div class="table-responsive">
                     <table class="table table-sm mb-0">
                         <thead>
@@ -314,7 +314,7 @@ if ($scriptureAvailable) {
                                         <?php if ($user->streak_last_date) : ?>
                                             <?php echo htmlspecialchars($user->streak_last_date, ENT_QUOTES, 'UTF-8'); ?>
                                         <?php else : ?>
-                                            <span class="text-muted"><?php echo Text::_('COM_LIVINGWORD_STATS_NEVER'); ?></span>
+                                            <span class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_NEVER'); ?></span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
