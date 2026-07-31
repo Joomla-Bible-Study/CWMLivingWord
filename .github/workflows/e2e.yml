@@ -144,6 +144,11 @@ jobs:
           builder.ci.password=admin1234567
           builder.ci.email=admin@example.com
           builder.ci.version=${JOOMLA_VERSION}
+          # Shared fallback: the browser projects resolve a site by URL but look
+          # up credentials by install id, and CI has no j6dev section for them to
+          # find. global-setup documents these two keys for exactly this case.
+          builder.joomla_username=admin
+          builder.joomla_password=admin1234567
           EOF
 
       - name: Serve the site
