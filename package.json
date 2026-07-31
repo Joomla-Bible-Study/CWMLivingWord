@@ -31,6 +31,7 @@
     "watch": "SOURCE_DIR=build/media_source/js OUTPUT_DIR=media/com_livingword/js rollup -c libraries/vendor/cwm/build-tools/templates/rollup.config.js -w",
     "lint:js": "eslint --max-warnings=0 .",
     "test:e2e": "playwright test",
-    "test:a11y": "playwright test --grep @a11y"
+    "test:a11y": "playwright test --grep @a11y",
+    "test:api": "playwright test --project=api-test"
   }
 }

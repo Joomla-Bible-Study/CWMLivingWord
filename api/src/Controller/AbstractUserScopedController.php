@@ -198,6 +198,46 @@ abstract class AbstractUserScopedController extends ApiController
     }
 
     /**
+     * Send a JSON:API document and stop.
+     *
+     * @param   int    $status   HTTP status.
+     * @param   array  $payload  Body to encode.
+     *
+     * @return  void
+     *
+     * @since   5.7.0
+     */
+    protected function respond(int $status, array $payload): void
+    {
+        $this->app->setHeader('status', $status);
+        $this->app->setHeader('Content-Type', 'application/vnd.api+json');
+        $this->app->sendHeaders();
+
+        echo json_encode($payload);
+
+        $this->app->close();
+    }
+
+    /**
+     * Refuse a malformed request with 400.
+     *
+     * Emitted rather than thrown. Joomla's API error handler turns an
+     * unrecognised exception into a 500, so throwing InvalidArgumentException
+     * for a client mistake reports a server fault — which sends an API
+     * consumer looking for a bug on the wrong side of the connection.
+     *
+     * @param   string  $detail  What the client got wrong.
+     *
+     * @return  void
+     *
+     * @since   5.7.0
+     */
+    protected function badRequest(string $detail): void
+    {
+        $this->respond(400, ['errors' => [['code' => 400, 'title' => 'Bad request', 'detail' => $detail]]]);
+    }
+
+    /**
      * Resolve the Administrator model backing this resource.
      *
      * @param   string  $name    Model name.
@@ -210,10 +250,13 @@ abstract class AbstractUserScopedController extends ApiController
      */
     public function getModel($name = '', $prefix = '', $config = [])
     {
-        if ($name === '') {
+        // ApiController passes the contentType; map it to the model. Prefix and
+        // config pass through — config carries modelState, which is where the
+        // user scope was just set, so dropping it would unscope the read.
+        if (strtolower($name) === $this->contentType) {
             $name = $this->modelName;
         }
 
-        return parent::getModel($name, 'Administrator', ['ignore_request' => true]);
+        return parent::getModel($name, $prefix, $config);
     }
 }

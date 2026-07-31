@@ -14,11 +14,16 @@
  */
 
 const { defineConfig, devices } = require('@playwright/test');
-const { loadProps } = require('./tests/e2e/helpers/properties');
+const { loadProps, installForRole } = require('./tests/e2e/helpers/properties');
 
 const props = loadProps(__dirname);
 
 const j6Url = props['builder.j6dev.url'] || 'https://j6-dev.local:8890';
+
+// The role=test install — the site `composer test:install` provisions from the
+// built package. Discovered by role, not by name: install ids are local to each
+// developer's build.properties. No role=test install, no API project.
+const testInstall = installForRole(props, 'test');
 
 module.exports = defineConfig({
     testDir: './tests/e2e',
@@ -79,5 +84,18 @@ module.exports = defineConfig({
                 baseURL: j6Url,
             },
         },
+        // API acceptance runs against the role=test install and nowhere else.
+        // Its whole point is asserting what a package install produces — a
+        // symlinked dev site cannot represent that, and a dev site is exactly
+        // what would hide a route that was never registered.
+        ...(testInstall ? [{
+            name: 'api-test',
+            testMatch: '**/api/**/*.spec.js',
+            use: {
+                ...devices['Desktop Chrome'],
+                baseURL: testInstall.url,
+                storageState: 'tests/e2e/.auth/admin-test.json',
+            },
+        }] : []),
     ],
 });

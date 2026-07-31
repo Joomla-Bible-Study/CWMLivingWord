@@ -44,21 +44,27 @@ run_phase() {
 }
 
 echo "########################################################################"
-echo "# 1/3  CLEAN INSTALL"
+echo "# 1/4  CLEAN INSTALL"
 echo "########################################################################"
 run_phase "clean install" bash build/test-install.sh
 
 echo
 echo "########################################################################"
-echo "# 2/3  UPGRADE FROM LAST RELEASE"
+echo "# 2/4  UPGRADE FROM LAST RELEASE"
 echo "########################################################################"
 run_phase "upgrade" bash build/test-upgrade.sh
 
 echo
 echo "########################################################################"
-echo "# 3/3  ACCESSIBILITY (WCAG 2.2 AA)"
+echo "# 3/4  ACCESSIBILITY (WCAG 2.2 AA)"
 echo "########################################################################"
 run_phase "accessibility" npm run --silent test:a11y
+
+echo
+echo "########################################################################"
+echo "# 4/4  API ACCEPTANCE"
+echo "########################################################################"
+run_phase "api acceptance" npm run --silent test:api
 
 echo
 echo "========================================================================"
@@ -79,7 +85,7 @@ fi
 if [ ${#SKIPPED[@]} -gt 0 ]; then
     echo " RELEASE GATE PASSED — with the phase(s) above not applicable."
 else
-    echo " RELEASE GATE PASSED — install, upgrade and accessibility all verified."
+    echo " RELEASE GATE PASSED — install, upgrade, accessibility and API all verified."
 fi
 
 echo "========================================================================"

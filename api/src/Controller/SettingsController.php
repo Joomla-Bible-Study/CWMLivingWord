@@ -92,10 +92,11 @@ class SettingsController extends AbstractUserScopedController
         $changes = array_intersect_key($attrs, array_flip(self::WRITABLE));
 
         if ($changes === []) {
-            throw new \InvalidArgumentException(
-                'No writable settings supplied. Writable: ' . implode(', ', self::WRITABLE) . '.',
-                400
+            $this->badRequest(
+                'No writable settings supplied. Writable: ' . implode(', ', self::WRITABLE) . '.'
             );
+
+            return;
         }
 
         $db     = Factory::getContainer()->get(DatabaseInterface::class);
