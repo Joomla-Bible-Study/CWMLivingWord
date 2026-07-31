@@ -101,7 +101,8 @@ foreach ($installs as $install) {
     $familyWhere = "(element = 'com_livingword' AND type = 'component')
         OR (element = 'pkg_livingword' AND type = 'package')
         OR (element = 'mod_livingword' AND type = 'module')
-        OR (element = 'livingword' AND type = 'plugin' AND folder = 'task')";
+        OR (element = 'livingword' AND type = 'plugin' AND folder = 'task')
+        OR (element = 'livingword' AND type = 'plugin' AND folder = 'webservices')";
 
     if ($withScripture) {
         // element is the <libraryname>, not the folder name — see the ARS
@@ -189,6 +190,7 @@ foreach ($installs as $install) {
         'api/components/com_livingword',
         'modules/mod_livingword',
         'plugins/task/livingword',
+        'plugins/webservices/livingword',
         'media/com_livingword',
         'media/mod_livingword',
         'administrator/manifests/packages/pkg_livingword.xml',
