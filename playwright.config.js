@@ -18,12 +18,14 @@ const { loadProps, installForRole } = require('./tests/e2e/helpers/properties');
 
 const props = loadProps(__dirname);
 
-const j6Url = props['builder.j6dev.url'] || 'https://j6-dev.local:8890';
-
-// The role=test install — the site `composer test:install` provisions from the
-// built package. Discovered by role, not by name: install ids are local to each
-// developer's build.properties. No role=test install, no API project.
+// Browser suites run against the j6 dev site when there is one. In CI there
+// is not: the disposable site the workflow builds is declared role=test, so
+// fall back to it rather than skipping the accessibility scans entirely.
+// Scanning the package-installed site is arguably the better test anyway —
+// it is the markup a user actually receives.
 const testInstall = installForRole(props, 'test');
+const j6Url = props['builder.j6dev.url'] || (testInstall && testInstall.url) || 'https://j6-dev.local:8890';
+
 
 module.exports = defineConfig({
     testDir: './tests/e2e',
