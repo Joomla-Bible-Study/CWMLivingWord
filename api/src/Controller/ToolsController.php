@@ -50,10 +50,17 @@ class ToolsController extends AbstractReadOnlyController
      */
     public function getModel($name = '', $prefix = '', $config = [])
     {
-        if ($name === '') {
-            $name = $this->input->get('id') ? 'Cwmtool' : 'Cwmtools';
-        }
+        // ApiController calls this with the contentType, not the model name, so
+        // the two have to be mapped. Prefix and config are passed through
+        // untouched — config carries the controller's modelState, and
+        // discarding it loses the filters set before the read.
+        $map = [
+            'tools' => 'Cwmtools',
+            'tool'  => 'Cwmtool',
+        ];
 
-        return parent::getModel($name, 'Administrator', ['ignore_request' => true]);
+        $name = $map[strtolower($name)] ?? $name;
+
+        return parent::getModel($name, $prefix, $config);
     }
 }

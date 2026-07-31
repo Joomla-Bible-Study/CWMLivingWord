@@ -66,7 +66,9 @@ class ProgressController extends AbstractUserScopedController
         $day    = $this->requestInt('day');
 
         if ($planId < 1 || $day < 1) {
-            throw new \InvalidArgumentException('plan_id and day are required and must be positive.', 400);
+            $this->badRequest('plan_id and day are required and must be positive.');
+
+            return;
         }
 
         $db = Factory::getContainer()->get(DatabaseInterface::class);
@@ -81,21 +83,11 @@ class ProgressController extends AbstractUserScopedController
             CwmprogressHelper::markComplete($db, $userId, $planId, $day);
         }
 
-        $this->app->setHeader('status', 201);
-        $this->app->sendHeaders();
-
-        echo json_encode([
-            'data' => [
-                'type'       => 'progress',
-                'attributes' => [
-                    'plan_id'       => $planId,
-                    'day'           => $day,
-                    'passage_index' => $passageIndex,
-                    'completed'     => true,
-                ],
-            ],
-        ]);
-
-        $this->app->close();
+        $this->respond(201, ['data' => ['type' => 'progress', 'attributes' => [
+            'plan_id'       => $planId,
+            'day'           => $day,
+            'passage_index' => $passageIndex,
+            'completed'     => true,
+        ]]]);
     }
 }

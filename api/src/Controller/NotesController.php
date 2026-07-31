@@ -64,7 +64,9 @@ class NotesController extends AbstractUserScopedController
         $day    = $this->requestInt('day');
 
         if ($planId < 1 || $day < 1) {
-            throw new \InvalidArgumentException('plan_id and day are required and must be positive.', 400);
+            $this->badRequest('plan_id and day are required and must be positive.');
+
+            return;
         }
 
         $body = (array) $this->input->json->get('data', [], 'array');
