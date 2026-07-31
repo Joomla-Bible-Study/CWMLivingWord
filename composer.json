@@ -39,6 +39,7 @@
   "autoload": {
     "psr-4": {
       "CWM\\Component\\Livingword\\Administrator\\": "admin/src/",
+      "CWM\\Component\\Livingword\\Api\\": "api/src/",
       "CWM\\Component\\Livingword\\Site\\": "site/src/"
     }
   },
@@ -56,9 +57,20 @@
   "extra": {
     "cwm-build-tools": {
       "joomlaLinks": [
-        { "type": "component", "name": "com_livingword" },
-        { "type": "module",    "name": "mod_livingword", "client": "site" },
-        { "type": "plugin",    "group": "task", "element": "livingword" }
+        {
+          "type": "component",
+          "name": "com_livingword"
+        },
+        {
+          "type": "module",
+          "name": "mod_livingword",
+          "client": "site"
+        },
+        {
+          "type": "plugin",
+          "group": "task",
+          "element": "livingword"
+        }
       ]
     }
   },
@@ -87,41 +99,45 @@
     "joomla/string": "^4.0"
   },
   "scripts": {
-    "test":               "phpunit",
-    "test:unit":          "phpunit --testsuite 'LivingWord Unit Tests'",
-    "test:integration":   "phpunit --testsuite 'LivingWord Integration Tests'",
-    "lint:syntax":        "find admin site mod_livingword plg_task_livingword -name '*.php' -print0 | xargs -0 -n1 -P4 php -l",
-    "lint":               "php-cs-fixer fix --dry-run --diff",
-    "lint:fix":           "php-cs-fixer fix",
-    "lint:js":            "npm run lint:js",
-    "build:js":           "npm run build:js",
-    "build:css":          "npm run build:css",
-    "check":              ["@lint:syntax", "@lint", "@test"],
-    "install-zip":        "cwm-install-zip",
+    "test": "phpunit",
+    "test:unit": "phpunit --testsuite 'LivingWord Unit Tests'",
+    "test:integration": "phpunit --testsuite 'LivingWord Integration Tests'",
+    "lint:syntax": "find admin site mod_livingword plg_task_livingword -name '*.php' -print0 | xargs -0 -n1 -P4 php -l",
+    "lint": "php-cs-fixer fix --dry-run --diff",
+    "lint:fix": "php-cs-fixer fix",
+    "lint:js": "npm run lint:js",
+    "build:js": "npm run build:js",
+    "build:css": "npm run build:css",
+    "check": [
+      "@lint:syntax",
+      "@lint",
+      "@test"
+    ],
+    "install-zip": "cwm-install-zip",
     "test:reset-testsite": "@php build/reset-testsite.php",
-    "test:install":       "bash build/test-install.sh",
-    "test:migrations":    "@php build/verify-migrations.php",
-    "test:a11y":          "npm run test:a11y",
-    "test:e2e":           "npm run test:e2e",
-    "test:upgrade":       "bash build/test-upgrade.sh",
-    "test:release":       "bash build/test-release.sh",
-    "setup":              "cwm-setup",
-    "joomla-install":     "cwm-joomla-install",
-    "joomla-latest":      "cwm-joomla-latest",
-    "symlink":            "cwm-link",
-    "symlink:check":      "cwm-link-check",
-    "verify":             "cwm-verify",
-    "clean":              "cwm-clean",
-    "build":              "cwm-package",
-    "release":            "cwm-release",
-    "bump-version":       "cwm-bump",
-    "package":            "cwm-package",
-    "ars-publish":        "cwm-ars-publish",
-    "ars-list":           "cwm-ars-list",
-    "ars-create-stream":  "cwm-ars-create-stream",
-    "changelog":          "cwm-changelog",
-    "sync-configs":       "cwm-sync-configs",
-    "sync-languages":     "cwm-sync-languages",
+    "test:install": "bash build/test-install.sh",
+    "test:migrations": "@php build/verify-migrations.php",
+    "test:a11y": "npm run test:a11y",
+    "test:e2e": "npm run test:e2e",
+    "test:upgrade": "bash build/test-upgrade.sh",
+    "test:release": "bash build/test-release.sh",
+    "setup": "cwm-setup",
+    "joomla-install": "cwm-joomla-install",
+    "joomla-latest": "cwm-joomla-latest",
+    "symlink": "cwm-link",
+    "symlink:check": "cwm-link-check",
+    "verify": "cwm-verify",
+    "clean": "cwm-clean",
+    "build": "cwm-package",
+    "release": "cwm-release",
+    "bump-version": "cwm-bump",
+    "package": "cwm-package",
+    "ars-publish": "cwm-ars-publish",
+    "ars-list": "cwm-ars-list",
+    "ars-create-stream": "cwm-ars-create-stream",
+    "changelog": "cwm-changelog",
+    "sync-configs": "cwm-sync-configs",
+    "sync-languages": "cwm-sync-languages",
     "post-install-cmd": [
       "@php -r \"if (!file_exists('build.properties')) { copy('build.dist.properties', 'build.properties'); echo 'Created build.properties from template. Run composer setup to configure.\\n'; }\""
     ]

@@ -142,4 +142,13 @@
             <language tag="zh-CN">zh-CN/com_livingword.sys.ini</language>
         </languages>
     </administration>
+
+    <!-- Web Services API. The routes themselves are registered by
+         plg_webservices_livingword; without that plugin enabled these files
+         ship but nothing reaches them. -->
+    <api>
+        <files folder="api">
+            <folder>src</folder>
+        </files>
+    </api>
 </extension>
