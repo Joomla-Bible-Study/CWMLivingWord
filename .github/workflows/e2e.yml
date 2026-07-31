@@ -144,11 +144,18 @@ jobs:
           builder.ci.password=admin1234567
           builder.ci.email=admin@example.com
           builder.ci.version=${JOOMLA_VERSION}
-          # Shared fallback: the browser projects resolve a site by URL but look
-          # up credentials by install id, and CI has no j6dev section for them to
-          # find. global-setup documents these two keys for exactly this case.
-          builder.joomla_username=admin
-          builder.joomla_password=admin1234567
+          # global-setup resolves the browser suites' site from a fixed j6dev id
+          # and falls back to a hardcoded j6-dev.local URL, which does not exist
+          # here. Declaring the disposable site under that id too points every
+          # suite at the one site CI actually has.
+          builder.j6dev.url=${SITE_URL}
+          builder.j6dev.path=${SITE_DIR}
+          builder.j6dev.db_host=127.0.0.1
+          builder.j6dev.db_user=root
+          builder.j6dev.db_pass=joomla_ci
+          builder.j6dev.db_name=joomla_ci
+          builder.j6dev.username=admin
+          builder.j6dev.password=admin1234567
           EOF
 
       - name: Serve the site
