@@ -90,7 +90,7 @@ if ($saveOrder && !empty($this->items)) {
                                         <a href="<?php echo Route::_('index.php?option=com_livingword&task=cwmplan.edit&id=' . (int) $item->id); ?>">
                                             <?php echo $this->escape($item->title); ?>
                                         </a>
-                                        <div class="small text-muted">
+                                        <div class="small text-body-secondary">
                                             <?php echo $this->escape($item->alias); ?>
                                         </div>
                                     </td>

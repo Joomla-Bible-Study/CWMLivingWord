@@ -18,6 +18,9 @@ use Joomla\CMS\Router\Route;
 /** @var \CWM\Component\Livingword\Administrator\View\Cwmtool\HtmlView $this */
 
 $this->getDocument()->getWebAssetManager()->useScript('form.validate');
+
+// The "Test" button beside the URL field is built in JS below.
+Text::script('COM_LIVINGWORD_TOOL_TEST_URL');
 ?>
 <form action="<?php echo Route::_('index.php?option=com_livingword&layout=edit&id=' . (int) $this->item->id); ?>" method="post" name="adminForm" id="adminForm" class="form-validate">
     <div class="main-card p-3">
@@ -77,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (icon) {
             preview.innerHTML = '<span class="' + icon + '"' + (hex ? ' style="color:' + hex + '"' : '') + '></span>';
         } else {
-            preview.innerHTML = '<span class="text-muted" style="font-size:1rem;"><?php echo Text::_('COM_LIVINGWORD_TOOL_NO_ICON', true); ?></span>';
+            preview.innerHTML = '<span class="text-body-secondary" style="font-size:1rem;"><?php echo Text::_('COM_LIVINGWORD_TOOL_NO_ICON', true); ?></span>';
         }
     }
 
@@ -99,14 +102,32 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.className = 'btn btn-outline-secondary';
         btn.target = '_blank';
         btn.rel = 'noopener noreferrer';
-        btn.textContent = 'Test';
-        btn.href = urlField.value || '#';
-        if (!urlField.value) btn.classList.add('disabled');
+        btn.textContent = Joomla.Text._('COM_LIVINGWORD_TOOL_TEST_URL', 'Test');
+
+        // Bootstrap's .disabled only dims an anchor. On its own it leaves the
+        // link in the tab order and announced as an ordinary link, so a
+        // keyboard or screen-reader user can reach and activate a control that
+        // does nothing — and axe cannot apply WCAG 1.4.3's exception for
+        // inactive components, so the dimmed text reads as a 1.97:1 contrast
+        // failure. aria-disabled states it, tabindex removes it from the tab
+        // order; this is Bootstrap's own guidance for disabled anchors.
+        const setDisabled = function(disabled) {
+            btn.href = urlField.value || '#';
+            btn.classList.toggle('disabled', disabled);
+            btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+            if (disabled) {
+                btn.setAttribute('tabindex', '-1');
+            } else {
+                btn.removeAttribute('tabindex');
+            }
+        };
+
+        setDisabled(!urlField.value);
         wrapper.appendChild(btn);
 
         urlField.addEventListener('input', function() {
-            btn.href = urlField.value || '#';
-            btn.classList.toggle('disabled', !urlField.value);
+            setDisabled(!urlField.value);
         });
     }
 });
