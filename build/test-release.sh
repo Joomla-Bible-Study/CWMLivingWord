@@ -20,15 +20,21 @@ cd "$ROOT"
 FAILED=()
 
 echo "########################################################################"
-echo "# 1/2  CLEAN INSTALL"
+echo "# 1/3  CLEAN INSTALL"
 echo "########################################################################"
 bash build/test-install.sh || FAILED+=("clean install")
 
 echo
 echo "########################################################################"
-echo "# 2/2  UPGRADE FROM LAST RELEASE"
+echo "# 2/3  UPGRADE FROM LAST RELEASE"
 echo "########################################################################"
 bash build/test-upgrade.sh || FAILED+=("upgrade")
+
+echo
+echo "########################################################################"
+echo "# 3/3  ACCESSIBILITY (WCAG 2.2 AA)"
+echo "########################################################################"
+npm run --silent test:a11y || FAILED+=("accessibility")
 
 echo
 echo "========================================================================"
