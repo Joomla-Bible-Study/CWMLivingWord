@@ -87,6 +87,12 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, json, simplexml, pdo, pdo_mysql, mysqli, zip, gd
 
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress
 
@@ -94,17 +100,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install npm dependencies and build assets
         run: |
           npm ci --no-audit --no-fund
           npm run build
 
+      - name: Cache Joomla release zip
+        id: joomla-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/joomla.zip
+          key: joomla-${{ env.JOOMLA_VERSION }}
+
       - name: Download and install Joomla ${{ env.JOOMLA_VERSION }}
         run: |
           mkdir -p "$SITE_DIR"
-          curl -sSL -o /tmp/joomla.zip \
-            "https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.zip"
+          if [ "${{ steps.joomla-cache.outputs.cache-hit }}" != "true" ]; then
+            curl -sSL -o /tmp/joomla.zip \
+              "https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.zip"
+          fi
           unzip -q /tmp/joomla.zip -d "$SITE_DIR"
           php "$SITE_DIR/installation/joomla.php" install -n \
             --site-name="LivingWord CI" \
@@ -127,48 +143,44 @@ jobs:
             -e "UPDATE jos_extensions SET enabled = 0 WHERE folder = 'system' AND element = 'guidedtours';"
 
       - name: Write build.properties for the disposable site
-        # The harness reads build.properties for everything — which install to
-        # reset, where to deploy, how to reach the database. role=test is what
-        # makes reset-testsite.php willing to touch it at all.
+        # role=test is what makes reset-testsite.php / installForRole('test')
+        # willing to touch this install — id name doesn't matter for that.
+        # global-setup.js additionally reads the browser suites' site by the
+        # fixed id `j6dev` (falling back to a hardcoded j6-dev.local URL that
+        # doesn't exist here), so the one disposable site is declared under
+        # that id rather than duplicated under a second one.
         run: |
           cat > build.properties <<EOF
-          builder.installs=ci
-          builder.ci.role=test
-          builder.ci.path=${SITE_DIR}
-          builder.ci.url=${SITE_URL}
-          builder.ci.db_host=127.0.0.1
-          builder.ci.db_user=root
-          builder.ci.db_pass=joomla_ci
-          builder.ci.db_name=joomla_ci
-          builder.ci.username=admin
-          builder.ci.password=admin1234567
-          builder.ci.email=admin@example.com
-          builder.ci.version=${JOOMLA_VERSION}
-          # global-setup resolves the browser suites' site from a fixed j6dev id
-          # and falls back to a hardcoded j6-dev.local URL, which does not exist
-          # here. Declaring the disposable site under that id too points every
-          # suite at the one site CI actually has.
-          builder.j6dev.url=${SITE_URL}
+          builder.installs=j6dev
+          builder.j6dev.role=test
           builder.j6dev.path=${SITE_DIR}
+          builder.j6dev.url=${SITE_URL}
           builder.j6dev.db_host=127.0.0.1
           builder.j6dev.db_user=root
           builder.j6dev.db_pass=joomla_ci
           builder.j6dev.db_name=joomla_ci
           builder.j6dev.username=admin
           builder.j6dev.password=admin1234567
+          builder.j6dev.email=admin@example.com
+          builder.j6dev.version=${JOOMLA_VERSION}
           EOF
 
       - name: Serve the site
         run: |
           PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8890 -t "$SITE_DIR" &> /tmp/php-server.log &
-          sleep 2
-          curl -sSf -o /dev/null "$SITE_URL/index.php"
+          timeout 15 bash -c 'until curl -sSf -o /dev/null "$0/index.php"; do sleep 0.5; done' "$SITE_URL"
 
       - name: Clean install of the built package
         # reset → build the real pkg_livingword zip → install through Joomla's
         # CLI → verify every extension registered and the schema landed.
         # The same script a release runs, unchanged.
         run: composer test:install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium

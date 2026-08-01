@@ -25,7 +25,6 @@ const j6Url = props['builder.j6dev.url'] || 'https://j6-dev.local:8890';
 // developer's build.properties. No role=test install, no API project.
 const testInstall = installForRole(props, 'test');
 
-
 module.exports = defineConfig({
     testDir: './tests/e2e',
     outputDir: 'build/test-results/',
