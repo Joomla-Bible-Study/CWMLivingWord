@@ -33,7 +33,22 @@ const LIVINGWORD_CONTENT = 'section#content';
  *                 "application" without its required ARIA attributes, and
  *                 editor iframes with no title.
  */
-const THIRD_PARTY = ['.choices', '.tox-tinymce'];
+const THIRD_PARTY = [
+    '.choices',
+    '.tox-tinymce',
+    // Joomla's own system-message component. It sits inside section#content,
+    // so a message enqueued by our install script — "the task plugin has been
+    // enabled" — drags Joomla's alert styling into our scan. On Joomla 5.4's
+    // Atum those alerts fail contrast (#8494ab on #e4ebf5 and similar); on 6.1
+    // they pass, which is why this only appeared once CI ran against 5.4.
+    //
+    // The message text is ours; its markup and palette are Joomla's, and we can
+    // neither fix nor be judged on them. Excluded by container rather than by
+    // disabling color-contrast, so the rule still applies to everything we do
+    // render on the same page.
+    '#system-message-container',
+    'joomla-alert',
+];
 
 /**
  * Every list-style admin screen, by view name.

@@ -1,0 +1,211 @@
+# Full release vetting against a disposable Joomla install.
+#
+# Everything that proves LivingWord actually works — clean install, schema
+# migrations, accessibility, REST API — ran only on one laptop, against dev
+# sites assembled by symlinks. Two problems with that, both of which bit:
+#
+#   - Symlinked dev sites never exercise the package wrapper, which is how
+#     pkg_livingword shipped uninstallable for five consecutive releases
+#     before the install harness caught it.
+#   - A suite that runs only when someone remembers rots between releases,
+#     and then fails at the worst moment. Proclaim's equivalent suite had
+#     rotted for months and its REST API shipped broken three releases
+#     running, which is the reason that workflow exists and this one copies
+#     it.
+#
+# This job stands up everything from nothing: a MySQL service, a Joomla site
+# installed headlessly by core's own CLI, the built pkg_livingword zip
+# deployed by the same `composer test:install` a release uses, then the
+# accessibility and API suites against it. No secrets, no persistent state,
+# reproducible in any contributor's fork.
+#
+# Scheduled nightly so regressions surface within a day rather than at
+# release time, manually dispatchable, and run on pull requests touching
+# anything it guards.
+name: E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Nightly, 04:23 UTC — off the top-of-hour cron crush.
+    - cron: '23 4 * * *'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'admin/**'
+      - 'site/**'
+      - 'api/**'
+      - 'plg_webservices_livingword/**'
+      - 'plg_task_livingword/**'
+      - 'mod_livingword/**'
+      - 'tests/e2e/**'
+      - 'build/test-install.sh'
+      - 'build/test-upgrade.sh'
+      - 'build/test-release.sh'
+      - 'build/reset-testsite.php'
+      - 'build/verify-migrations.php'
+      - 'playwright.config.js'
+      - 'cwm-build.config.json'
+      - '.github/workflows/e2e.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JOOMLA_VERSION: '5.4.3'
+  SITE_DIR: /home/runner/joomla-site
+  SITE_URL: http://127.0.0.1:8890
+
+jobs:
+  release-vetting:
+    name: Package install + accessibility + API
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: joomla_ci
+          MYSQL_DATABASE: joomla_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, simplexml, pdo, pdo_mysql, mysqli, zip, gd
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies and build assets
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Cache Joomla release zip
+        id: joomla-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/joomla.zip
+          key: joomla-${{ env.JOOMLA_VERSION }}
+
+      - name: Download and install Joomla ${{ env.JOOMLA_VERSION }}
+        run: |
+          mkdir -p "$SITE_DIR"
+          if [ "${{ steps.joomla-cache.outputs.cache-hit }}" != "true" ]; then
+            curl -sSL -o /tmp/joomla.zip \
+              "https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.zip"
+          fi
+          unzip -q /tmp/joomla.zip -d "$SITE_DIR"
+          php "$SITE_DIR/installation/joomla.php" install -n \
+            --site-name="LivingWord CI" \
+            --admin-user="CI Admin" \
+            --admin-username=admin \
+            --admin-password=admin1234567 \
+            --admin-email=admin@example.com \
+            --db-type=mysqli \
+            --db-host=127.0.0.1 \
+            --db-user=root \
+            --db-pass=joomla_ci \
+            --db-name=joomla_ci \
+            --db-prefix=jos_ \
+            --db-encryption=0
+          rm -rf "$SITE_DIR/installation"
+          sed -i "s#public \$live_site = '';#public \$live_site = '${SITE_URL}';#" "$SITE_DIR/configuration.php"
+          # The guided tours plugin injects an overlay into every admin view,
+          # which the accessibility scans would judge as our markup.
+          mysql -h 127.0.0.1 -u root -pjoomla_ci joomla_ci \
+            -e "UPDATE jos_extensions SET enabled = 0 WHERE folder = 'system' AND element = 'guidedtours';"
+
+      - name: Write build.properties for the disposable site
+        # role=test is what makes reset-testsite.php / installForRole('test')
+        # willing to touch this install — id name doesn't matter for that.
+        # global-setup.js additionally reads the browser suites' site by the
+        # fixed id `j6dev` (falling back to a hardcoded j6-dev.local URL that
+        # doesn't exist here), so the one disposable site is declared under
+        # that id rather than duplicated under a second one.
+        run: |
+          cat > build.properties <<EOF
+          builder.installs=j6dev
+          builder.j6dev.role=test
+          builder.j6dev.path=${SITE_DIR}
+          builder.j6dev.url=${SITE_URL}
+          builder.j6dev.db_host=127.0.0.1
+          builder.j6dev.db_user=root
+          builder.j6dev.db_pass=joomla_ci
+          builder.j6dev.db_name=joomla_ci
+          builder.j6dev.username=admin
+          builder.j6dev.password=admin1234567
+          builder.j6dev.email=admin@example.com
+          builder.j6dev.version=${JOOMLA_VERSION}
+          EOF
+
+      - name: Serve the site
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8890 -t "$SITE_DIR" &> /tmp/php-server.log &
+          timeout 15 bash -c 'until curl -sSf -o /dev/null "$0/index.php"; do sleep 0.5; done' "$SITE_URL"
+
+      - name: Clean install of the built package
+        # reset → build the real pkg_livingword zip → install through Joomla's
+        # CLI → verify every extension registered and the schema landed.
+        # The same script a release runs, unchanged.
+        run: composer test:install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Accessibility scans (WCAG 2.2 AA)
+        # Runs against the package-installed site, which is the markup a user
+        # actually receives. This suite is what caught an admin view returning
+        # 500 on every request — a failure no lint or unit test sees, because
+        # none of them render a page.
+        run: npx playwright test --grep @a11y
+
+      - name: REST API acceptance
+        # 401-not-404 without a token, a real token from the admin profile,
+        # and the negative authorisation assertions: a client-supplied user_id
+        # is not honoured, and credential columns never appear in a response.
+        run: npx playwright test --project=api-test
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: build/reports/e2e
+          retention-days: 7
+
+      - name: Upload PHP server log on failure
+        if: failure()
+        run: cat /tmp/php-server.log
