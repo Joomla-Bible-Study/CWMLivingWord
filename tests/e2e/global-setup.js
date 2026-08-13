@@ -378,8 +378,20 @@ async function authenticateMembers(config, props, authDir, selected) {
     const projects  = (config.projects || [])
         .filter((p) => !selected.length || selected.includes(p.name));
 
+    // Any j6 browser project, not just the one that declares the member state.
+    //
+    // Sessions are only refreshed for the projects selected, so a spec in one
+    // tier that reaches into the other gets whatever stale file is on disk —
+    // and a saved *login page* reads exactly like an empty list, which cost an
+    // hour of chasing an admin screen that appeared unable to see its own
+    // groups. The daily-email spec legitimately needs both: an administrator to
+    // run the task, and the member whose preferences decide whether the routine
+    // has anybody to send to.
     const wanted = projects.some(
-        (p) => p.use && typeof p.use.storageState === 'string' && p.use.storageState.endsWith(stateFile)
+        (p) => p.use && (
+            (typeof p.use.storageState === 'string' && p.use.storageState.endsWith(stateFile))
+            || p.name === 'admin-j6'
+        )
     );
 
     if (!wanted) {
