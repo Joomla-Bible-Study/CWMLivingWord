@@ -199,7 +199,7 @@ async function loginAdminWithRetry(browser, baseUrl, username, password, storage
  *
  * @returns {void}
  */
-function ensureMemberAccount(install) {
+function ensureMemberAccount(install, account) {
     if (!install.path || !fs.existsSync(path.join(install.path, 'cli/joomla.php'))) {
         return;
     }
@@ -210,10 +210,10 @@ function ensureMemberAccount(install) {
         output = execFileSync('php', [
             path.join(install.path, 'cli/joomla.php'),
             'user:add',
-            `--username=${install.memberUsername}`,
+            `--username=${account.username}`,
             '--name=LivingWord E2E Member',
-            `--password=${install.memberPassword}`,
-            `--email=${install.memberEmail}`,
+            `--password=${account.password}`,
+            `--email=${account.email}`,
             '--usergroup=Registered',
         ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (error) {
@@ -224,7 +224,7 @@ function ensureMemberAccount(install) {
         return;
     }
 
-    console.log(`  Warning: could not seed ${install.memberUsername} — ${output.trim().slice(0, 200)}`);
+    console.log(`  Warning: could not seed ${account.username} — ${output.trim().slice(0, 200)}`);
 }
 
 /**
@@ -271,15 +271,15 @@ async function memberStateStillValid(browser, baseUrl, storageStatePath) {
  *
  * @returns {Promise<void>}
  */
-async function loginMember(browser, install, storageStatePath) {
+async function loginMember(browser, install, account, storageStatePath) {
     const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
 
     try {
         const page = await ctx.newPage();
 
         await page.goto(`${install.url}/index.php?option=com_users&view=login`, { waitUntil: 'domcontentloaded' });
-        await page.fill('#username', install.memberUsername);
-        await page.fill('#password', install.memberPassword);
+        await page.fill('#username', account.username);
+        await page.fill('#password', account.password);
 
         // Enter rather than a button click: the login module and the com_users
         // login view render different submit controls depending on template,
@@ -291,7 +291,7 @@ async function loginMember(browser, install, storageStatePath) {
 
         if (await page.locator('#username').isVisible().catch(() => false)) {
             throw new Error(
-                `Front-end login failed for ${install.memberUsername} at ${install.url}.\n` +
+                `Front-end login failed for ${account.username} at ${install.url}.\n` +
                 'Set builder.<install>.member_username / member_password in build.properties, or let global ' +
                 'setup seed the account by declaring builder.<install>.path.'
             );
@@ -398,22 +398,45 @@ async function authenticateMembers(config, props, authDir, selected) {
         return;
     }
 
-    const install   = installById(props, 'j6dev');
-    const statePath = path.join(authDir, stateFile);
+    const install = installById(props, 'j6dev');
 
-    ensureMemberAccount(install);
+    // Two readers, not one. The accountability-partner digest only mails a
+    // mutual pairing, and an account cannot pair with itself — so the second
+    // account is what makes that third routine testable at all. Both are
+    // subscribed, because every plan-bearing view falls back to the onboarding
+    // picker without a plan.
+    const accounts = [
+        {
+            username: install.memberUsername,
+            password: install.memberPassword,
+            email: install.memberEmail,
+            stateFile,
+        },
+        {
+            username: install.partnerUsername,
+            password: install.partnerPassword,
+            email: install.partnerEmail,
+            stateFile: 'partner-j6.json',
+        },
+    ];
 
     const browser = await chromium.launch({ channel: 'chromium' });
 
     try {
-        if (await memberStateStillValid(browser, install.url, statePath)) {
-            console.log(`Reusing valid member session for ${install.id} (${stateFile}).`);
-        } else {
-            console.log(`\nAuthenticating member ${install.memberUsername} against ${install.url}…`);
-            await loginMember(browser, install, statePath);
-        }
+        for (const account of accounts) {
+            const statePath = path.join(authDir, account.stateFile);
 
-        await ensureMemberSubscription(browser, install, statePath);
+            ensureMemberAccount(install, account);
+
+            if (await memberStateStillValid(browser, install.url, statePath)) {
+                console.log(`Reusing valid session for ${account.username} (${account.stateFile}).`);
+            } else {
+                console.log(`\nAuthenticating ${account.username} against ${install.url}…`);
+                await loginMember(browser, install, account, statePath);
+            }
+
+            await ensureMemberSubscription(browser, install, statePath);
+        }
     } finally {
         await browser.close();
     }
