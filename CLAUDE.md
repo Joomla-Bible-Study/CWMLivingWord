@@ -202,7 +202,7 @@ When in doubt, ask before deleting.
 
 - **PSR-12** base with custom rules via `.php-cs-fixer.dist.php`
 - **EditorConfig** for consistent formatting (`.editorconfig`)
-- PHP: 4-space indent; JS/JSON/CSS/YAML: 2-space indent; others: tabs
+- PHP and JS: 4-space indent; JSON/CSS/YAML: 2-space indent; others: tabs
 - Unix line endings (LF), UTF-8, trim trailing whitespace
 - JS sources live in `build/media_source/js/*.es6.js`; never edit the generated bundles under `media/com_livingword/js/`.
 
