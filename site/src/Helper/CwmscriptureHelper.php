@@ -61,8 +61,16 @@ class CwmscriptureHelper
             return null;
         }
 
-        $params   = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
-        $provider = \CWM\Library\Scripture\Bible\BibleProviderFactory::getProviderForTranslation($version, $params);
+        // Acquiring the provider is guarded for the same reason the fetch below
+        // is: this component treats the library as optional and answers with a
+        // BibleGateway link when it cannot help, which a fatal here would deny
+        // it the chance to do.
+        try {
+            $params   = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
+            $provider = \CWM\Library\Scripture\Bible\BibleProviderFactory::getProviderForTranslation($version, $params);
+        } catch (\Throwable) {
+            return null;
+        }
 
         $passages  = array_map('trim', explode(';', $reading));
         $allText   = [];
@@ -75,7 +83,15 @@ class CwmscriptureHelper
 
             try {
                 $result = $provider->getPassage($passage, $version);
-            } catch (\Exception) {
+            } catch (\Throwable) {
+                // Throwable, not Exception. A fault inside the library is an
+                // Error as often as an Exception — AbstractBibleProvider's
+                // cache read calls $this->getDatabase(), which no provider
+                // defines, so every cached lookup raises "Call to undefined
+                // method" (lib_cwmscripture). Catching Exception alone let
+                // that escape and take the whole reading page down with a 500,
+                // in a component whose every call site is written to fall back
+                // to a BibleGateway link when the library cannot answer.
                 continue;
             }
 
@@ -280,15 +296,19 @@ class CwmscriptureHelper
             return null;
         }
 
-        $params    = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
-        $bbEnabled = (int) $params->get('provider_biblebrain', 0) === 1;
-        $bbKey     = (string) $params->get('biblebrain_api_key', '');
+        try {
+            $params    = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
+            $bbEnabled = (int) $params->get('provider_biblebrain', 0) === 1;
+            $bbKey     = (string) $params->get('biblebrain_api_key', '');
 
-        if (!$bbEnabled || empty($bbKey)) {
+            if (!$bbEnabled || empty($bbKey)) {
+                return null;
+            }
+
+            $provider = \CWM\Library\Scripture\Bible\BibleProviderFactory::getProvider('biblebrain', $bbKey);
+        } catch (\Throwable) {
             return null;
         }
-
-        $provider = \CWM\Library\Scripture\Bible\BibleProviderFactory::getProvider('biblebrain', $bbKey);
 
         if (!($provider instanceof \CWM\Library\Scripture\Bible\AudioProviderInterface)) {
             return null;
@@ -316,7 +336,10 @@ class CwmscriptureHelper
             foreach ($chapters as $chapter) {
                 try {
                     $result = $provider->getAudio($parsed['book'], $chapter, $version);
-                } catch (\Exception) {
+                } catch (\Throwable) {
+                    // Throwable for the same reason as the passage fetch above:
+                    // a library-side Error must degrade to "no audio", never to
+                    // a fatal.
                     continue;
                 }
 
@@ -367,10 +390,14 @@ class CwmscriptureHelper
             return false;
         }
 
-        $params = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
+        try {
+            $params = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
 
-        return (int) $params->get('provider_biblebrain', 0) === 1
-            && !empty($params->get('biblebrain_api_key', ''));
+            return (int) $params->get('provider_biblebrain', 0) === 1
+                && !empty($params->get('biblebrain_api_key', ''));
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**
