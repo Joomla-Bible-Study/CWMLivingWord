@@ -62,18 +62,57 @@ function installIds(props) {
 /**
  * Connection details for one named install.
  *
+ * `path` is the filesystem root, needed by anything that shells out to the
+ * install's own `cli/joomla.php` — seeding the front-end member account, for
+ * one. It is per-install (`builder.<id>.path`, as CI writes it) and falls back
+ * to positional lookup in the legacy comma-separated `builder.joomla_paths`,
+ * which is how the older dev installs are still declared. Empty when neither
+ * answers, and callers must cope: a URL-only install can still be browsed, it
+ * just cannot be seeded.
+ *
+ * `member*` is the front-end account the member-* projects log in as. Not the
+ * admin: these specs exercise what a subscriber can do, and running them as a
+ * Super User would hide every permission the site actually applies.
+ *
  * @param {object} props
  * @param {string} id
- * @returns {{id: string, role: string, url: string, username: string, password: string}}
+ * @returns {{id: string, role: string, url: string, path: string, username: string, password: string,
+ *            memberUsername: string, memberPassword: string, memberEmail: string}}
  */
 function installById(props, id) {
     return {
         id,
         role: props[`builder.${id}.role`] || '',
         url: props[`builder.${id}.url`] || '',
+        path: props[`builder.${id}.path`] || pathFromJoomlaPaths(props, id),
         username: props[`builder.${id}.username`] || props['builder.joomla_username'] || '',
         password: props[`builder.${id}.password`] || props['builder.joomla_password'] || '',
+        memberUsername: props[`builder.${id}.member_username`] || 'lw-e2e-member',
+        memberPassword: props[`builder.${id}.member_password`] || 'lw-e2e-member-pw-9134',
+        memberEmail: props[`builder.${id}.member_email`] || 'lw-e2e-member@example.com',
     };
+}
+
+/**
+ * Recover an install root from the legacy `builder.joomla_paths` list.
+ *
+ * The list is positional and carries no ids, so match on the directory name:
+ * install id `j6dev` against a path ending `j6-dev` or `j6dev`. Only used when
+ * the install declares no `builder.<id>.path` of its own.
+ *
+ * @param {object} props
+ * @param {string} id
+ * @returns {string}
+ */
+function pathFromJoomlaPaths(props, id) {
+    const paths = (props['builder.joomla_paths'] || props['builder.joomla_path'] || '')
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+
+    const wanted = id.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    return paths.find((entry) => path.basename(entry).toLowerCase().replace(/[^a-z0-9]/g, '') === wanted) || '';
 }
 
 /**

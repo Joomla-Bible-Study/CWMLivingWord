@@ -27,8 +27,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const { chromium } = require('@playwright/test');
-const { loadProps, installForRole } = require('./helpers/properties');
+const { loadProps, installById, installForRole } = require('./helpers/properties');
 
 /**
  * Project names passed on the command line, e.g. --project=admin-j6.
@@ -181,6 +182,231 @@ async function loginAdminWithRetry(browser, baseUrl, username, password, storage
     }
 }
 
+/**
+ * Ensure the front-end member account exists, using the install's own CLI.
+ *
+ * Seeded rather than assumed: the member specs are about what a subscriber can
+ * do, so they need an account that is not a Super User, and every developer
+ * would otherwise have to hand-create the same one. `user:add` answers "The
+ * username already exists!" on a repeat run, which is success here — what
+ * matters is that the account exists, not who made it.
+ *
+ * Silent no-op when the install declares no filesystem path. A URL-only site
+ * can still be browsed, and if the account really is missing, the login below
+ * fails with a message that says exactly that.
+ *
+ * @param   {object}  install  Install descriptor from installById()
+ *
+ * @returns {void}
+ */
+function ensureMemberAccount(install) {
+    if (!install.path || !fs.existsSync(path.join(install.path, 'cli/joomla.php'))) {
+        return;
+    }
+
+    let output;
+
+    try {
+        output = execFileSync('php', [
+            path.join(install.path, 'cli/joomla.php'),
+            'user:add',
+            `--username=${install.memberUsername}`,
+            '--name=LivingWord E2E Member',
+            `--password=${install.memberPassword}`,
+            `--email=${install.memberEmail}`,
+            '--usergroup=Registered',
+        ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (error) {
+        output = `${error.stdout || ''}${error.stderr || ''}`;
+    }
+
+    if (/already exists/i.test(output) || /User created/i.test(output)) {
+        return;
+    }
+
+    console.log(`  Warning: could not seed ${install.memberUsername} — ${output.trim().slice(0, 200)}`);
+}
+
+/**
+ * Whether a saved state still holds an authenticated front-end session.
+ *
+ * Asks for the profile view, which com_users renders only to a logged-in user
+ * and otherwise answers with the login form.
+ *
+ * @param   {object}  browser           Playwright browser
+ * @param   {string}  baseUrl           Site root
+ * @param   {string}  storageStatePath  Saved state file
+ *
+ * @returns {Promise<boolean>}
+ */
+async function memberStateStillValid(browser, baseUrl, storageStatePath) {
+    if (!fs.existsSync(storageStatePath)) {
+        return false;
+    }
+
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, storageState: storageStatePath });
+
+    try {
+        const page = await ctx.newPage();
+
+        await page.goto(`${baseUrl}/index.php?option=com_users&view=profile`, {
+            waitUntil: 'domcontentloaded',
+            timeout: 15000,
+        });
+
+        return !(await page.locator('#username').isVisible().catch(() => false));
+    } catch {
+        return false;
+    } finally {
+        await ctx.close();
+    }
+}
+
+/**
+ * Log the member in on the front end and save the session.
+ *
+ * @param   {object}  browser           Playwright browser
+ * @param   {object}  install           Install descriptor from installById()
+ * @param   {string}  storageStatePath  Where to save the session
+ *
+ * @returns {Promise<void>}
+ */
+async function loginMember(browser, install, storageStatePath) {
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+
+    try {
+        const page = await ctx.newPage();
+
+        await page.goto(`${install.url}/index.php?option=com_users&view=login`, { waitUntil: 'domcontentloaded' });
+        await page.fill('#username', install.memberUsername);
+        await page.fill('#password', install.memberPassword);
+
+        // Enter rather than a button click: the login module and the com_users
+        // login view render different submit controls depending on template,
+        // and both submit the form the field belongs to.
+        await page.locator('#password').press('Enter');
+        await page.waitForLoadState('domcontentloaded');
+
+        await page.goto(`${install.url}/index.php?option=com_users&view=profile`, { waitUntil: 'domcontentloaded' });
+
+        if (await page.locator('#username').isVisible().catch(() => false)) {
+            throw new Error(
+                `Front-end login failed for ${install.memberUsername} at ${install.url}.\n` +
+                'Set builder.<install>.member_username / member_password in build.properties, or let global ' +
+                'setup seed the account by declaring builder.<install>.path.'
+            );
+        }
+
+        await ctx.storageState({ path: storageStatePath });
+        console.log(`  Saved member session → ${path.basename(storageStatePath)}`);
+    } finally {
+        await ctx.close();
+    }
+}
+
+/**
+ * Ensure the member is subscribed to a reading plan.
+ *
+ * Not cosmetic setup — it is what makes most of the site reachable at all.
+ * cwmhome short-circuits to the onboarding picker for anyone without a plan,
+ * and cwmplanview, cwmgroups and cwmsettings render that same picker, so an
+ * unsubscribed session sees the onboarding hero at every one of those URLs and
+ * a spec looking for their real content finds nothing.
+ *
+ * Subscribing through the onboarding form rather than the database keeps the
+ * fixture honest: it is the same POST a first-time visitor makes, so if
+ * cwmsubscribe.start ever breaks, every member spec fails at setup and says so.
+ *
+ * @param   {object}  browser  Playwright browser
+ * @param   {object}  install  Install descriptor from installById()
+ * @param   {string}  statePath  Saved member session
+ *
+ * @returns {Promise<void>}
+ */
+async function ensureMemberSubscription(browser, install, statePath) {
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, storageState: statePath });
+
+    try {
+        const page = await ctx.newPage();
+
+        await page.goto(`${install.url}/index.php?option=com_livingword&view=cwmhome`, {
+            waitUntil: 'domcontentloaded',
+        });
+
+        const subscribe = page.locator('form[action*="cwmsubscribe"] button[type="submit"]').first();
+
+        if (!(await subscribe.count())) {
+            return;
+        }
+
+        console.log('  Member has no plan — subscribing through the onboarding form.');
+        await subscribe.click();
+        await page.waitForLoadState('domcontentloaded');
+
+        const stillOnboarding = await page.locator('.com-livingword-onboarding').count();
+
+        if (stillOnboarding) {
+            console.log('  Warning: the member is still unsubscribed after posting cwmsubscribe.start.');
+
+            return;
+        }
+
+        // The subscription lives in #__livingword_users, not the session, but
+        // re-saving keeps this state file the single thing a spec needs.
+        await ctx.storageState({ path: statePath });
+    } finally {
+        await ctx.close();
+    }
+}
+
+/**
+ * Authenticate the front-end member for any selected project that wants one.
+ *
+ * Mirrors the admin pass above: a project needs a member session exactly when
+ * it declares that session's storageState, so running only `--project=site-j6`
+ * never logs anybody in.
+ *
+ * @param   {object}    config    Resolved Playwright config
+ * @param   {object}    props     build.properties
+ * @param   {string}    authDir   Directory holding saved sessions
+ * @param   {string[]}  selected  Project names from argv, empty for all
+ *
+ * @returns {Promise<void>}
+ */
+async function authenticateMembers(config, props, authDir, selected) {
+    const stateFile = 'member-j6.json';
+    const projects  = (config.projects || [])
+        .filter((p) => !selected.length || selected.includes(p.name));
+
+    const wanted = projects.some(
+        (p) => p.use && typeof p.use.storageState === 'string' && p.use.storageState.endsWith(stateFile)
+    );
+
+    if (!wanted) {
+        return;
+    }
+
+    const install   = installById(props, 'j6dev');
+    const statePath = path.join(authDir, stateFile);
+
+    ensureMemberAccount(install);
+
+    const browser = await chromium.launch({ channel: 'chromium' });
+
+    try {
+        if (await memberStateStillValid(browser, install.url, statePath)) {
+            console.log(`Reusing valid member session for ${install.id} (${stateFile}).`);
+        } else {
+            console.log(`\nAuthenticating member ${install.memberUsername} against ${install.url}…`);
+            await loginMember(browser, install, statePath);
+        }
+
+        await ensureMemberSubscription(browser, install, statePath);
+    } finally {
+        await browser.close();
+    }
+}
+
 module.exports = async function globalSetup(config) {
     const root = path.join(__dirname, '../..');
     const props = loadProps(root);
@@ -231,8 +457,12 @@ module.exports = async function globalSetup(config) {
         (p) => p.use && typeof p.use.storageState === 'string' && p.use.storageState.endsWith(site.stateFile)
     ));
 
+    // Before the early return below: a run of member specs alone needs no
+    // admin session at all, and must still get its member one.
+    await authenticateMembers(config, props, authDir, selected);
+
     if (!needed.length) {
-        console.log('\nGlobal setup: no selected project needs an admin session; nothing to authenticate.\n');
+        console.log('\nGlobal setup: no selected project needs an admin session.\n');
         return;
     }
 

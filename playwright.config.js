@@ -84,6 +84,24 @@ module.exports = defineConfig({
                 baseURL: j6Url,
             },
         },
+        // Front-end specs that need a subscriber. Separate from site-j6 rather
+        // than logging that project in, because the guest state is itself worth
+        // scanning: cwmhome short-circuits to the onboarding picker for anyone
+        // without a plan, so a logged-in site-j6 would stop covering the view
+        // most first-time visitors actually see.
+        //
+        // The account is a plain Registered user seeded by global setup, never
+        // the admin — running these as a Super User would hide every permission
+        // the site applies.
+        {
+            name: 'member-j6',
+            testMatch: '**/member/**/*.spec.js',
+            use: {
+                ...devices['Desktop Chrome'],
+                baseURL: j6Url,
+                storageState: 'tests/e2e/.auth/member-j6.json',
+            },
+        },
         // API acceptance runs against the role=test install and nowhere else.
         // Its whole point is asserting what a package install produces — a
         // symlinked dev site cannot represent that, and a dev site is exactly
