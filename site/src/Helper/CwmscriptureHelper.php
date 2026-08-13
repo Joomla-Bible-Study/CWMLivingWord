@@ -404,6 +404,16 @@ class CwmscriptureHelper
      * Handles formats like "Genesis 1", "Genesis 1-3", "John 3:16-18",
      * "1 Samuel 2:1-10".
      *
+     * Book resolution is the library's job, via the public
+     * `AbstractBibleProvider::resolveBookCode()`. This used to walk
+     * `AbstractBibleProvider::BOOK_NAMES` by reflection, which read a
+     * `protected` constant the library never promised to keep — lib 1.1.13
+     * moves it into `Book\BookCodes`, at which point `getConstant()` returns
+     * false, the name table is empty, and every lookup silently returns null
+     * (#118). `resolveBookCode()` also resolves translated names and
+     * abbreviations, and returns '' rather than guessing when an abbreviation
+     * prefixes more than one book — "Jo" no longer answers Joshua for John.
+     *
      * @param   string  $reference  Human-readable passage reference
      *
      * @return  ?array{book: string, chapter: int}  Parsed result or null
@@ -422,31 +432,13 @@ class CwmscriptureHelper
         $bookName = trim($m[1]);
         $chapter  = (int) $m[2];
 
-        // Use BibleBrainProvider's USFM code mapping
-        $usfmCodes = \CWM\Library\Scripture\Bible\Provider\BibleBrainProvider::getUsfmCodes();
-        $bookNames = \CWM\Library\Scripture\Bible\AbstractBibleProvider::BOOK_NAMES ?? [];
+        $usfmCode = \CWM\Library\Scripture\Bible\AbstractBibleProvider::resolveBookCode($bookName);
 
-        // Try reflection to access BOOK_NAMES constant
-        try {
-            $reflection = new \ReflectionClass(\CWM\Library\Scripture\Bible\AbstractBibleProvider::class);
-            $bookNames  = $reflection->getConstant('BOOK_NAMES') ?: [];
-        } catch (\ReflectionException) {
+        if ($usfmCode === '') {
             return null;
         }
 
-        $normalized = strtolower($bookName);
-
-        foreach ($bookNames as $num => $name) {
-            if (strtolower($name) === $normalized || str_starts_with(strtolower($name), $normalized)) {
-                $usfmCode = $usfmCodes[$num] ?? '';
-
-                if (!empty($usfmCode)) {
-                    return ['book' => $usfmCode, 'chapter' => $chapter];
-                }
-            }
-        }
-
-        return null;
+        return ['book' => $usfmCode, 'chapter' => $chapter];
     }
 
     /**
