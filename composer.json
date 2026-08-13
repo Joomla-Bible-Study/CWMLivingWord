@@ -45,7 +45,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "CWM\\Component\\Livingword\\Tests\\": "tests/unit/"
+      "CWM\\Component\\Livingword\\Tests\\": "tests/unit/",
+      "CWM\\Plugin\\Task\\Livingword\\": "plg_task_livingword/src/"
     }
   },
   "repositories": [

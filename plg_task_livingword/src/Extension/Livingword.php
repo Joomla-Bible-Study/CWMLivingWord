@@ -19,6 +19,7 @@ use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
+use CWM\Plugin\Task\Livingword\Support\LocalHour;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Component\Scheduler\Administrator\Event\ExecuteTaskEvent;
@@ -90,16 +91,47 @@ class Livingword extends CMSPlugin implements SubscriberInterface
 
         $db = $this->getDatabase();
 
-        // Get users subscribed to email whose preferred hour matches now
-        $serverHour = (int) date('G');
+        // Subscribers whose preferred hour has arrived *where they are*.
+        //
+        // This used to compare email_hour against date('G'), which Joomla pins
+        // to UTC — so a reader in America/Chicago who asked for 6am was mailed
+        // at 1am, and the timezone stored on the very same row was read by
+        // nothing anywhere in the component. Matching per timezone is what
+        // makes that column mean something.
+        //
+        // Grouped by distinct timezone rather than filtered in PHP: a site has
+        // a handful of timezones and can have any number of subscribers, so
+        // this stays one query that returns only the rows that are due.
+        $now      = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $fallback = (string) $this->getApplication()->get('offset', 'UTC');
+
+        $zones = $db->setQuery(
+            $db->getQuery(true)
+                ->select('DISTINCT ' . $db->quoteName('timezone'))
+                ->from($db->quoteName('#__livingword_users'))
+                ->where($db->quoteName('email') . ' = 1')
+        )->loadColumn();
+
+        if (empty($zones)) {
+            return Status::OK;
+        }
 
         $query = $db->getQuery(true)
             ->select('a.*, u.name, u.email AS user_email')
             ->from($db->quoteName('#__livingword_users', 'a'))
             ->join('INNER', $db->quoteName('#__users', 'u') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('a.user_id'))
             ->where($db->quoteName('a.email') . ' = 1')
-            ->where($db->quoteName('u.block') . ' = 0')
-            ->where($db->quoteName('a.email_hour') . ' = ' . $serverHour);
+            ->where($db->quoteName('u.block') . ' = 0');
+
+        $due = [];
+
+        foreach ($zones as $zone) {
+            $due[] = '(' . $db->quoteName('a.timezone') . ' = ' . $db->quote((string) $zone)
+                . ' AND ' . $db->quoteName('a.email_hour') . ' = '
+                . LocalHour::inZone((string) $zone, $fallback, $now) . ')';
+        }
+
+        $query->where('(' . implode(' OR ', $due) . ')');
 
         $db->setQuery($query);
         $subscribers = $db->loadObjectList();

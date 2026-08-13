@@ -109,15 +109,21 @@ test.describe('Daily reading email @admin', () => {
             await page.goto(SETTINGS);
             test.skip(!(await page.locator('#email_hour').count()), 'preferences are not reachable for this member');
 
-            // UTC, not local. Joomla forces PHP's timezone to UTC, so the
-            // routine's date('G') is the UTC hour — and matching against the
-            // machine's local hour silently selects nobody. That is also worth
-            // knowing as a product question: the routine compares a reader's
-            // preferred hour against server time and ignores the timezone
-            // column stored next to it.
+            // The reader's timezone is pinned to UTC and the hour set in UTC,
+            // so this is deterministic wherever the runner and the site happen
+            // to be. The routine now reads each subscriber's own timezone —
+            // before that it compared against date('G'), which Joomla pins to
+            // UTC, so anyone who had chosen a zone was mailed at the wrong
+            // hour and the column was read by nothing.
             const hour = String(new Date().getUTCHours());
+            const zones = await page.locator('#timezone option').evaluateAll((o) => o.map((x) => x.value));
 
             await page.locator('#email').setChecked(true);
+
+            if (zones.includes('UTC')) {
+                await page.locator('#timezone').selectOption('UTC');
+            }
+
             await page.locator('#email_hour').selectOption(hour);
             await page.locator('#settingsForm button[type="submit"]:not([name="action"])').click();
             await page.waitForLoadState('domcontentloaded');
