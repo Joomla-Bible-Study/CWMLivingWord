@@ -28,7 +28,7 @@ namespace CWM\Plugin\Task\Livingword\Support;
  * class with no dependencies can be exercised in a unit test at any hour of any
  * day, including the ones where daylight saving changes the answer.
  *
- * @since  __DEPLOY_VERSION__
+ * @since  5.7.0-beta4
  */
 final class LocalHour
 {
@@ -46,7 +46,7 @@ final class LocalHour
      *
      * @return  int  Hour of the day, 0-23
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.0-beta4
      */
     public static function inZone(string $timezone, string $fallback, \DateTimeImmutable $now): int
     {

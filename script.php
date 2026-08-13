@@ -259,7 +259,7 @@ class Com_livingwordInstallerScript
      *
      * @return  void
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.0-beta4
      */
     private function ensureUserPreferenceColumns(): void
     {
