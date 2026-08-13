@@ -110,7 +110,7 @@ The build, dev, and release pipeline is driven entirely by [`cwm-build-tools`](h
 
 - PHP 8.3+
 - Composer
-- Node.js 20+ and npm 10+ (for frontend asset pipeline)
+- Node.js 24+ and npm 10.1+ (for frontend asset pipeline; see `engines` in `package.json`)
 - A local Joomla 5 (or 6) installation for symlinked development
 
 ### Quick Start
