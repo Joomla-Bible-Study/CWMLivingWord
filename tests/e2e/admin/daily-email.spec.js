@@ -22,65 +22,13 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const { catcherAvailable, clearInbox, waitForMail, messageBody } = require('../helpers/mailpit');
+const { ensureTask, runTask } = require('../helpers/scheduler');
 
-const MAILPIT = process.env.MAILPIT_URL || 'http://127.0.0.1:8025';
+const ROUTINE = 'livingword.email_notifications';
+const TITLE   = 'E2E Daily Reading Emails';
 
-const TASKS = 'administrator/index.php?option=com_scheduler&view=tasks'
-    + '&filter%5Bsearch%5D=&filter%5Bstate%5D=';
 const SETTINGS = 'index.php?option=com_livingword&view=cwmsettings';
-
-/**
- * Whether a mail catcher is listening, and its inbox is readable.
- *
- * @param   {object}  request  Playwright APIRequestContext
- *
- * @returns {Promise<boolean>}
- */
-async function catcherAvailable(request) {
-    try {
-        const res = await request.get(`${MAILPIT}/api/v1/info`, { timeout: 3000 });
-
-        return res.ok();
-    } catch {
-        return false;
-    }
-}
-
-/**
- * Empty the catcher, so what arrives next can only be what this test caused.
- *
- * @param   {object}  request  Playwright APIRequestContext
- *
- * @returns {Promise<void>}
- */
-async function clearInbox(request) {
-    await request.delete(`${MAILPIT}/api/v1/messages`);
-}
-
-/**
- * Wait for a captured message, since delivery is asynchronous to the click.
- *
- * @param   {object}  request  Playwright APIRequestContext
- * @param   {number}  timeout  Milliseconds to keep asking
- *
- * @returns {Promise<Array>}   Message summaries, newest first
- */
-async function waitForMail(request, timeout = 20000) {
-    const deadline = Date.now() + timeout;
-
-    for (;;) {
-        const res = await request.get(`${MAILPIT}/api/v1/messages?limit=20`);
-        const body = res.ok() ? await res.json() : { messages: [] };
-
-        if ((body.messages || []).length || Date.now() > deadline) {
-            return body.messages || [];
-        }
-
-        await new Promise((resolve) => {
-            setTimeout(resolve, 500);
-        });
-    }
-}
 
 test.describe('Daily reading email @admin', () => {
     test.describe.configure({ mode: 'serial' });
@@ -88,7 +36,7 @@ test.describe('Daily reading email @admin', () => {
     test.beforeEach(async ({ request }) => {
         test.skip(
             !(await catcherAvailable(request)),
-            `no mail catcher on ${MAILPIT} — refusing to run a routine that would email real subscribers`
+            'no mail catcher listening — refusing to run a routine that would email real subscribers'
         );
     });
 
@@ -138,18 +86,12 @@ test.describe('Daily reading email @admin', () => {
     });
 
     test('running the task delivers a reading email', async ({ page, request }) => {
-        await page.goto(TASKS);
-
-        const row = page.locator('#adminForm tbody tr').filter({ hasText: 'Reading Emails' }).first();
-
-        test.skip(
-            !(await row.count()),
-            'no scheduled task uses the daily-reading routine on this site'
-        );
+        // Created rather than assumed: the plugin does nothing until a task is
+        // scheduled, so on a fresh site there is none to find.
+        expect(await ensureTask(page, ROUTINE, TITLE), 'a task for the routine exists').toBeTruthy();
 
         await clearInbox(request);
-
-        await row.locator('button:has-text("Run Task")').click();
+        await runTask(page, TITLE);
 
         const messages = await waitForMail(request);
 
@@ -165,9 +107,7 @@ test.describe('Daily reading email @admin', () => {
 
         test.skip(!messages.length, 'no message captured by the previous test');
 
-        const res = await request.get(`${MAILPIT}/api/v1/message/${messages[0].ID}`);
-        const body = await res.json();
-        const html = `${body.HTML || ''}${body.Text || ''}`;
+        const html = await messageBody(request, messages[0].ID);
 
         // The two links every reading email carries. They are the only place
         // these tokens are ever exposed, which is why the landing pages could
