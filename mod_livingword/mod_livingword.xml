@@ -9,7 +9,7 @@
     <version>5.7.0-beta4</version>
     <license>GNU General Public License version 2 or later; see LICENSE.txt</license>
     <description>MOD_LIVINGWORD_XML_DESCRIPTION</description>
-    <namespace path="src">CWM\Module\Livingword\Site</namespace>
+    <namespace path="src">CWM\Module\Livingword</namespace>
 
     <compatibility>
         <cms>
