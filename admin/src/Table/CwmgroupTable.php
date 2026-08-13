@@ -180,6 +180,19 @@ class CwmgroupTable extends Table implements TaggableTableInterface
             }
         }
 
+        // Empty dates are NULL, not ''. start_date is optional on the form and
+        // nullable in the schema, but MySQL will not take '' for a DATE — so
+        // saving a group without one failed with the driver's own words,
+        // "Incorrect date value: '' for column 'start_date' at row 1", shown
+        // to the administrator as the whole explanation. The integer fields
+        // above were already normalised for exactly this reason; the date was
+        // missed.
+        foreach (['start_date'] as $field) {
+            if (isset($src[$field]) && trim((string) $src[$field]) === '') {
+                $src[$field] = null;
+            }
+        }
+
         return parent::bind($src, $ignore);
     }
 }

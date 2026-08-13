@@ -23,7 +23,7 @@ $this->getDocument()->getWebAssetManager()->useScript('form.validate');
     <div class="main-card">
         <div class="row">
             <div class="col-lg-9">
-                <?php echo $this->form->renderField('plan'); ?>
+                <?php echo $this->form->renderField('plan_id'); ?>
                 <?php echo $this->form->renderField('reading'); ?>
                 <?php echo $this->form->renderField('descrip'); ?>
                 <?php echo $this->form->renderField('audio'); ?>
