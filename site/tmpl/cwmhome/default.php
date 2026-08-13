@@ -149,6 +149,15 @@ if ($isLoggedIn && $reading) {
     $wa->registerAndUseScript('com_livingword.progress', 'media/com_livingword/js/livingword-progress.js', [], ['defer' => true]);
     $wa->registerAndUseScript('com_livingword.notes', 'media/com_livingword/js/livingword-notes.js', [], ['defer' => true]);
     $doc->addScriptOptions('csrf.token', Session::getFormToken());
+
+    // Every string the journal script asks Joomla.Text for. Without this the
+    // reader is shown the key: Text::_() answers with the key it was not given,
+    // and because a key is a non-empty string the script's `|| 'Saved'`
+    // fallback never fires — so saving a note reported
+    // "COM_LIVINGWORD_NOTES_SAVED" in green.
+    Text::script('COM_LIVINGWORD_NOTES_SAVING');
+    Text::script('COM_LIVINGWORD_NOTES_SAVED');
+    Text::script('COM_LIVINGWORD_NOTES_ERROR');
 }
 
 $notesUrl = Route::_('index.php?option=com_livingword&task=cwmnotes.save&format=json', false);
@@ -161,6 +170,14 @@ if ($showAudio && $reading) {
     $audioUrl = Route::_('index.php?option=com_livingword&task=cwmaudio.getAudio&format=json');
     $wa->registerAndUseScript('com_livingword.audio', 'media/com_livingword/js/livingword-audio.js', [], ['defer' => true]);
     $wa->registerAndUseStyle('com_livingword.audio', 'media/com_livingword/css/livingword-audio.css');
+
+    // Same for the player: its status line and its play/pause aria-labels are
+    // all Joomla.Text lookups.
+    Text::script('COM_LIVINGWORD_AUDIO_LOADING');
+    Text::script('COM_LIVINGWORD_AUDIO_ERROR');
+    Text::script('COM_LIVINGWORD_AUDIO_UNAVAILABLE');
+    Text::script('COM_LIVINGWORD_AUDIO_PLAY');
+    Text::script('COM_LIVINGWORD_AUDIO_PAUSE');
     $doc->addScriptOptions('csrf.token', Session::getFormToken());
 }
 ?>
