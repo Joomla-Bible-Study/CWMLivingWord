@@ -56,6 +56,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Only when nothing published this tag already.
+      #
+      # `composer release` (cwm-release) builds, creates the GitHub release,
+      # uploads the zip and publishes to ARS — all before the tag it pushes
+      # reaches this workflow. So this step lost the race on every release
+      # since v5.6.0-beta1 and failed the run with "a release with the same tag
+      # name already exists", six red runs deep by 5.7.0-beta3.
+      #
+      # The build above is still worth running: it proves the package builds on
+      # a clean machine rather than only on the maintainer's, and the step
+      # before it proves the tag matches the manifest. What is no longer this
+      # workflow's job is publishing, unless a tag arrives without the release
+      # pipeline having run — a hand-pushed tag, which is the case this branch
+      # still covers.
+      #
+      # It never overwrites: an existing release's asset is the one that was
+      # tested and published to ARS, and a runner rebuild is not byte-identical
+      # to it.
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,6 +82,12 @@ jobs:
           TAG="${{ steps.version.outputs.tag }}"
           SCRIPTURE="${{ steps.scripture.outputs.version }}"
           PKG="build/dist/pkg_livingword-$VERSION.zip"
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "::notice::$TAG is already published — leaving it untouched."
+            echo "$TAG already published; this run verified the build only." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
 
           gh release create "$TAG" "$PKG" \
             --repo "$GITHUB_REPOSITORY" \
