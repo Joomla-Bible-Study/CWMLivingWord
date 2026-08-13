@@ -42,6 +42,38 @@
 <changelogs>
 
     <!-- ============================================================ -->
+    <!-- 5.7.0-beta3                                              -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.7.0-beta3</version>
+        <date>2026-08-13</date>
+        <note>
+            <item>test(a11y): add WCAG 2.2 AA scanning for admin and site views by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/108</item>
+            <item>feat(compat): declare Joomla 7 in the manifests by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/107</item>
+            <item>fix(a11y): reach WCAG 2.2 AA across every view by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/110</item>
+            <item>fix(test): distinguish a not-applicable phase from a failed one by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/111</item>
+            <item>revert(compat): withdraw the Joomla 7 declaration by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/112</item>
+            <item>feat(api): Web Services API for catalog and user data by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/113</item>
+            <item>fix(api): enable the webservices plugin on install by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/114</item>
+            <item>test(api): acceptance suite, and the two bugs it found by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/115</item>
+            <item>ci(e2e): vet releases against a disposable Joomla, nightly by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/116</item>
+            <item>chore(deps-dev): bump the npm-minor-and-patch group across 1 directory with 3 updates by @dependabot[bot] in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/91</item>
+            <item>ci: bump actions/checkout from 4 to 7 by @dependabot[bot] in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/93</item>
+            <item>chore(deps-dev): bump brace-expansion from 5.0.6 to 5.0.7 by @dependabot[bot] in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/83</item>
+            <item>fix(scripture): resolve books through the library&#x27;s public API, register as a consumer by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/119</item>
+            <item>chore(deps): update npm dev dependencies, cwm/build-tools to v1.15.1 by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/120</item>
+            <item>style(js): bring the JS sources in line with the shared CWM ESLint base by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/121</item>
+            <item>chore(deps): raise declared dependency ranges to the installed versions by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/122</item>
+            <item>ci: gate on composer lint by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/123</item>
+            <item>ci: gate on npm run lint:js by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/124</item>
+            <item>fix(site): add the missing settings controller, and the E2E that found it by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/125</item>
+            <item>fix(scripture): survive a library fault, and cover reading progress end to end by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/126</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
     <!-- 5.7.0-beta2                                              -->
     <!-- ============================================================ -->
     <changelog>
