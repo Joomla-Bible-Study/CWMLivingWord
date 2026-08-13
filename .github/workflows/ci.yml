@@ -42,12 +42,15 @@ jobs:
     uses: Joomla-Bible-Study/cwm-build-tools/.github/workflows/joomla-package-ci.yml@v1
     with:
       php-version: '8.3'
-      # PHP CS Fixer is off, matching what this project ran before the
-      # migration: `composer lint` has never been part of CI here and the
-      # tree has formatting it would reject. Turn it on in its own change,
-      # after `composer lint:fix` — not as a side effect of adopting the
-      # shared pipeline. The syntax check (`lint:syntax`) still runs.
-      run-lint: false
+      # PHP CS Fixer was held off during the migration because the tree had
+      # formatting it would reject. That debt is paid — `composer lint` reports
+      # 0 of 97 files fixable — so it gates now, in its own change, which is
+      # how the migration comment said to turn it on.
+      #
+      # This covers PHP only. The shared workflow has no JS lint step, so
+      # `npm run lint:js` still runs nowhere in CI even though it is clean as
+      # of #121; gating it needs an input on joomla-package-ci.yml.
+      run-lint: true
       run-lint-syntax: true
       build-command: 'composer build'
       package-glob: 'build/dist/pkg_livingword-*.zip'
