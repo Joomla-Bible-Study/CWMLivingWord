@@ -146,6 +146,7 @@ class Com_livingwordInstallerScript
             $this->registerContentTypes();
 
             $this->ensureActionTokenIndex();
+            $this->ensureUserPreferenceColumns();
 
             // Tell lib_cwmscripture this component depends on it, so removing
             // the library is refused while Living Word is installed.
@@ -171,6 +172,7 @@ class Com_livingwordInstallerScript
             $this->registerContentTypes();
 
             $this->ensureActionTokenIndex();
+            $this->ensureUserPreferenceColumns();
 
             // Idempotent, and the repair path for a fresh package install where
             // the library child had not been stored yet at our postflight.
@@ -231,6 +233,78 @@ class Com_livingwordInstallerScript
         }
 
         ConsumerRegistry::unregister('com_livingword', 'component');
+    }
+
+    /**
+     * Ensure #__livingword_users carries the three preference columns.
+     *
+     * audio_version, email_hour and timezone are in install.mysql.utf8.sql and
+     * in no update file, so a site created before they were added never got
+     * them — and nothing said so. Joomla's DatabaseDriver::updateObject() reads
+     * the table's real columns and silently skips any property that is not one,
+     * so saving preferences answered "Your preferences have been saved" and
+     * dropped these three every time. Observed on two dev installs; a package
+     * install has them, which is why it never showed up in testing.
+     *
+     * email_hour is the one that bites hardest: the task plugin only mails
+     * subscribers whose hour matches the current server hour, so on an affected
+     * site the daily email goes out at whatever hour the row happens to hold
+     * and the reader cannot change it.
+     *
+     * In PHP rather than an update file for two reasons. Joomla runs update SQL
+     * only when it is newer than the recorded schema version, so a site already
+     * past this version would never see it — the same reason
+     * ensureActionTokenIndex() exists. And MySQL has no ADD COLUMN IF NOT
+     * EXISTS, so a plain ALTER would fail on every site that is already fine.
+     *
+     * @return  void
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    private function ensureUserPreferenceColumns(): void
+    {
+        $columns = [
+            'audio_version' => "varchar(20) NOT NULL DEFAULT '' COMMENT 'Preferred audio bible version'",
+            'email_hour'    => "tinyint NOT NULL DEFAULT 6 COMMENT 'Preferred email hour (0-23)'",
+            'timezone'      => "varchar(50) NOT NULL DEFAULT '' COMMENT 'User timezone (e.g. America/Chicago)'",
+        ];
+
+        try {
+            $db    = Factory::getContainer()->get(DatabaseInterface::class);
+            $table = $db->replacePrefix('#__livingword_users');
+
+            foreach ($columns as $column => $definition) {
+                $query = $db->getQuery(true)
+                    ->select('COUNT(*)')
+                    ->from($db->quoteName('information_schema.columns'))
+                    ->where($db->quoteName('table_schema') . ' = DATABASE()')
+                    ->where($db->quoteName('table_name') . ' = ' . $db->quote($table))
+                    ->where($db->quoteName('column_name') . ' = ' . $db->quote($column));
+
+                if ((int) $db->setQuery($query)->loadResult() > 0) {
+                    continue;
+                }
+
+                // The definition is a literal from the array above, never user
+                // input, and column definitions cannot be bound as parameters.
+                $db->setQuery(
+                    'ALTER TABLE ' . $db->quoteName($table)
+                    . ' ADD COLUMN ' . $db->quoteName($column) . ' ' . $definition
+                )->execute();
+
+                Factory::getApplication()->enqueueMessage(
+                    sprintf('CWM LivingWord: added the missing %s column to #__livingword_users.', $column),
+                    'message'
+                );
+            }
+        } catch (\Throwable $e) {
+            // Say so rather than fail the install: a missing column costs three
+            // preferences, and aborting the update would cost everything.
+            Factory::getApplication()->enqueueMessage(
+                'CWM LivingWord: could not repair the preference columns — ' . $e->getMessage(),
+                'warning'
+            );
+        }
     }
 
     /**
