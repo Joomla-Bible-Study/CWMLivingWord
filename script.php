@@ -12,6 +12,7 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Library\Scripture\Installer\ConsumerRegistry;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filter\OutputFilter;
 use Joomla\CMS\Installer\InstallerAdapter;
@@ -68,6 +69,8 @@ class Com_livingwordInstallerScript
      */
     public function uninstall(InstallerAdapter $adapter): bool
     {
+        $this->unregisterScriptureConsumer();
+
         return true;
     }
 
@@ -144,6 +147,10 @@ class Com_livingwordInstallerScript
 
             $this->ensureActionTokenIndex();
 
+            // Tell lib_cwmscripture this component depends on it, so removing
+            // the library is refused while Living Word is installed.
+            $this->registerScriptureConsumer();
+
             Factory::getApplication()->enqueueMessage(
                 sprintf('CWM LivingWord %s has been installed successfully.', $version),
                 'message'
@@ -165,6 +172,10 @@ class Com_livingwordInstallerScript
 
             $this->ensureActionTokenIndex();
 
+            // Idempotent, and the repair path for a fresh package install where
+            // the library child had not been stored yet at our postflight.
+            $this->registerScriptureConsumer();
+
             Factory::getApplication()->enqueueMessage(
                 sprintf('CWM LivingWord has been updated to version %s.', $version),
                 'message'
@@ -172,6 +183,54 @@ class Com_livingwordInstallerScript
         }
 
         return true;
+    }
+
+    /**
+     * Register com_livingword as a consumer of lib_cwmscripture.
+     *
+     * The library gates two destructive operations on "who still depends on
+     * me": its own uninstall, and dropping the shared `#__bsms_*` tables, which
+     * hold every locally downloaded translation. Joomla tracks no library
+     * dependencies, so the only extensions the library can see are the ones in
+     * its `FIRST_PARTY` list or in this registry. com_livingword is currently in
+     * that hardcoded list; registering means we no longer depend on staying
+     * there. Requires lib_cwmscripture 1.1.6 (#85).
+     *
+     * The library is a soft dependency — every call site guards on
+     * `class_exists()` / `isInstalled()` and falls back to BibleGateway — so a
+     * missing registry must never fail the install.
+     *
+     * @return  void
+     *
+     * @since   5.7.0
+     */
+    private function registerScriptureConsumer(): void
+    {
+        if (!class_exists(ConsumerRegistry::class)) {
+            return;
+        }
+
+        ConsumerRegistry::register('com_livingword', 'component', name: 'Living Word (com_livingword)');
+    }
+
+    /**
+     * Drop this component's row from the library's consumer registry.
+     *
+     * Leaving it behind would not pin the library forever — `installed()` prunes
+     * rows whose extension is gone from `#__extensions` — but unregistering is
+     * the cheap, explicit half of the contract.
+     *
+     * @return  void
+     *
+     * @since   5.7.0
+     */
+    private function unregisterScriptureConsumer(): void
+    {
+        if (!class_exists(ConsumerRegistry::class)) {
+            return;
+        }
+
+        ConsumerRegistry::unregister('com_livingword', 'component');
     }
 
     /**
