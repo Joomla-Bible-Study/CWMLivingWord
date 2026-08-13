@@ -74,6 +74,11 @@ function installIds(props) {
  * admin: these specs exercise what a subscriber can do, and running them as a
  * Super User would hide every permission the site actually applies.
  *
+ * `partner*` is a second such account. The accountability-partner digest only
+ * mails a *mutual* pairing where the partner shares their progress, so proving
+ * it needs two readers who chose each other — one account cannot pair with
+ * itself.
+ *
  * @param {object} props
  * @param {string} id
  * @returns {{id: string, role: string, url: string, path: string, username: string, password: string,
@@ -90,6 +95,9 @@ function installById(props, id) {
         memberUsername: props[`builder.${id}.member_username`] || 'lw-e2e-member',
         memberPassword: props[`builder.${id}.member_password`] || 'lw-e2e-member-pw-9134',
         memberEmail: props[`builder.${id}.member_email`] || 'lw-e2e-member@example.com',
+        partnerUsername: props[`builder.${id}.partner_username`] || 'lw-e2e-partner',
+        partnerPassword: props[`builder.${id}.partner_password`] || 'lw-e2e-partner-pw-9134',
+        partnerEmail: props[`builder.${id}.partner_email`] || 'lw-e2e-partner@example.com',
     };
 }
 
