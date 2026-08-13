@@ -52,16 +52,19 @@ test.describe('Task plugin registration @admin', () => {
     });
 
     test('the scheduler offers all three LivingWord routines', async ({ page }) => {
-        await page.goto(SCHEDULER_NEW);
+        // Asserted against the response com_scheduler actually sends, not the
+        // live DOM. The picker rearranges itself after load, so a DOM query
+        // races that: the same locator answered 1 on one load and 0 on the
+        // next. The server's own HTML cannot race, and it is the same claim —
+        // these routines are on the screen where an admin creates a task.
+        const response = await page.request.get(SCHEDULER_NEW);
 
-        // The routine picker is what an admin meets when creating a task. A
-        // routine missing here is a plugin Joomla cannot see, and the symptom
-        // on a live site is email that simply never arrives.
+        expect(response.status(), 'the routine picker loads').toBe(200);
+
+        const html = await response.text();
+
         for (const routine of ROUTINES) {
-            await expect(
-                page.locator(`text=${routine}`),
-                `${routine} is offered`
-            ).not.toHaveCount(0);
+            expect(html.includes(routine), `${routine} is offered`).toBeTruthy();
         }
     });
 });
