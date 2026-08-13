@@ -29,7 +29,7 @@ use Joomla\CMS\Session\Session;
  * or accountability partner from the site. `CwmsettingsModel::saveSettings()`
  * was written at the same time and has been complete and unreachable since.
  *
- * @since  __DEPLOY_VERSION__
+ * @since  5.7.0-beta2
  */
 class CwmsettingsController extends BaseController
 {
@@ -38,7 +38,7 @@ class CwmsettingsController extends BaseController
      *
      * @return  void
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.0-beta2
      */
     public function save(): void
     {

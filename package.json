@@ -1,6 +1,6 @@
 {
   "name": "com_livingword",
-  "version": "5.7.0-beta1",
+  "version": "5.7.0-beta2",
   "description": "CWM LivingWord - frontend asset build pipeline (rollup JS, CSS minification, ESLint) and Playwright e2e/a11y/API tests",
   "license": "GPL-2.0-or-later",
   "private": true,
