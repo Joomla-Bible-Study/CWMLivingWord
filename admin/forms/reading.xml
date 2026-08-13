@@ -7,8 +7,8 @@
             default="0"
         />
         <field
-            name="plan"
-            type="Plan"
+            name="plan_id"
+            type="PlanId"
             label="COM_LIVINGWORD_PLAN"
             description="COM_LIVINGWORD_READING_PLAN_DESC"
             required="true"
