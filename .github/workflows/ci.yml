@@ -46,11 +46,11 @@ jobs:
       # formatting it would reject. That debt is paid — `composer lint` reports
       # 0 of 97 files fixable — so it gates now, in its own change, which is
       # how the migration comment said to turn it on.
-      #
-      # This covers PHP only. The shared workflow has no JS lint step, so
-      # `npm run lint:js` still runs nowhere in CI even though it is clean as
-      # of #121; gating it needs an input on joomla-package-ci.yml.
       run-lint: true
       run-lint-syntax: true
+      # Added in cwm-build-tools v1.16.0, and reachable because the same release
+      # restored the moving v1 tag. Runs as its own parallel `JS Lint` check,
+      # so it costs the PHP job nothing.
+      run-lint-js: true
       build-command: 'composer build'
       package-glob: 'build/dist/pkg_livingword-*.zip'
