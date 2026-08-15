@@ -32,6 +32,7 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
      *
      * @since   5.0.0
      */
+    #[\Override]
     protected function getLayoutData(): array
     {
         $data = parent::getLayoutData();
@@ -42,5 +43,22 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
         $data['reading'] = $helper->getTodayReading($data['params']);
 
         return $data;
+    }
+
+    /**
+     * The layout renders the component's day-counter and empty-state strings, and the
+     * module's own .ini does not carry them. On a page that is not a com_livingword
+     * page nothing else loads them, so the reader sees the raw COM_LIVINGWORD_* keys.
+     *
+     * @return  void
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    #[\Override]
+    protected function loadLanguage(): void
+    {
+        parent::loadLanguage();
+
+        $this->app->getLanguage()->load('com_livingword', JPATH_SITE);
     }
 }
