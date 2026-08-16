@@ -52,7 +52,7 @@ class Dispatcher extends AbstractModuleDispatcher implements HelperFactoryAwareI
      *
      * @return  void
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.0
      */
     #[\Override]
     protected function loadLanguage(): void
