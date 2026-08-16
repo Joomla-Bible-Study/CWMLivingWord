@@ -147,6 +147,7 @@ class Com_livingwordInstallerScript
 
             $this->ensureActionTokenIndex();
             $this->ensureUserPreferenceColumns();
+            $this->ensureProgressPassageKey();
 
             // Tell lib_cwmscripture this component depends on it, so removing
             // the library is refused while Living Word is installed.
@@ -173,6 +174,7 @@ class Com_livingwordInstallerScript
 
             $this->ensureActionTokenIndex();
             $this->ensureUserPreferenceColumns();
+            $this->ensureProgressPassageKey();
 
             // Idempotent, and the repair path for a fresh package install where
             // the library child had not been stored yet at our postflight.
@@ -302,6 +304,166 @@ class Com_livingwordInstallerScript
             // preferences, and aborting the update would cost everything.
             Factory::getApplication()->enqueueMessage(
                 'CWM LivingWord: could not repair the preference columns — ' . $e->getMessage(),
+                'warning'
+            );
+        }
+    }
+
+    /**
+     * Ensure #__livingword_progress can hold one row per passage, not per day.
+     *
+     * Per-passage completion (#7) added `passage_index` and widened the unique
+     * key to cover it — in install.mysql.utf8.sql only. No update file was ever
+     * written, and CREATE TABLE IF NOT EXISTS does not alter an existing table,
+     * so every site that installed before #7 and upgraded still carries the
+     * original UNIQUE (user_id, plan_id, day). That key admits exactly one
+     * passage per day: the reader ticks passage 2, the request returns 200, and
+     * the row is rejected. Measured on a carried-forward dev install, 42 of the
+     * rows a full seed writes were refused; a fresh install refused none.
+     *
+     * Nothing complained because CwmprogressHelper::markPassageComplete()
+     * swallowed the violation as "already marked" — narrowed in this release so
+     * a genuinely lost write is no longer silent.
+     *
+     * In PHP rather than an update file for the reason ensureActionTokenIndex()
+     * gives: Joomla runs update SQL only when it is newer than the recorded
+     * schema version, and MySQL has no DROP/ADD INDEX IF EXISTS, so a plain
+     * ALTER would fail on every site that is already correct.
+     *
+     * Matched on shape, not on name — a hand-patched site may carry the narrow
+     * key under a different one — and ordered so the wide key is in place before
+     * the narrow key goes: if the ALTER fails, the table keeps the protection it
+     * had. Widening a unique key can never fail on existing data.
+     *
+     * @return  void
+     *
+     * @since   5.7.0
+     */
+    private function ensureProgressPassageKey(): void
+    {
+        $narrowColumns = ['user_id', 'plan_id', 'day'];
+        $wideColumns   = [...$narrowColumns, 'passage_index'];
+
+        try {
+            $db    = Factory::getContainer()->get(DatabaseInterface::class);
+            $table = $db->replacePrefix('#__livingword_progress');
+
+            $columnExists = $db->setQuery(
+                $db->getQuery(true)
+                    ->select('COUNT(*)')
+                    ->from($db->quoteName('information_schema.columns'))
+                    ->where($db->quoteName('table_schema') . ' = DATABASE()')
+                    ->where($db->quoteName('table_name') . ' = ' . $db->quote($table))
+                    ->where($db->quoteName('column_name') . ' = ' . $db->quote('passage_index'))
+            )->loadResult();
+
+            // An upgraded site can be missing the column as well as the key —
+            // insertObject() then fails on "unknown column" instead, which the
+            // same catch used to hide.
+            if ((int) $columnExists === 0) {
+                $db->setQuery(
+                    'ALTER TABLE ' . $db->quoteName($table)
+                    . ' ADD COLUMN ' . $db->quoteName('passage_index')
+                    . " smallint UNSIGNED NOT NULL DEFAULT 0"
+                    . " COMMENT '0-based passage index within the day reading'"
+                    . ' AFTER ' . $db->quoteName('day')
+                )->execute();
+            }
+
+            $rows = $db->setQuery(
+                $db->getQuery(true)
+                    ->select(
+                        $db->quoteName(
+                            ['index_name', 'non_unique', 'column_name'],
+                            ['name', 'nonUnique', 'column']
+                        )
+                    )
+                    ->from($db->quoteName('information_schema.statistics'))
+                    ->where($db->quoteName('table_schema') . ' = DATABASE()')
+                    ->where($db->quoteName('table_name') . ' = ' . $db->quote($table))
+                    ->order($db->quoteName('index_name') . ', ' . $db->quoteName('seq_in_index'))
+            )->loadObjectList();
+
+            $indexes = [];
+
+            foreach ($rows as $row) {
+                $indexes[$row->name]['unique']    = (int) $row->nonUnique === 0;
+                $indexes[$row->name]['columns'][] = $row->column;
+            }
+
+            $hasWide = false;
+
+            foreach ($indexes as $spec) {
+                if ($spec['unique'] && array_diff($wideColumns, $spec['columns']) === []) {
+                    $hasWide = true;
+                }
+            }
+
+            $repaired = false;
+
+            if (!$hasWide && !isset($indexes['idx_user_plan_day_passage'])) {
+                $db->setQuery(
+                    'ALTER TABLE ' . $db->quoteName($table)
+                    . ' ADD UNIQUE KEY ' . $db->quoteName('idx_user_plan_day_passage')
+                    . ' (' . implode(', ', $db->quoteName($wideColumns)) . ')'
+                )->execute();
+
+                $hasWide  = true;
+                $repaired = true;
+            }
+
+            // Only now, with the wide key in place, is it safe to give up the
+            // narrow one — any unique key over a subset of (user_id, plan_id,
+            // day), whatever it is called.
+            if ($hasWide) {
+                foreach ($indexes as $name => $spec) {
+                    if (
+                        $name === 'PRIMARY'
+                        || !$spec['unique']
+                        || array_diff($spec['columns'], $narrowColumns) !== []
+                    ) {
+                        continue;
+                    }
+
+                    $db->setQuery(
+                        'ALTER TABLE ' . $db->quoteName($table)
+                        . ' DROP INDEX ' . $db->quoteName($name)
+                    )->execute();
+
+                    unset($indexes[$name]);
+                    $repaired = true;
+                }
+            }
+
+            // The shipped schema keeps a plain (user_id, plan_id, day) index for
+            // the per-day lookups; dropping the narrow unique above takes it
+            // with it on an affected site.
+            if ($hasWide && !isset($indexes['idx_user_plan_day'])) {
+                $db->setQuery(
+                    'ALTER TABLE ' . $db->quoteName($table)
+                    . ' ADD KEY ' . $db->quoteName('idx_user_plan_day')
+                    . ' (' . implode(', ', $db->quoteName($narrowColumns)) . ')'
+                )->execute();
+            }
+
+            if ($repaired) {
+                // Worth saying out loud: it explains why days completed before
+                // the repair can still show as partially read. Those days hold
+                // the one row the old key allowed, and which passage it records
+                // is whichever the reader ticked first — so the missing rows
+                // cannot be backfilled without inventing progress.
+                Factory::getApplication()->enqueueMessage(
+                    'CWM LivingWord: repaired the reading-progress unique key, which had been limiting'
+                    . ' this site to one passage per day. Days completed before now may still show as'
+                    . ' partially read — re-ticking their passages records them properly.',
+                    'message'
+                );
+            }
+        } catch (\Throwable $e) {
+            // Say so rather than fail the update: the site keeps working, and
+            // the reader loses per-passage ticks, not the component.
+            Factory::getApplication()->enqueueMessage(
+                'CWM LivingWord: could not repair the reading-progress unique key — ' . $e->getMessage(),
                 'warning'
             );
         }

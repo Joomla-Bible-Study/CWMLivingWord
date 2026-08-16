@@ -76,14 +76,26 @@ class CwmprogressController extends BaseController
 
         if ($passageIndex >= 0) {
             // Passage-level toggle
-            $result = CwmprogressHelper::togglePassage(
-                $db,
-                $userId,
-                $planId,
-                $day,
-                $passageIndex,
-                max($passageCount, 1)
-            );
+            try {
+                $result = CwmprogressHelper::togglePassage(
+                    $db,
+                    $userId,
+                    $planId,
+                    $day,
+                    $passageIndex,
+                    max($passageCount, 1)
+                );
+            } catch (\RuntimeException $e) {
+                // A write the database refused. Answering with an error leaves
+                // the button in its old state, which is the truth; the previous
+                // behaviour was to report the tick as saved and drop it. The
+                // cause goes to the log rather than to the browser.
+                CwmprogressHelper::logFailure($e);
+
+                $app->sendHeaders();
+                echo new JsonResponse(null, 'Could not save your progress', true);
+                $app->close();
+            }
 
             $app->sendHeaders();
             echo new JsonResponse([
@@ -97,7 +109,15 @@ class CwmprogressController extends BaseController
         }
 
         // Day-level toggle (mark all passages at once)
-        $completed = CwmprogressHelper::toggleComplete($db, $userId, $planId, $day, max($passageCount, 1));
+        try {
+            $completed = CwmprogressHelper::toggleComplete($db, $userId, $planId, $day, max($passageCount, 1));
+        } catch (\RuntimeException $e) {
+            CwmprogressHelper::logFailure($e);
+
+            $app->sendHeaders();
+            echo new JsonResponse(null, 'Could not save your progress', true);
+            $app->close();
+        }
 
         $app->sendHeaders();
         echo new JsonResponse([

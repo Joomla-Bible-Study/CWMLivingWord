@@ -80,10 +80,22 @@ class CwmcompleteController extends BaseController
         $passageCount = CwmprogressHelper::countPassages($reading->reading);
 
         // Mark all passages as complete (idempotent)
-        for ($i = 0; $i < $passageCount; $i++) {
-            if (!CwmprogressHelper::isPassageCompleted($db, $userId, $planId, $currentDay, $i)) {
-                CwmprogressHelper::markPassageComplete($db, $userId, $planId, $currentDay, $i);
+        try {
+            for ($i = 0; $i < $passageCount; $i++) {
+                if (!CwmprogressHelper::isPassageCompleted($db, $userId, $planId, $currentDay, $i)) {
+                    CwmprogressHelper::markPassageComplete($db, $userId, $planId, $currentDay, $i);
+                }
             }
+        } catch (\RuntimeException $e) {
+            // The reading was not recorded, so the landing page must not say it
+            // was — this is the one-click link from the daily email, and its
+            // whole job is to be trustworthy about that.
+            CwmprogressHelper::logFailure($e);
+
+            $app->setUserState('com_livingword.complete.success', false);
+            $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmcomplete', false));
+
+            return;
         }
 
         // Update streak

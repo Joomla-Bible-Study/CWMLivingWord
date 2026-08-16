@@ -1,0 +1,17 @@
+-- 5.7.0: reading-progress unique key repair (#143).
+--
+-- No DDL here. Per-passage completion (#7) widened the unique key on
+-- #__livingword_progress from (user_id, plan_id, day) to include
+-- passage_index, in install.mysql.utf8.sql only — so a site that installed
+-- before #7 and upgraded still holds one passage per day and silently drops
+-- every later tick.
+--
+-- The repair runs in script.php::ensureProgressPassageKey() instead, for the
+-- reasons ensureActionTokenIndex() and ensureUserPreferenceColumns() already
+-- document: Joomla runs an update file only when it is newer than the recorded
+-- #__schemas version, so a site already past this version would never see it,
+-- and MySQL has no DROP/ADD INDEX IF EXISTS — a plain ALTER would fail on every
+-- site whose key is already correct, which is every fresh install since #7.
+--
+-- build/verify-migrations.php asserts the resulting key shape, including that
+-- the three-column index is no longer UNIQUE.
