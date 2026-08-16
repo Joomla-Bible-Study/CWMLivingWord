@@ -10,7 +10,7 @@
  * @package    LivingWord
  * @copyright  (C) 2026 CWM Team All rights reserved
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
- * @since      __DEPLOY_VERSION__
+ * @since      5.7.1
  */
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -33,14 +33,14 @@ use Joomla\Filesystem\Folder;
  * Joomla 5+ expects the script file to return an InstallerScriptInterface
  * instance directly (not define a named class).
  *
- * @since  __DEPLOY_VERSION__
+ * @since  5.7.1
  */
 return new class () implements InstallerScriptInterface {
     /**
      * The scripture extensions, as #__extensions identifies them.
      *
      * @var    array<int, array{type: string, element: string, folder: string}>
-     * @since  __DEPLOY_VERSION__
+     * @since  5.7.1
      */
     private const SCRIPTURE_EXTENSIONS = [
         ['type' => 'library', 'element' => 'cwmscripture',   'folder' => ''],
@@ -70,7 +70,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  bool  False only when the stack is required and could not be installed
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     private function installScriptureStack(InstallerAdapter $adapter): bool
     {
@@ -161,7 +161,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  void
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     private function releaseScriptureExtensions(): void
     {
@@ -209,7 +209,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  bool
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     private function scriptureLibraryPresent(): bool
     {
@@ -224,7 +224,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  int|null
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     private function extensionId(string $element, string $type): ?int
     {
@@ -250,7 +250,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  string|null
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     private function installedVersion(string $element, string $type): ?string
     {
@@ -285,7 +285,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  string|null
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     private function manifestVersionInZip(string $zip): ?string
     {
@@ -327,7 +327,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  bool  False aborts the install
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     public function preflight(string $type, InstallerAdapter $adapter): bool
     {
@@ -345,7 +345,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  bool
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     public function install(InstallerAdapter $adapter): bool
     {
@@ -359,7 +359,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  bool
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     public function update(InstallerAdapter $adapter): bool
     {
@@ -377,7 +377,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  bool
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     public function uninstall(InstallerAdapter $adapter): bool
     {
@@ -392,7 +392,7 @@ return new class () implements InstallerScriptInterface {
      *
      * @return  bool
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.7.1
      */
     public function postflight(string $type, InstallerAdapter $adapter): bool
     {
