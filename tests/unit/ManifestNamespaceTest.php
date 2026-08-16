@@ -91,8 +91,13 @@ class ManifestNamespaceTest extends TestCase
         $found = [];
 
         foreach ([...glob(self::ROOT . '/*.xml'), ...glob(self::ROOT . '/*/*.xml')] as $file) {
-            // A manifest that is a symlink is not a source of truth.
-            // admin/livingword.xml is one, pointing at the root manifest.
+            // A manifest that is a symlink is not a manifest of its own.
+            // admin/livingword.xml points at the root one: cwm-link symlinks
+            // administrator/components/com_livingword to this repo's admin/,
+            // and Joomla's Discover looks for the manifest inside that folder,
+            // where a package install would have put a copy. It is the same
+            // extension, so it belongs to the root manifest's entry, not to a
+            // fifth one the build config is missing.
             if (is_link($file) || !str_contains((string) file_get_contents($file), '<namespace')) {
                 continue;
             }
