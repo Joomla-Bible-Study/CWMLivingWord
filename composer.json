@@ -103,7 +103,7 @@
     "test": "phpunit",
     "test:unit": "phpunit --testsuite 'LivingWord Unit Tests'",
     "test:integration": "phpunit --testsuite 'LivingWord Integration Tests'",
-    "lint:syntax": "find admin site mod_livingword plg_task_livingword -name '*.php' -print0 | xargs -0 -n1 -P4 php -l",
+    "lint:syntax": "find admin site mod_livingword plg_task_livingword plg_webservices_livingword build/script.install.php -name '*.php' -print0 | xargs -0 -n1 -P4 php -l",
     "lint": "php-cs-fixer fix --dry-run --diff",
     "lint:fix": "php-cs-fixer fix",
     "lint:js": "npm run lint:js",
