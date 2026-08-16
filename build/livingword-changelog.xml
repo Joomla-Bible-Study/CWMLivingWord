@@ -42,6 +42,27 @@
 <changelogs>
 
     <!-- ============================================================ -->
+    <!-- 5.7.1                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.7.1</version>
+        <date>2026-08-16</date>
+        <fix>
+            <item>Removing LivingWord no longer uninstalls the scripture stack. LivingWord declared the CWM Scripture library and its two plugins as its own package contents. Joomla removes exactly what a package declares, so uninstalling LivingWord deleted the library, the scripture-links plugin and the scripture task plugin — even on a site where Proclaim was still using them, and even though Proclaim had installed them first. Every downloaded translation went with the library. Nothing warned about it, and the only way back was to reinstall and re-download.</item>
+        </fix>
+        <change>
+            <item>The release gate tests the upgrade it is gating. The pre-release upgrade check took its baseline from the version file, which during a release still reads as the version being released — so it reported &quot;nothing newer to test&quot; about the very build under test. On 5.7.0 that meant a release whose headline fix only runs on the update route was gated by a check that skipped itself; it was verified by hand instead. The baseline now comes from the releases that actually exist, so every release from here is tested upgrading from the artifact most sites are on.</item>
+        </change>
+        <note>
+            <item>Requires PHP 8.3 or later, and Joomla 5 or 6.</item>
+            <item>No database changes and no configuration to review. Reading plans, progress, notes and groups are untouched.</item>
+            <item>If you have already uninstalled LivingWord from a site and lost the scripture library, reinstalling the CWM Scripture package restores it. Downloaded translations have to be downloaded again.</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
     <!-- 5.7.0                                                    -->
     <!-- ============================================================ -->
     <changelog>
