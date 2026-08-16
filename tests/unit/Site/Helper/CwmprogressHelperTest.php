@@ -9,6 +9,8 @@
 namespace CWM\Component\Livingword\Tests\Site\Helper;
 
 use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
+use Joomla\Database\DatabaseInterface;
+use Joomla\Database\QueryInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -112,5 +114,63 @@ class CwmprogressHelperTest extends TestCase
             'three passages' => ['Genesis 1; Psalm 23; John 3:16', 3],
             'five passages'  => ['Gen 1; Gen 2; Gen 3; Gen 4; Gen 5', 5],
         ];
+    }
+
+    // ── markPassageComplete (#143) ──
+
+    public function testMarkPassageCompleteIsQuietWhenTheRowIsAlreadyThere(): void
+    {
+        // Re-marking a passage: the insert is refused, the row is present, and
+        // there is nothing to report.
+        $db = $this->mockDatabase(new \RuntimeException('Duplicate entry'), rowPresent: true);
+
+        CwmprogressHelper::markPassageComplete($db, 42, 7, 3, 1);
+    }
+
+    public function testMarkPassageCompleteThrowsWhenTheRowWasNotStored(): void
+    {
+        // The pre-#7 narrow unique key: passage 1 collides with passage 0 on
+        // (user_id, plan_id, day), so the same violation means a lost write.
+        $db = $this->mockDatabase(new \RuntimeException('Duplicate entry'), rowPresent: false);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Could not record passage 1 of day 3 for plan 7');
+
+        CwmprogressHelper::markPassageComplete($db, 42, 7, 3, 1);
+    }
+
+    public function testMarkPassageCompleteThrowsOnANonDuplicateFailure(): void
+    {
+        // A missing passage_index column raises "unknown column", not a
+        // constraint violation — swallowed just as silently before #143.
+        $db = $this->mockDatabase(new \RuntimeException('Unknown column'), rowPresent: false);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown column');
+
+        CwmprogressHelper::markPassageComplete($db, 42, 7, 3, 0);
+    }
+
+    /**
+     * A database whose insert fails and whose follow-up count says whether the
+     * row exists — the only two things markPassageComplete() consults.
+     */
+    private function mockDatabase(\RuntimeException $insertFailure, bool $rowPresent): DatabaseInterface
+    {
+        $query = $this->createStub(QueryInterface::class);
+        $query->method('select')->willReturnSelf();
+        $query->method('from')->willReturnSelf();
+        $query->method('where')->willReturnSelf();
+
+        $db = $this->createMock(DatabaseInterface::class);
+        $db->method('getQuery')->willReturn($query);
+        $db->method('quoteName')->willReturnArgument(0);
+        $db->method('setQuery')->willReturnSelf();
+        $db->method('loadResult')->willReturn($rowPresent ? '1' : '0');
+        $db->expects($this->once())
+            ->method('insertObject')
+            ->willThrowException($insertFailure);
+
+        return $db;
     }
 }

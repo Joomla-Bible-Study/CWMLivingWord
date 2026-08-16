@@ -97,6 +97,13 @@ class CwmprogressHelper
     /**
      * Mark a specific passage as complete.
      *
+     * Re-marking a passage is a no-op, so the unique-constraint violation that
+     * produces is swallowed. Only that one: the check is whether the row is
+     * there afterwards, not which error code came back. A site carrying the
+     * pre-#7 narrow unique key raises the same violation for a *different* row
+     * — passage 2 colliding with passage 1 on (user_id, plan_id, day) — and
+     * swallowing that lost the write while reporting success (#143).
+     *
      * @param   DatabaseInterface  $db            Database instance
      * @param   int                $userId        Joomla user ID
      * @param   int                $planId        Plan ID
@@ -104,6 +111,8 @@ class CwmprogressHelper
      * @param   int                $passageIndex  0-based passage index
      *
      * @return  void
+     *
+     * @throws  \RuntimeException  When the passage could not be recorded.
      *
      * @since   5.5.0
      */
@@ -123,8 +132,23 @@ class CwmprogressHelper
 
         try {
             $db->insertObject('#__livingword_progress', $record);
-        } catch (\RuntimeException) {
-            // Already exists (unique constraint) — ignore
+        } catch (\RuntimeException $e) {
+            if (self::isPassageCompleted($db, $userId, $planId, $day, $passageIndex)) {
+                // Already marked — the insert was redundant, not lost.
+                return;
+            }
+
+            throw new \RuntimeException(
+                \sprintf(
+                    'Could not record passage %d of day %d for plan %d: %s',
+                    $passageIndex,
+                    $day,
+                    $planId,
+                    $e->getMessage()
+                ),
+                (int) $e->getCode(),
+                $e
+            );
         }
     }
 

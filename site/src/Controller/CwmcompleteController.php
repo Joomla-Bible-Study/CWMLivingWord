@@ -17,6 +17,7 @@ use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
 
@@ -80,10 +81,23 @@ class CwmcompleteController extends BaseController
         $passageCount = CwmprogressHelper::countPassages($reading->reading);
 
         // Mark all passages as complete (idempotent)
-        for ($i = 0; $i < $passageCount; $i++) {
-            if (!CwmprogressHelper::isPassageCompleted($db, $userId, $planId, $currentDay, $i)) {
-                CwmprogressHelper::markPassageComplete($db, $userId, $planId, $currentDay, $i);
+        try {
+            for ($i = 0; $i < $passageCount; $i++) {
+                if (!CwmprogressHelper::isPassageCompleted($db, $userId, $planId, $currentDay, $i)) {
+                    CwmprogressHelper::markPassageComplete($db, $userId, $planId, $currentDay, $i);
+                }
             }
+        } catch (\RuntimeException $e) {
+            // The reading was not recorded, so the landing page must not say it
+            // was — this is the one-click link from the daily email, and its
+            // whole job is to be trustworthy about that.
+            Log::addLogger(['text_file' => 'com_livingword.php'], Log::ERROR, ['com_livingword']);
+            Log::add($e->getMessage(), Log::ERROR, 'com_livingword');
+
+            $app->setUserState('com_livingword.complete.success', false);
+            $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmcomplete', false));
+
+            return;
         }
 
         // Update streak

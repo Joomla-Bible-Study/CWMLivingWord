@@ -50,7 +50,12 @@ require $root . '/libraries/vendor/autoload.php';
  *
  * `tables`  — must exist.
  * `columns` — table => [column, ...] that must exist on it.
- * `indexes` — table => [index, ...] that must exist on it.
+ * `indexes` — table => [index, ...] that must exist on it, or
+ *             table => [index => ['unique' => bool, 'columns' => [...]], ...]
+ *             when the index's shape matters and not just its presence. #143 is
+ *             why the shape form exists: a site can carry the right index name
+ *             alongside a stricter one that still rejects the rows it is meant
+ *             to admit, and existence alone reports that site as healthy.
  *
  * Derived from admin/sql/updates/mysql/*.sql. A version with no DDL gets no
  * entry; the resolver falls back to the newest earlier one.
@@ -92,6 +97,35 @@ const EXPECTATIONS = [
         'indexes' => [
             'livingword_users' => ['idx_action_token'],
             'livingword_links' => ['idx_catid'],
+        ],
+    ],
+    // 5.6.0 and 5.7.0 ship their schema work in script.php postflight rather
+    // than update SQL (see those methods for why), so the entries exist to have
+    // the result asserted, not because an update file introduced it.
+    '5.7.0' => [
+        'tables'  => ['livingword_notes', 'livingword_tools'],
+        'columns' => [
+            'livingword_groups'   => ['join_mode'],
+            'livingword_users'    => ['action_token', 'audio_version', 'email_hour', 'timezone'],
+            'livingword_links'    => ['catid'],
+            'livingword_progress' => ['passage_index'],
+        ],
+        'indexes' => [
+            'livingword_users'    => ['idx_action_token'],
+            'livingword_links'    => ['idx_catid'],
+            // #143: the unique key must cover passage_index, and the
+            // three-column index must NOT be unique — either one alone still
+            // limits the site to a single passage per day.
+            'livingword_progress' => [
+                'idx_user_plan_day_passage' => [
+                    'unique'  => true,
+                    'columns' => ['user_id', 'plan_id', 'day', 'passage_index'],
+                ],
+                'idx_user_plan_day' => [
+                    'unique'  => false,
+                    'columns' => ['user_id', 'plan_id', 'day'],
+                ],
+            ],
         ],
     ],
 ];
@@ -200,12 +234,27 @@ foreach ($installs as $install) {
         continue;
     }
 
-    [$host, $user, $pass, $name, $prefix] = (static function (string $file): array {
-        require $file;
-        $c = new \JConfig();
+    // Read in a child process: every configuration.php declares a class named
+    // JConfig, so requiring a second one in this process is a fatal redeclare —
+    // which is what a run with two role=test installs used to hit.
+    $config = json_decode((string) shell_exec(sprintf(
+        '%s -r %s %s 2>/dev/null',
+        escapeshellarg(PHP_BINARY),
+        escapeshellarg(
+            'require $argv[1]; $c = new JConfig();'
+            . ' echo json_encode([$c->host, $c->user, $c->password, $c->db, $c->dbprefix]);'
+        ),
+        escapeshellarg($configFile)
+    )), true);
 
-        return [$c->host, $c->user, $c->password, $c->db, $c->dbprefix];
-    })($configFile);
+    if (!\is_array($config)) {
+        fwrite(STDERR, "  could not read {$configFile}.\n");
+        $failures++;
+
+        continue;
+    }
+
+    [$host, $user, $pass, $name, $prefix] = $config;
 
     $port = 3306;
 
@@ -267,13 +316,18 @@ foreach ($installs as $install) {
     }
 
     // 3. Indexes introduced alongside them. A missing index is silent in
-    //    normal use and only shows up as a slow query under load.
+    //    normal use and only shows up as a slow query under load — or, when the
+    //    index is a unique key, as writes the application quietly loses.
     foreach ($expected['indexes'] as $table => $indexes) {
         if (!$tableExists($table)) {
             continue;
         }
 
-        foreach ($indexes as $index) {
+        foreach ($indexes as $key => $value) {
+            // Both forms: a bare name, or name => shape.
+            $index = \is_int($key) ? $value : $key;
+            $shape = \is_int($key) ? [] : $value;
+
             $checks++;
             $res = $db->query(
                 "SHOW INDEX FROM `{$prefix}{$table}` WHERE Key_name = '" . $db->real_escape_string($index) . "'"
@@ -281,6 +335,41 @@ foreach ($installs as $install) {
 
             if (!($res instanceof mysqli_result) || $res->num_rows === 0) {
                 $fail("missing index {$table}.{$index}");
+
+                continue;
+            }
+
+            $parts = $res->fetch_all(MYSQLI_ASSOC);
+            usort($parts, static fn(array $a, array $b): int => $a['Seq_in_index'] <=> $b['Seq_in_index']);
+
+            if (isset($shape['unique'])) {
+                $checks++;
+                $isUnique = (int) $parts[0]['Non_unique'] === 0;
+
+                if ($isUnique !== $shape['unique']) {
+                    $fail(sprintf(
+                        'index %s.%s is %s, expected %s',
+                        $table,
+                        $index,
+                        $isUnique ? 'UNIQUE' : 'non-unique',
+                        $shape['unique'] ? 'UNIQUE' : 'non-unique'
+                    ));
+                }
+            }
+
+            if (isset($shape['columns'])) {
+                $checks++;
+                $columns = array_column($parts, 'Column_name');
+
+                if ($columns !== $shape['columns']) {
+                    $fail(sprintf(
+                        'index %s.%s covers (%s), expected (%s)',
+                        $table,
+                        $index,
+                        implode(', ', $columns),
+                        implode(', ', $shape['columns'])
+                    ));
+                }
             }
         }
     }
