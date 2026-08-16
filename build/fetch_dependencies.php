@@ -3,10 +3,10 @@
 /**
  * LivingWord — fetch external build dependencies.
  *
- * Downloads the latest stable pkg_cwmscripture release from GitHub and
- * extracts the inner lib + plugin zips used by the LivingWord package build.
+ * Downloads the latest stable pkg_cwmscripture release from GitHub. The build
+ * bundles the package whole, not its three inner zips — see script.install.php.
  *
- * Fails hard on any network, API, or extraction error — offline builds are
+ * Fails hard on any network, API, or verification error — offline builds are
  * not supported because shipping a stale scripture library would silently
  * hide breakage against the latest API.
  */
@@ -20,8 +20,8 @@ const SCRIPTURE_INNER_ZIPS   = [
 ];
 
 /**
- * Fetch the latest stable pkg_cwmscripture release and extract its inner zips
- * into the given vendor directory.
+ * Fetch the latest stable pkg_cwmscripture release into the given vendor
+ * directory, verifying it carries the extensions LivingWord depends on.
  *
  * @param   string  $vendorDir  Absolute path where inner zips should land.
  * @param   bool    $verbose    Whether to echo progress.
@@ -67,12 +67,9 @@ function fetchScriptureDependencies(string $vendorDir, bool $verbose = false): a
     $pkgZipPath = $vendorDir . '/' . $assetName;
     ghDownload($assetUrl, $pkgZipPath);
 
-    // Extract the package zip to a temp dir, then move inner zips into vendor/.
-    $tempDir = $vendorDir . '/.tmp-' . bin2hex(random_bytes(4));
-
-    if (!mkdir($tempDir, 0755, true)) {
-        throw new \RuntimeException("Cannot create temp dir: $tempDir");
-    }
+    // Kept whole: unpacking here is what made the scripture extensions package
+    // children of LivingWord, so removing LivingWord uninstalled Proclaim's stack.
+    $canonical = $vendorDir . '/' . SCRIPTURE_PACKAGE_NAME . '.zip';
 
     try {
         $zip = new ZipArchive();
@@ -81,43 +78,32 @@ function fetchScriptureDependencies(string $vendorDir, bool $verbose = false): a
             throw new \RuntimeException("Cannot open downloaded package: $pkgZipPath");
         }
 
-        if (!$zip->extractTo($tempDir)) {
-            $zip->close();
-            throw new \RuntimeException("Cannot extract $pkgZipPath to $tempDir");
+        // Verified, not extracted — catch a release missing an extension here
+        // rather than on a site.
+        foreach (SCRIPTURE_INNER_ZIPS as $innerZip) {
+            if ($zip->locateName($innerZip) === false) {
+                $zip->close();
+
+                throw new \RuntimeException("Expected inner zip $innerZip not found in $assetName");
+            }
         }
 
         $zip->close();
 
-        $results = [];
-
-        foreach (SCRIPTURE_INNER_ZIPS as $innerZip) {
-            $source = $tempDir . '/' . $innerZip;
-
-            if (!file_exists($source)) {
-                throw new \RuntimeException("Expected inner zip $innerZip not found in $assetName");
-            }
-
-            $dest = $vendorDir . '/' . $innerZip;
-
-            if (file_exists($dest)) {
-                unlink($dest);
-            }
-
-            if (!rename($source, $dest)) {
-                throw new \RuntimeException("Failed to move $innerZip to vendor directory");
-            }
-
-            $results[$innerZip] = $dest;
-
-            if ($verbose) {
-                echo "  + $innerZip\n";
-            }
+        if (file_exists($canonical) && !unlink($canonical)) {
+            throw new \RuntimeException("Cannot replace $canonical");
         }
 
-        return ['version' => $version, 'zips' => $results];
-    } finally {
-        rrmdir($tempDir);
+        if (!rename($pkgZipPath, $canonical)) {
+            throw new \RuntimeException("Failed to move $assetName to vendor directory");
+        }
 
+        if ($verbose) {
+            echo '  + ' . SCRIPTURE_PACKAGE_NAME . '.zip (' . count(SCRIPTURE_INNER_ZIPS) . " extensions inside)\n";
+        }
+
+        return ['version' => $version, 'zips' => [SCRIPTURE_PACKAGE_NAME . '.zip' => $canonical]];
+    } finally {
         if (file_exists($pkgZipPath)) {
             unlink($pkgZipPath);
         }
@@ -253,34 +239,9 @@ function ghDownload(string $url, string $destination): void
     }
 }
 
-/**
- * Recursively remove a directory.
- */
-function rrmdir(string $dir): void
-{
-    if (!is_dir($dir)) {
-        return;
-    }
-
-    $items = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::CHILD_FIRST
-    );
-
-    foreach ($items as $item) {
-        if ($item->isDir()) {
-            rmdir($item->getPathname());
-        } else {
-            unlink($item->getPathname());
-        }
-    }
-
-    rmdir($dir);
-}
-
 // CLI entry — fires only when invoked directly (php build/fetch_dependencies.php),
-// not when included via require_once. Writes the 3 scripture zips into build/vendor/
-// for cwm-package's `prebuilt` includes to pick up.
+// not when included via require_once. Writes build/vendor/pkg_cwmscripture.zip for
+// cwm-package's `prebuilt` include to pick up.
 if (PHP_SAPI === 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     $vendorDir = __DIR__ . '/vendor';
     $verbose   = in_array('--verbose', $argv ?? [], true) || in_array('-v', $argv ?? [], true);

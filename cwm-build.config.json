@@ -88,7 +88,7 @@
             "md"
         ],
         "preBuild": {
-            "_comment": "Runs once before cwm-package assembles the bundle: (1) wipes build/dist and build/vendor so stale zips from prior builds can't be picked up by outputGlob (regression seen during v5.0.1 release where the stale 5.0.0 zip got published alongside 5.0.1), (2) installs npm deps if missing, (3) bundles JS via rollup and minifies CSS via csso into media/com_livingword/{js,css}/, (4) fetches the latest pkg_cwmscripture release from GitHub and extracts its 3 inner zips into build/vendor/ for the prebuilt includes below.",
+            "_comment": "Runs once before cwm-package assembles the bundle: (1) wipes build/dist and build/vendor so stale zips from prior builds can't be picked up by outputGlob (regression seen during v5.0.1 release where the stale 5.0.0 zip got published alongside 5.0.1), (2) installs npm deps if missing, (3) bundles JS via rollup and minifies CSS via csso into media/com_livingword/{js,css}/, (4) fetches the latest pkg_cwmscripture release from GitHub into build/vendor/ for the prebuilt include below.",
             "mode": "run",
             "command": "rm -rf build/dist build/vendor && npm install --no-audit --no-fund && npm run build && php build/fetch_dependencies.php"
         },
@@ -98,8 +98,9 @@
         }
     },
     "package": {
-        "_comment": "Assembles pkg_livingword-{version}.zip with 6 inner zips: com_livingword (self), mod_livingword + plg_task_livingword (inline \u2014 built from this repo), and 3 scripture zips (prebuilt \u2014 fetched from GitHub by the preBuild hook).",
+        "_comment": "Assembles pkg_livingword-{version}.zip with 6 inner zips: com_livingword (self), mod_livingword + plg_task_livingword (inline \u2014 built from this repo), and pkg_cwmscripture (prebuilt \u2014 the whole scripture package, fetched from GitHub by the preBuild hook, installed by script.install.php rather than declared as a package child).",
         "manifest": "build/pkg_livingword.xml",
+        "installer": "build/script.install.php",
         "outputDir": "build/dist",
         "outputName": "pkg_livingword-{version}.zip",
         "innerLayout": "packages-prefix",
@@ -175,31 +176,21 @@
                 }
             },
             {
+                "_comment": "The whole scripture PACKAGE, not its three children. pkg_livingword.xml deliberately does not declare it, so removing LivingWord cannot uninstall a stack shared with Proclaim; build/script.install.php installs it in preflight instead.",
                 "type": "prebuilt",
-                "outputName": "lib_cwmscripture.zip",
-                "distGlob": "build/vendor/lib_cwmscripture.zip"
-            },
-            {
-                "type": "prebuilt",
-                "outputName": "plg_content_scripturelinks.zip",
-                "distGlob": "build/vendor/plg_content_scripturelinks.zip"
-            },
-            {
-                "type": "prebuilt",
-                "outputName": "plg_task_cwmscripture.zip",
-                "distGlob": "build/vendor/plg_task_cwmscripture.zip"
+                "outputName": "pkg_cwmscripture.zip",
+                "distGlob": "build/vendor/pkg_cwmscripture.zip"
             }
         ],
         "verify": {
             "expectedEntries": [
                 "pkg_livingword.xml",
+                "script.install.php",
                 "packages/com_livingword.zip",
                 "packages/mod_livingword.zip",
                 "packages/plg_task_livingword.zip",
                 "packages/plg_webservices_livingword.zip",
-                "packages/lib_cwmscripture.zip",
-                "packages/plg_content_scripturelinks.zip",
-                "packages/plg_task_cwmscripture.zip"
+                "packages/pkg_cwmscripture.zip"
             ]
         }
     },

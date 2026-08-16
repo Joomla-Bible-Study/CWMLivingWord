@@ -13,31 +13,28 @@
 
     <changelogurl>https://raw.githubusercontent.com/Joomla-Bible-Study/CWMLivingWord/main/build/livingword-changelog.xml</changelogurl>
 
+    <!-- Installs the bundled pkg_cwmscripture; see the note on <files> below.
+         No <blockChildUninstall>: it would re-assert the ownership we're giving up. -->
+    <scriptfile>script.install.php</scriptfile>
+
     <!-- ARS update stream 6 (see cwm-build.config.json ars.updateStreamId).
-         The task=stream parameter is required — without it ARS falls back to
-         task=all and returns an <extensionset> category index instead of the
-         <updates> document Joomla's extension update adapter expects.
-         The trailing dummy=extension.xml is ignored by ARS; it exists so
-         proxies and caches that sniff the URL extension see an .xml file.
-         Matches pkg_proclaim.xml. -->
+         task=stream is required — without it ARS returns an <extensionset> index
+         instead of the <updates> document Joomla's update adapter expects. -->
     <updateservers>
         <server type="extension" name="CWM LivingWord Package">https://www.christianwebministries.org/index.php?option=com_ars&amp;view=update&amp;task=stream&amp;format=xml&amp;id=6&amp;dummy=extension.xml</server>
     </updateservers>
 
-    <!-- folder must match package.innerLayout in cwm-build.config.json, which
-         is "packages-prefix" — the inner zips are assembled under packages/.
-         Without it Joomla looks for them at the archive root, InstallerHelper::
-         unpack() returns false, and PackageAdapter aborts with "Unable to
-         install extension" after a "Trying to access array offset on false"
-         warning. Compare pkg_proclaim.xml (packages-prefix + folder) and
-         pkg_cwmscripture.xml (root layout + no folder). -->
+    <!-- folder must match package.innerLayout ("packages-prefix") in
+         cwm-build.config.json, or PackageAdapter can't find the inner zips.
+
+         The scripture stack is deliberately absent: removeExtensionFiles()
+         uninstalls every entry here by element, so declaring it made removing
+         LivingWord take a stack shared with Proclaim. packages/pkg_cwmscripture.zip
+         ships as an undeclared extra that script.install.php installs. -->
     <files folder="packages">
-        <file type="library" id="cwmscripture">lib_cwmscripture.zip</file>
         <file type="component" id="com_livingword">com_livingword.zip</file>
         <file type="module" client="site" id="mod_livingword">mod_livingword.zip</file>
         <file type="plugin" group="task" id="livingword">plg_task_livingword.zip</file>
         <file type="plugin" group="webservices" id="livingword">plg_webservices_livingword.zip</file>
-        <file type="plugin" group="task" id="cwmscripture">plg_task_cwmscripture.zip</file>
-        <file type="plugin" group="content" id="scripturelinks">plg_content_scripturelinks.zip</file>
     </files>
 </extension>
