@@ -102,8 +102,9 @@ jobs:
           - \`com_livingword\` $VERSION — LivingWord component (admin + site + media)
           - \`mod_livingword\` — Daily reading module
           - \`plg_task_livingword\` — Scheduled email delivery task plugin
-          - \`lib_cwmscripture\` v$SCRIPTURE — Bible provider library
-          - \`plg_content_scripturelinks\` v$SCRIPTURE — Scripture linking content plugin
+          - \`pkg_cwmscripture\` v$SCRIPTURE — Bible provider library, scripture linking
+            and scripture task plugins. Installed only if your site has an older
+            version; uninstalling LivingWord leaves it in place.
 
           ## Requirements
 
