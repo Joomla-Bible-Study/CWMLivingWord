@@ -16,6 +16,22 @@
 # not a rebuild of an old tree — that guarantees the old install.sql, so the
 # upgrade genuinely exercises the ADD COLUMN / CREATE TABLE update SQL.
 #
+# Which baseline, and why not versions.json
+# -----------------------------------------
+# It used to default to versions.json `current`, and that made this phase skip
+# itself at the one moment it mattered most. cwm-release runs the whole
+# test:release gate BEFORE it bumps — deliberately, so a failure leaves nothing
+# mutated — so during a release `active_development` and `current` are still
+# the same string, and the comparison below said "nothing newer to test" about
+# the very build being released. The 5.7.0 gate reported install, accessibility
+# and API green with the upgrade phase skipped, and the release carried a
+# postflight schema repair that only runs on the update route.
+#
+# So the baseline is resolved from the releases that exist instead: the newest
+# STABLE release older than the build under test, which is the artifact most
+# sites are actually on, and which pulls in every migration since. Prereleases
+# are used only when no stable one qualifies.
+#
 # Run via: composer test:upgrade [baseline-version]
 #
 # @package  Livingword.Build
@@ -28,29 +44,84 @@ cd "$ROOT"
 
 BIN="libraries/vendor/bin"
 
-NEWVER="$(php -r '$v = json_decode(file_get_contents("build/versions.json"), true); echo $v["active_development"]["version"] ?? "";')"
-BASEVER="${1:-$(php -r '$v = json_decode(file_get_contents("build/versions.json"), true); echo $v["current"]["version"] ?? "";')}"
+REPO="$(php -r '$c = json_decode(file_get_contents("cwm-build.config.json"), true); echo $c["github"]["owner"] . "/" . $c["github"]["repo"];')"
 
-if [ -z "$NEWVER" ] || [ -z "$BASEVER" ]; then
-    echo "ERROR: could not resolve versions (active_development / current) from build/versions.json" >&2
+NEWVER="$(php -r '$v = json_decode(file_get_contents("build/versions.json"), true); echo $v["active_development"]["version"] ?? "";')"
+
+if [ -z "$NEWVER" ]; then
+    echo "ERROR: could not resolve active_development from build/versions.json" >&2
     exit 1
 fi
 
-# Exit 3 means "not applicable", as distinct from "failed". Immediately after a
-# release the active-development version IS the last release, so there is
-# nothing newer to upgrade to and the update() path cannot fire. That is not a
-# defect, and failing the release gate for it would leave the gate red between
-# every release and the next bump — which teaches people to ignore it.
+# Nothing older than this installs at all: every package before 5.6.0-beta2
+# assembled its inner extensions into a folder the manifest never pointed at,
+# so Joomla refused it (#95). Such a release cannot serve as a "before" state.
+MIN_BASELINE="5.6.0-beta2"
+
+# The newest usable release strictly older than $1, preferring stable ones.
+# Empty output (and a non-zero status) means there is no such release, or that
+# GitHub could not be reached.
+previous_release() {
+    gh release list --repo "$REPO" --limit 100 --json tagName,isPrerelease \
+        --jq '.[] | [.tagName, (.isPrerelease | tostring)] | @tsv' 2>/dev/null \
+    | php -r '
+        $newer  = $argv[1];
+        $floor  = $argv[2];
+        $stable = [];
+        $any    = [];
+
+        while (($line = fgets(STDIN)) !== false) {
+            [$tag, $prerelease] = array_pad(explode("\t", trim($line)), 2, "");
+
+            if ($tag === "") {
+                continue;
+            }
+
+            $version = ltrim($tag, "v");
+
+            // Strictly older than the build under test, and installable.
+            if (version_compare($version, $newer, ">=") || version_compare($version, $floor, "<")) {
+                continue;
+            }
+
+            $any[] = $version;
+
+            if ($prerelease !== "true") {
+                $stable[] = $version;
+            }
+        }
+
+        $pool = $stable ?: $any;
+
+        if ($pool === []) {
+            exit(1);
+        }
+
+        usort($pool, "version_compare");
+
+        echo end($pool);
+    ' "$1" "$MIN_BASELINE"
+}
+
+if [ -n "${1:-}" ]; then
+    BASEVER="$1"
+else
+    BASEVER="$(previous_release "$NEWVER" || true)"
+fi
+
+# Exit 3 means "not applicable", as distinct from "failed" — reachable now only
+# when no released artifact qualifies as a baseline at all: the first release of
+# a project, or an offline run with nothing cached. Not a defect, and failing
+# the gate for it would teach people to ignore the gate.
 #
 # test-release.sh maps 3 to a loud SKIPPED. It stays loud deliberately: a
 # silently skipped phase reads as a pass, which is how an ungated release
 # happens.
-if [ "$NEWVER" = "$BASEVER" ]; then
-    echo "NOT APPLICABLE: active-development version ($NEWVER) equals the baseline." >&2
-    echo "                The upgrade path only fires when the new build is newer," >&2
-    echo "                so there is nothing to test until the next version bump." >&2
-    echo "                To test against an older release explicitly:" >&2
-    echo "                  composer test:upgrade -- 5.6.0-beta2" >&2
+if [ -z "$BASEVER" ] || [ "$NEWVER" = "$BASEVER" ]; then
+    echo "NOT APPLICABLE: no released package older than ${NEWVER} is usable as a baseline." >&2
+    echo "                Releases before ${MIN_BASELINE} cannot install (#95), and GitHub" >&2
+    echo "                must be reachable to resolve one. To name a baseline explicitly:" >&2
+    echo "                  composer test:upgrade -- 5.6.0" >&2
     exit 3
 fi
 
@@ -69,14 +140,14 @@ mkdir -p build/dist
 
 if [ ! -f "$BASEZIP" ]; then
     gh release download "v${BASEVER}" \
-        --repo "$(php -r '$c = json_decode(file_get_contents("cwm-build.config.json"), true); echo $c["github"]["owner"] . "/" . $c["github"]["repo"];')" \
+        --repo "$REPO" \
         --pattern "pkg_livingword-${BASEVER}.zip" \
         --dir build/dist
 fi
 
 if [ ! -f "$BASEZIP" ]; then
     echo "ERROR: baseline artifact not found: $BASEZIP" >&2
-    echo "       Releases before 5.6.0-beta2 shipped a package that cannot install" >&2
+    echo "       Releases before ${MIN_BASELINE} shipped a package that cannot install" >&2
     echo "       (see #95), so they are not usable as an upgrade baseline." >&2
     exit 1
 fi
