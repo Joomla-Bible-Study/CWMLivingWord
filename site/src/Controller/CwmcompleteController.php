@@ -17,7 +17,6 @@ use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use CWM\Component\Livingword\Site\Helper\CwmreadingHelper;
 use CWM\Component\Livingword\Site\Helper\CwmuserHelper;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
 
@@ -91,8 +90,7 @@ class CwmcompleteController extends BaseController
             // The reading was not recorded, so the landing page must not say it
             // was — this is the one-click link from the daily email, and its
             // whole job is to be trustworthy about that.
-            Log::addLogger(['text_file' => 'com_livingword.php'], Log::ERROR, ['com_livingword']);
-            Log::add($e->getMessage(), Log::ERROR, 'com_livingword');
+            CwmprogressHelper::logFailure($e);
 
             $app->setUserState('com_livingword.complete.success', false);
             $this->setRedirect(Route::_('index.php?option=com_livingword&view=cwmcomplete', false));

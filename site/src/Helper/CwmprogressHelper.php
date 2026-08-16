@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Site\Helper;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use Joomla\CMS\Log\Log;
 use Joomla\Database\DatabaseInterface;
 
 /**
@@ -149,6 +150,31 @@ class CwmprogressHelper
                 (int) $e->getCode(),
                 $e
             );
+        }
+    }
+
+    /**
+     * Record a progress write the database refused.
+     *
+     * The category is registered on the spot because Log drops one no logger
+     * has claimed, and a dropped record is the failure mode this path exists to
+     * end. Wrapped in turn because the file logger throws when it cannot open
+     * its file, and callers reach this from inside their own catch — a log that
+     * cannot be written must not swallow the response that reports the failure.
+     *
+     * @param   \Throwable  $e  The failure to record
+     *
+     * @return  void
+     *
+     * @since   5.7.0
+     */
+    public static function logFailure(\Throwable $e): void
+    {
+        try {
+            Log::addLogger(['text_file' => 'com_livingword.php'], Log::ERROR, ['com_livingword']);
+            Log::add($e->getMessage(), Log::ERROR, 'com_livingword');
+        } catch (\Throwable) {
+            // Nothing further to do — the caller still reports the failure.
         }
     }
 

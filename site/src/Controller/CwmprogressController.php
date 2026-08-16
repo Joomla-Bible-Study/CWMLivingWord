@@ -16,7 +16,6 @@ namespace CWM\Component\Livingword\Site\Controller;
 
 use CWM\Component\Livingword\Site\Helper\CwmprogressHelper;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Response\JsonResponse;
 use Joomla\CMS\Session\Session;
@@ -90,12 +89,8 @@ class CwmprogressController extends BaseController
                 // A write the database refused. Answering with an error leaves
                 // the button in its old state, which is the truth; the previous
                 // behaviour was to report the tick as saved and drop it. The
-                // cause goes to the log rather than to the browser — with the
-                // logger registered explicitly, since Log discards a category
-                // no logger claims and a discarded record is the failure mode
-                // this whole change is about.
-                Log::addLogger(['text_file' => 'com_livingword.php'], Log::ERROR, ['com_livingword']);
-                Log::add($e->getMessage(), Log::ERROR, 'com_livingword');
+                // cause goes to the log rather than to the browser.
+                CwmprogressHelper::logFailure($e);
 
                 $app->sendHeaders();
                 echo new JsonResponse(null, 'Could not save your progress', true);
@@ -117,8 +112,7 @@ class CwmprogressController extends BaseController
         try {
             $completed = CwmprogressHelper::toggleComplete($db, $userId, $planId, $day, max($passageCount, 1));
         } catch (\RuntimeException $e) {
-            Log::addLogger(['text_file' => 'com_livingword.php'], Log::ERROR, ['com_livingword']);
-            Log::add($e->getMessage(), Log::ERROR, 'com_livingword');
+            CwmprogressHelper::logFailure($e);
 
             $app->sendHeaders();
             echo new JsonResponse(null, 'Could not save your progress', true);
