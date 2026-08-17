@@ -32,6 +32,13 @@
 # sites are actually on, and which pulls in every migration since. Prereleases
 # are used only when no stable one qualifies.
 #
+# "Older than" needs the version being released, though, and that is the half
+# the first fix left stale. cwm-release now exports CWM_RELEASE_VERSION for the
+# gate; without it the baseline is resolved relative to `active_development`,
+# which during a release is still the previous bump — so releasing 5.7.1 with
+# the pointer at 5.7.0-beta4 picks the newest stable below beta4. The phase runs
+# and upgrades from the wrong "before" state.
+#
 # Run via: composer test:upgrade [baseline-version]
 #
 # @package  Livingword.Build
@@ -52,6 +59,24 @@ if [ -z "$NEWVER" ]; then
     echo "ERROR: could not resolve active_development from build/versions.json" >&2
     exit 1
 fi
+
+# The version this run is validating an upgrade *to*, which is not always the
+# version the artifact is labelled with.
+#
+# cwm-release exports CWM_RELEASE_VERSION for the test:release gate, because the
+# gate runs before the bump and nothing on disk names the release yet. That is
+# the version the baseline must be chosen relative to: releasing 5.7.1 while
+# active_development still reads 5.7.0-beta4 otherwise resolves the newest
+# stable release below *beta4*, which can be a whole minor line too old.
+#
+# It deliberately does not become NEWVER. `composer build -- --version` only
+# substitutes the output *filename*; the manifest inside the zip is whatever is
+# on disk, so the label has to keep tracking the manifests or the artifact
+# claims a version it does not carry.
+#
+# Unset outside a release — a nightly, a PR, or a hand run — and then
+# active_development is genuinely the build under test.
+TARGETVER="${CWM_RELEASE_VERSION:-$NEWVER}"
 
 # Nothing older than this installs at all: every package before 5.6.0-beta2
 # assembled its inner extensions into a folder the manifest never pointed at,
@@ -106,7 +131,7 @@ previous_release() {
 if [ -n "${1:-}" ]; then
     BASEVER="$1"
 else
-    BASEVER="$(previous_release "$NEWVER" || true)"
+    BASEVER="$(previous_release "$TARGETVER" || true)"
 fi
 
 # Exit 3 means "not applicable", as distinct from "failed" — reachable now only
@@ -117,8 +142,8 @@ fi
 # test-release.sh maps 3 to a loud SKIPPED. It stays loud deliberately: a
 # silently skipped phase reads as a pass, which is how an ungated release
 # happens.
-if [ -z "$BASEVER" ] || [ "$NEWVER" = "$BASEVER" ]; then
-    echo "NOT APPLICABLE: no released package older than ${NEWVER} is usable as a baseline." >&2
+if [ -z "$BASEVER" ] || [ "$TARGETVER" = "$BASEVER" ]; then
+    echo "NOT APPLICABLE: no released package older than ${TARGETVER} is usable as a baseline." >&2
     echo "                Releases before ${MIN_BASELINE} cannot install (#95), and GitHub" >&2
     echo "                must be reachable to resolve one. To name a baseline explicitly:" >&2
     echo "                  composer test:upgrade -- 5.6.0" >&2
@@ -130,6 +155,16 @@ NEWZIP="build/dist/pkg_livingword-${NEWVER}.zip"
 
 echo "========================================================================"
 echo " UPGRADE TEST — ${BASEVER}  ->  ${NEWVER}"
+
+# Say so when the artifact is not labelled with the version being released. The
+# tree under test is the one that ships; only the stamp differs, because the
+# gate runs before the bump. Unstated, that gap reads as though the release
+# version itself was exercised.
+if [ "$TARGETVER" != "$NEWVER" ]; then
+    echo " Releasing ${TARGETVER} — the build is labelled ${NEWVER} until the bump."
+    echo " Baseline chosen relative to ${TARGETVER}."
+fi
+
 echo "========================================================================"
 
 echo "-- [1/6] reset test site(s) to a clean slate"
