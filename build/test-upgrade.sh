@@ -168,7 +168,7 @@ fi
 echo "========================================================================"
 
 echo "-- [1/6] reset test site(s) to a clean slate"
-php build/reset-testsite.php
+"$BIN/cwm-reset-testsite"
 
 echo "-- [2/6] fetch released baseline ${BASEVER}"
 mkdir -p build/dist
