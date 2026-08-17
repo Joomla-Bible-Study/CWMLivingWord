@@ -292,16 +292,16 @@
         },
         {
             "name": "cwm/build-tools",
-            "version": "v1.23.2",
+            "version": "v1.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Joomla-Bible-Study/cwm-build-tools.git",
-                "reference": "5608c46338bae6ddd42994151a87c774f923fa55"
+                "reference": "10669fb366d601e4e6e8d12f8c3f95613ddefe56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Joomla-Bible-Study/cwm-build-tools/zipball/5608c46338bae6ddd42994151a87c774f923fa55",
-                "reference": "5608c46338bae6ddd42994151a87c774f923fa55",
+                "url": "https://api.github.com/repos/Joomla-Bible-Study/cwm-build-tools/zipball/10669fb366d601e4e6e8d12f8c3f95613ddefe56",
+                "reference": "10669fb366d601e4e6e8d12f8c3f95613ddefe56",
                 "shasum": ""
             },
             "require": {
@@ -341,6 +341,7 @@
                 "bin/cwm-baseline",
                 "bin/cwm-lint-queries",
                 "bin/cwm-lint-comments",
+                "bin/cwm-lint-workflows",
                 "bin/cwm-reset-testsite",
                 "bin/cwm-verify-update-stream"
             ],
@@ -407,10 +408,10 @@
                 "release"
             ],
             "support": {
-                "source": "https://github.com/Joomla-Bible-Study/cwm-build-tools/tree/v1.23.2",
+                "source": "https://github.com/Joomla-Bible-Study/cwm-build-tools/tree/v1.24.0",
                 "issues": "https://github.com/Joomla-Bible-Study/cwm-build-tools/issues"
             },
-            "time": "2026-08-17T21:52:18+00:00"
+            "time": "2026-08-17T22:56:40+00:00"
         },
         {
             "name": "ergebnis/agent-detector",

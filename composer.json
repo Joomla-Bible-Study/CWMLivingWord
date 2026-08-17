@@ -103,6 +103,7 @@
     "test": "phpunit",
     "test:unit": "phpunit --testsuite 'LivingWord Unit Tests'",
     "test:integration": "phpunit --testsuite 'LivingWord Integration Tests'",
+    "lint-workflows": "cwm-lint-workflows",
     "lint:syntax": "find admin site mod_livingword plg_task_livingword plg_webservices_livingword build/script.install.php -name '*.php' -print0 | xargs -0 -n1 -P4 php -l",
     "lint": "php-cs-fixer fix --dry-run --diff",
     "lint:fix": "php-cs-fixer fix",
@@ -111,7 +112,7 @@
     "build:css": "npm run build:css",
     "check": [
       "@lint:syntax",
-      "@lint",
+      "@lint-workflows", "@lint",
       "@test"
     ],
     "install-zip": "cwm-install-zip",
