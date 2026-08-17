@@ -38,7 +38,7 @@ echo " CLEAN-INSTALL TEST — pkg_livingword ${VERSION}"
 echo "========================================================================"
 
 echo "-- [1/5] reset test site(s) to a clean slate"
-php build/reset-testsite.php
+"$BIN/cwm-reset-testsite"
 
 echo "-- [2/5] build package ${VERSION}"
 composer build -- --version "$VERSION"

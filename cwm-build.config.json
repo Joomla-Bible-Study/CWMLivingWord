@@ -225,6 +225,49 @@
             ]
         }
     },
+    "_testSite_comment": "Consumed by cwm-reset-testsite, which replaced build/reset-testsite.php. Entries are type-qualified because element alone is ambiguous: 'livingword' names both a task and a webservices plugin, and the library registers under its <libraryname>. The scripture stack is a GROUP, not part of the family — it is shared with Proclaim, so a run that removed it unasked would break a site hosting both. Enable with: cwm-reset-testsite -- --with scripture (the old --with-scripture flag).",
+    "testSite": {
+        "reset": {
+            "elements": [
+                { "element": "com_livingword", "type": "component" },
+                { "element": "pkg_livingword", "type": "package" },
+                { "element": "mod_livingword", "type": "module" },
+                { "element": "livingword", "type": "plugin", "folder": "task" },
+                { "element": "livingword", "type": "plugin", "folder": "webservices" }
+            ],
+            "tablePrefixes":     ["livingword_"],
+            "components":        ["com_livingword"],
+            "menuLinkPatterns":  ["%option=com_livingword%"],
+            "typeAliasPatterns": ["com_livingword.%"],
+            "directories": [
+                "administrator/components/com_livingword",
+                "components/com_livingword",
+                "api/components/com_livingword",
+                "modules/mod_livingword",
+                "plugins/task/livingword",
+                "plugins/webservices/livingword",
+                "media/com_livingword",
+                "media/mod_livingword",
+                "administrator/manifests/packages/pkg_livingword.xml",
+                "administrator/manifests/packages/livingword"
+            ],
+            "fileGlobs": [
+                "administrator/language/*/com_livingword.*",
+                "language/*/com_livingword.*"
+            ],
+            "groups": {
+                "scripture": {
+                    "elements": [
+                        { "element": "cwmscripture", "type": "library" },
+                        { "element": "cwmscripture", "type": "plugin", "folder": "task" },
+                        { "element": "scripturelinks", "type": "plugin", "folder": "content" },
+                        { "element": "pkg_cwmscripture", "type": "package" }
+                    ],
+                    "tablePrefixes": ["bsms_bible"]
+                }
+            }
+        }
+    },
     "ars": {
         "endpoint": "https://www.christianwebministries.org",
         "categoryId": 7,

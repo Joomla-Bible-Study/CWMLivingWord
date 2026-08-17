@@ -116,7 +116,7 @@
     ],
     "install-zip": "cwm-install-zip",
     "seed": "@php build/seed_scenarios.php",
-    "test:reset-testsite": "@php build/reset-testsite.php",
+    "test:reset-testsite": "cwm-reset-testsite",
     "test:install": "bash build/test-install.sh",
     "test:migrations": "@php build/verify-migrations.php",
     "test:a11y": "npm run test:a11y",
