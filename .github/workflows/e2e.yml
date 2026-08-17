@@ -42,8 +42,14 @@ on:
       - 'build/test-install.sh'
       - 'build/test-upgrade.sh'
       - 'build/test-release.sh'
-      - 'build/reset-testsite.php'
       - 'build/verify-migrations.php'
+      # The harness resets the site through cwm-reset-testsite and resolves its
+      # upgrade baseline through cwm-baseline, both of which live in
+      # cwm/build-tools. A version bump replaces that code wholesale, so the
+      # lock belongs here or the job never sees the tooling it runs on.
+      # (build/reset-testsite.php was listed until it was deleted in favour of
+      # the shared command; the entry outlived the file.)
+      - 'composer.lock'
       - 'playwright.config.js'
       - 'cwm-build.config.json'
       - '.github/workflows/e2e.yml'
