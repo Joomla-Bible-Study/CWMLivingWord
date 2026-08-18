@@ -161,10 +161,6 @@ jobs:
           builder.j6dev.role=test
           builder.j6dev.path=${SITE_DIR}
           builder.j6dev.url=${SITE_URL}
-          builder.j6dev.db_host=127.0.0.1
-          builder.j6dev.db_user=root
-          builder.j6dev.db_pass=joomla_ci
-          builder.j6dev.db_name=joomla_ci
           builder.j6dev.username=admin
           builder.j6dev.password=admin1234567
           builder.j6dev.email=admin@example.com
