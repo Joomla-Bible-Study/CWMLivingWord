@@ -26,8 +26,8 @@
  */
 
 use CWM\BuildTools\Dev\InstallConfig;
-use CWM\BuildTools\Dev\TestSite;
 use CWM\BuildTools\Dev\PropertiesReader;
+use CWM\BuildTools\Dev\TestSite;
 
 const ROOT = __DIR__ . '/..';
 
