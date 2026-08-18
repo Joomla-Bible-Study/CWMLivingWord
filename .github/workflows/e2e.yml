@@ -52,6 +52,20 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # ⚠️ build/fetch_dependencies.php asks api.github.com for the latest
+  # CWMScriptureLinks release. Unauthenticated, that shares a rate limit with
+  # every other job on the runner's IP address, and a build fails with HTTP 403
+  # for reasons that have nothing to do with this repository -- which is how it
+  # failed on the v1.28 dependency bump.
+  #
+  # The script already sends `Authorization: Bearer` when GITHUB_TOKEN or
+  # GH_TOKEN is set; it was simply never given one. The automatic token lifts
+  # the limit from 60 requests an hour to 1000.
+  #
+  # Set at workflow level rather than on the one step that builds today: the
+  # fetch runs from the preBuild hook, so any future build step needs it too,
+  # and a step added without it would fail the same way.
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   JOOMLA_VERSION: '5.4.3'
   SITE_DIR: /home/runner/joomla-site
   SITE_URL: http://127.0.0.1:8890
