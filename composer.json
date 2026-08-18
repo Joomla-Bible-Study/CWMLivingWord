@@ -84,7 +84,7 @@
     "ext-zip": "*"
   },
   "require-dev": {
-    "cwm/build-tools": "^1.13",
+    "cwm/build-tools": "^1.25",
     "phpunit/phpunit": "^12.5",
     "friendsofphp/php-cs-fixer": "^3.0",
     "roave/security-advisories": "dev-latest",
