@@ -27,6 +27,7 @@
 
 use CWM\BuildTools\Dev\InstallConfig;
 use CWM\BuildTools\Dev\PropertiesReader;
+use CWM\BuildTools\Dev\TestSite;
 
 const ROOT = __DIR__ . '/..';
 
@@ -292,8 +293,15 @@ function main(array $argv): int
 
     try {
         $install = resolveInstall($args['install'] ?? null);
-        $prefix  = readTablePrefix($install);
-        $pdo     = connect($install);
+
+        // The install supplies the path; the credentials and the prefix both
+        // come from the site's own configuration.php. Previously the prefix was
+        // read from there and the credentials from build.properties, so when
+        // the two disagreed this connected to one database and wrote with the
+        // other's prefix.
+        $site   = TestSite::fromInstall($install);
+        $prefix = $site->prefix();
+        $pdo    = $site->db();
     } catch (\RuntimeException $e) {
         fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
 
@@ -301,7 +309,7 @@ function main(array $argv): int
     }
 
     printf("Install: %s (%s)\n", $install->id, $install->path ?: 'no path');
-    printf("Database: %s, prefix %s\n\n", $install->dbName(), $prefix);
+    printf("Database: %s, prefix %s\n\n", $site->database(), $prefix);
 
     if (isset($args['reset'])) {
         resetSeed($pdo, $prefix, $install);
@@ -423,50 +431,6 @@ function resolveInstall(string|bool|null $id): InstallConfig
     throw new \RuntimeException("Pass --install=<id>. Known: {$known}");
 }
 
-/**
- * The table prefix, read from the install's own configuration.php.
- *
- * build.properties carries credentials but not the prefix, and guessing it
- * from the database name is how a seeder writes into the wrong tables.
- */
-function readTablePrefix(InstallConfig $install): string
-{
-    if ($install->path === '') {
-        throw new \RuntimeException("Install '{$install->id}' declares no path, so its prefix cannot be read.");
-    }
-
-    $config = $install->path . '/configuration.php';
-
-    if (!is_file($config)) {
-        throw new \RuntimeException("No configuration.php at {$config} — is the install provisioned?");
-    }
-
-    if (preg_match('/\$dbprefix\s*=\s*[\'"]([^\'"]*)[\'"]/', (string) file_get_contents($config), $m) !== 1) {
-        throw new \RuntimeException("Could not read \$dbprefix from {$config}.");
-    }
-
-    return $m[1];
-}
-
-function connect(InstallConfig $install): \PDO
-{
-    $host = $install->dbHost();
-    $port = '3306';
-
-    if (str_contains($host, ':')) {
-        [$host, $port] = explode(':', $host, 2);
-    }
-
-    $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $install->dbName());
-
-    try {
-        return new \PDO($dsn, $install->dbUser(), $install->dbPass(), [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-        ]);
-    } catch (\PDOException $e) {
-        throw new \RuntimeException("Could not connect to {$install->dbName()}: " . $e->getMessage());
-    }
-}
 
 /**
  * Create the Joomla accounts, then return username => user id.
