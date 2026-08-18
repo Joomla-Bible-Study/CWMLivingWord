@@ -31,28 +31,21 @@ on:
     - cron: '23 4 * * *'
   pull_request:
     branches: [ "main" ]
-    paths:
-      - 'admin/**'
-      - 'site/**'
-      - 'api/**'
-      - 'plg_webservices_livingword/**'
-      - 'plg_task_livingword/**'
-      - 'mod_livingword/**'
-      - 'tests/e2e/**'
-      - 'build/test-install.sh'
-      - 'build/test-upgrade.sh'
-      - 'build/test-release.sh'
-      - 'build/verify-migrations.php'
-      # The harness resets the site through cwm-reset-testsite and resolves its
-      # upgrade baseline through cwm-baseline, both of which live in
-      # cwm/build-tools. A version bump replaces that code wholesale, so the
-      # lock belongs here or the job never sees the tooling it runs on.
-      # (build/reset-testsite.php was listed until it was deleted in favour of
-      # the shared command; the entry outlived the file.)
-      - 'composer.lock'
-      - 'playwright.config.js'
-      - 'cwm-build.config.json'
-      - '.github/workflows/e2e.yml'
+    # ⚠️ No paths: filter, deliberately.
+    #
+    # This job was gated on an allow-list, which fails closed: anything nobody
+    # thought of skips, and a skipped job is indistinguishable in a checks list
+    # from a passing one. Across this repository and Proclaim that happened
+    # five times -- most of them found by someone noticing an absent job rather
+    # than by anything reporting it. One was here: a cwm/build-tools bump
+    # replaces the harness's tooling wholesale, and composer.lock was not
+    # listed, so the bump merged without this job running on it.
+    #
+    # The nightly schedule above already ran what the filter skipped, so this
+    # does not make the job see more; it moves the failure from a post-merge
+    # nightly to the pull request that caused it.
+    #
+    # Joomla-Bible-Study/cwm-build-tools#129.
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
