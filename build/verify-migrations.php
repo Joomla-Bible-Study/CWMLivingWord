@@ -40,6 +40,7 @@
 declare(strict_types=1);
 
 use CWM\BuildTools\Dev\PropertiesReader;
+use CWM\BuildTools\Dev\TestSite;
 
 $root = \dirname(__DIR__);
 
@@ -234,55 +235,28 @@ foreach ($installs as $install) {
         continue;
     }
 
-    // Read in a child process: every configuration.php declares a class named
-    // JConfig, so requiring a second one in this process is a fatal redeclare —
-    // which is what a run with two role=test installs used to hit.
-    $config = json_decode((string) shell_exec(sprintf(
-        '%s -r %s %s 2>/dev/null',
-        escapeshellarg(PHP_BINARY),
-        escapeshellarg(
-            'require $argv[1]; $c = new JConfig();'
-            . ' echo json_encode([$c->host, $c->user, $c->password, $c->db, $c->dbprefix]);'
-        ),
-        escapeshellarg($configFile)
-    )), true);
-
-    if (!\is_array($config)) {
-        fwrite(STDERR, "  could not read {$configFile}.\n");
+    // configuration.php is parsed as text rather than required. Every one of
+    // them declares a class named JConfig, and classes are process-global, so
+    // requiring a second install's config used to be a fatal redeclare — which
+    // is why this went through a shell_exec child process to read it.
+    try {
+        $site = TestSite::fromPath($install->path);
+        $db   = $site->db();
+    } catch (\RuntimeException $e) {
+        fwrite(STDERR, '  ' . $e->getMessage() . "\n");
         $failures++;
 
         continue;
     }
 
-    [$host, $user, $pass, $name, $prefix] = $config;
-
-    $port = 3306;
-
-    if (str_contains($host, ':')) {
-        [$host, $portStr] = explode(':', $host, 2);
-        $port             = (int) $portStr;
-    }
-
-    $db = @new mysqli($host, $user, $pass, $name, $port);
-
-    if ($db->connect_errno !== 0) {
-        fwrite(STDERR, "  DB connection failed: {$db->connect_error}\n");
-        $failures++;
-
-        continue;
-    }
+    $prefix = $site->prefix();
 
     $fail = static function (string $message) use (&$failures): void {
         echo "  FAIL: {$message}\n";
         $failures++;
     };
 
-    $tableExists = static function (string $table) use ($db, $prefix): bool {
-        $like = $db->real_escape_string($prefix . $table);
-        $res  = $db->query("SHOW TABLES LIKE '{$like}'");
-
-        return $res instanceof mysqli_result && $res->num_rows > 0;
-    };
+    $tableExists = static fn (string $table): bool => $site->hasTable('#__' . $table);
 
     $checks = 0;
 
@@ -305,11 +279,7 @@ foreach ($installs as $install) {
 
         foreach ($columns as $column) {
             $checks++;
-            $res = $db->query(
-                "SHOW COLUMNS FROM `{$prefix}{$table}` LIKE '" . $db->real_escape_string($column) . "'"
-            );
-
-            if (!($res instanceof mysqli_result) || $res->num_rows === 0) {
+            if (!$site->hasColumn('#__' . $table, $column)) {
                 $fail("missing column {$table}.{$column}");
             }
         }
@@ -329,17 +299,22 @@ foreach ($installs as $install) {
             $shape = \is_int($key) ? [] : $value;
 
             $checks++;
-            $res = $db->query(
-                "SHOW INDEX FROM `{$prefix}{$table}` WHERE Key_name = '" . $db->real_escape_string($index) . "'"
-            );
-
-            if (!($res instanceof mysqli_result) || $res->num_rows === 0) {
+            if (!$site->hasIndex('#__' . $table, $index)) {
                 $fail("missing index {$table}.{$index}");
 
                 continue;
             }
 
-            $parts = $res->fetch_all(MYSQLI_ASSOC);
+            // Presence is shared; shape is not. Uniqueness and column order are
+            // read here because no other consumer has asked for them yet, and a
+            // primitive with one caller is a guess about the second.
+            $stmt = $db->prepare(
+                'SELECT non_unique AS Non_unique, column_name AS Column_name, seq_in_index AS Seq_in_index '
+                . 'FROM information_schema.statistics '
+                . 'WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?'
+            );
+            $stmt->execute([$prefix . $table, $index]);
+            $parts = $stmt->fetchAll(PDO::FETCH_ASSOC);
             usort($parts, static fn(array $a, array $b): int => $a['Seq_in_index'] <=> $b['Seq_in_index']);
 
             if (isset($shape['unique'])) {
@@ -376,7 +351,6 @@ foreach ($installs as $install) {
 
     echo "  {$checks} assertion(s) checked\n";
 
-    $db->close();
 }
 
 if ($failures > 0) {
