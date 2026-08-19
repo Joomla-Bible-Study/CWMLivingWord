@@ -42,6 +42,36 @@
 <changelogs>
 
     <!-- ============================================================ -->
+    <!-- 5.7.2                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.7.2</version>
+        <date>2026-08-19</date>
+        <note>
+            <item>fix(build): resolve the baseline relative to the release target (#152) by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/154</item>
+            <item>refactor(build): adopt cwm-reset-testsite, dropping the local copy by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/155</item>
+            <item>chore(build): delete orphaned build/sync_languages.py (#153) by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/156</item>
+            <item>chore(deps): update cwm/build-tools to v1.23.2 by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/157</item>
+            <item>chore(ci): add lint-workflows to the check chain by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/158</item>
+            <item>chore(ci): drop the .claude paths-ignore entry, which excludes nothing by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/159</item>
+            <item>refactor(build): migrate verify-migrations to TestSite, dropping the shell_exec workaround by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/160</item>
+            <item>refactor(build): seed_scenarios reads one source, not two by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/161</item>
+            <item>chore(ci): stop writing database keys nothing reads into build.properties by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/162</item>
+            <item>chore: drop the database keys from the committed properties template by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/163</item>
+            <item>ci: run the e2e job on every pull request, not an allow-list by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/164</item>
+            <item>chore(deps): bump cwm/build-tools to ^1.27 by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/165</item>
+            <item>chore(deps): bump cwm/build-tools to ^1.28 by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/166</item>
+            <item>ci: authenticate the GitHub API calls the build makes by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/167</item>
+            <item>chore(deps): bump cwm/build-tools to ^1.29 by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/168</item>
+            <item>test(schema): replay migrations in CI, from a committed baseline by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/169</item>
+            <item>chore(deps): bump cwm/build-tools to ^1.31 by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/170</item>
+            <item>fix(schema): repair the missing action_token index, and disarm the dead migrations by @bcordis in https://github.com/Joomla-Bible-Study/CWMLivingWord/pull/171</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
     <!-- 5.7.1                                                    -->
     <!-- ============================================================ -->
     <changelog>
