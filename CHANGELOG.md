@@ -7,6 +7,34 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Milestone 1 — Engagement & Progress Tracking (planned)
+- Reading completion tracking per day (`#__livingword_progress` table)
+- Progress indicator: Day X of Y, percentage complete
+- Reading streak tracking (current and best streak)
+- Catch-up / skip UX in user Settings view
+- Chapter-level completion within multi-passage days
+- One-click email unsubscribe with signed token (CAN-SPAM compliance)
+
+### Milestone 2 — Social & Accountability (planned)
+- Group reading plans for church campaigns
+- Accountability partner feature
+- Pastor / admin congregation progress dashboard
+
+### Milestone 3 — Content & Reading Experience (planned)
+- Inline Bible text via API.Bible (with caching)
+- Audio Bible playback on home view
+- Devotional/reflection content display
+- Short-duration plan support (3–365 day plans, self-paced mode)
+
+### Milestone 4 — Notifications & Delivery (planned)
+- User-controlled email delivery time preference
+- Weekly progress digest email
+- CSV bulk import for reading plan details
+
+---
+
+## [5.7.2] — 2026-08-19
+
 ### Fixed
 
 - **`idx_action_token` was missing on every site installed from v5.0.0 to
@@ -40,32 +68,6 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   guarded with `WHERE NOT EXISTS`.
 
   All four are now executed by `composer schema-replay` in CI.
-
-### Milestone 1 — Engagement & Progress Tracking (planned)
-- Reading completion tracking per day (`#__livingword_progress` table)
-- Progress indicator: Day X of Y, percentage complete
-- Reading streak tracking (current and best streak)
-- Catch-up / skip UX in user Settings view
-- Chapter-level completion within multi-passage days
-- One-click email unsubscribe with signed token (CAN-SPAM compliance)
-
-### Milestone 2 — Social & Accountability (planned)
-- Group reading plans for church campaigns
-- Accountability partner feature
-- Pastor / admin congregation progress dashboard
-
-### Milestone 3 — Content & Reading Experience (planned)
-- Inline Bible text via API.Bible (with caching)
-- Audio Bible playback on home view
-- Devotional/reflection content display
-- Short-duration plan support (3–365 day plans, self-paced mode)
-
-### Milestone 4 — Notifications & Delivery (planned)
-- User-controlled email delivery time preference
-- Weekly progress digest email
-- CSV bulk import for reading plan details
-
----
 
 ## [5.0.0] — 2026
 
