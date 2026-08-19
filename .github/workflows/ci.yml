@@ -67,5 +67,11 @@ jobs:
       # restored the moving v1 tag. Runs as its own parallel `JS Lint` check,
       # so it costs the PHP job nothing.
       run-lint-js: true
+      # Executes the migration files themselves. Everything else here proves the
+      # destination schema is right: a fresh install applies install.sql and
+      # Joomla stamps #__schemas at the newest version without running a single
+      # update file, so until this the update SQL only ever ran on a user's site
+      # mid-upgrade. Runs as its own job with its own MySQL service.
+      run-schema-replay: true
       build-command: 'composer build'
       package-glob: 'build/dist/pkg_livingword-*.zip'
