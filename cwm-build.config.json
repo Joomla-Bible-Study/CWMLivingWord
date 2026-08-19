@@ -268,6 +268,21 @@
             }
         }
     },
+    "_schemaReplay_comment": "`root` is the extension root the manifest's relative paths resolve against, as Joomla's extension_root does \u2014 livingword.xml sits at the repo root while the sql/ it names is under admin/, so without it every path resolves one level too high. `from` is 5.4.0, NOT 5.0.0: the migration filenames here do not track release tags \u2014 5.1.0.sql through 5.4.0.sql were all committed before v5.0.0 was tagged, so every tag from v5.0.0 to v5.4.1 ships the same five files and a fresh install of any of them stamps #__schemas at 5.4.0. Pairing v5.0.0's install schema with `from: 5.0.0` would replay four files no site has ever run. Three migrations execute today; every one added from here on is covered.",
+    "schemaReplay": {
+        "targets": [
+            {
+                "name": "com_cwmlivingword",
+                "manifest": "livingword.xml",
+                "root": "admin",
+                "baseline": [
+                    "build/sql-baselines/joomla-core.sql",
+                    "build/sql-baselines/com_cwmlivingword-5.0.0.sql"
+                ],
+                "from": "5.4.0"
+            }
+        ]
+    },
     "ars": {
         "endpoint": "https://www.christianwebministries.org",
         "categoryId": 7,

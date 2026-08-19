@@ -140,6 +140,7 @@
     "ars-create-stream": "cwm-ars-create-stream",
     "changelog": "cwm-changelog",
     "sync-configs": "cwm-sync-configs",
+    "schema-replay": "cwm-schema-replay",
     "sync-languages": "cwm-sync-languages",
     "post-install-cmd": [
       "@php -r \"if (!file_exists('build.properties')) { copy('build.dist.properties', 'build.properties'); echo 'Created build.properties from template. Run composer setup to configure.\\n'; }\""
