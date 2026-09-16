@@ -101,7 +101,7 @@ jobs:
           extensions: mbstring, json, simplexml, pdo, pdo_mysql, mysqli, zip, gd
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -122,7 +122,7 @@ jobs:
 
       - name: Cache Joomla release zip
         id: joomla-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /tmp/joomla.zip
           key: joomla-${{ env.JOOMLA_VERSION }}
@@ -186,7 +186,7 @@ jobs:
         run: composer test:install
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ hashFiles('package-lock.json') }}
