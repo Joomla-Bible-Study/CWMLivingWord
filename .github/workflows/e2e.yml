@@ -70,6 +70,13 @@ env:
   SITE_DIR: /home/runner/joomla-site
   SITE_URL: http://127.0.0.1:8890
 
+# Declared explicitly rather than relying on the repository default, so
+# tightening that default later cannot silently take the monitoring away again.
+# issues: write is granted on the notify job alone — the vetting job checks out
+# and runs tests and needs nothing more.
+permissions:
+  contents: read
+
 jobs:
   release-vetting:
     name: Package install + accessibility + API
@@ -218,3 +225,76 @@ jobs:
       - name: Upload PHP server log on failure
         if: failure()
         run: cat /tmp/php-server.log
+
+  # A nightly nobody hears about is not a monitor. This job's schema gate
+  # failed for 40 consecutive nights from 2026-08-19 and the only thing it
+  # produced was artifacts on a page no one opens. A failure on a pull request
+  # is already visible on that pull request; the scheduled run is the one with
+  # no audience, so only it opens an issue.
+  #
+  # One issue, reopened and updated rather than one per night, and closed
+  # automatically when the job comes back green — the same shape Proclaim's
+  # e2e.yml uses, so there is one pattern across the repositories.
+  notify:
+    name: Nightly failure issue
+    needs: release-vetting
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Open or update the nightly failure issue
+        if: needs.release-vetting.result == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          LABEL: 'ci: nightly'
+        run: |
+          TITLE="Nightly E2E is failing"
+          BODY="The scheduled E2E run failed on $(date -u +%Y-%m-%d).
+
+          **Run:** $RUN_URL
+
+          The run page shows which step failed. The Playwright report is attached
+          to that run as an artifact, kept for 7 days, and the PHP server log is
+          printed into the job output. This issue is updated on each further
+          failure and closed automatically once the nightly is green again."
+
+          # ⚠️ Both label names must exist in the repository. `gh issue create`
+          # fails outright on an unknown one, and this call has no fallback, so
+          # a typo here means the nightly silently has no audience at all.
+          #
+          # Found by label, not by title search. `--search "in:title …"` is fuzzy
+          # and reads GitHub's search index, which lags creation by seconds to
+          # minutes; a re-run landing inside that window would open a duplicate.
+          # --label queries the API directly and is exact.
+          NUM=$(gh issue list --repo "$REPO" --state open --label "$LABEL" --json number --jq '.[0].number // ""')
+
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --repo "$REPO" --body "Still failing on $(date -u +%Y-%m-%d): $RUN_URL"
+          else
+            gh issue create --repo "$REPO" \
+              --title "$TITLE" \
+              --label "$LABEL" \
+              --label "type: bug" \
+              --body "$BODY"
+          fi
+
+      - name: Close the nightly failure issue when green
+        if: needs.release-vetting.result == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          LABEL: 'ci: nightly'
+        run: |
+          NUM=$(gh issue list --repo "$REPO" --state open --label "$LABEL" --json number --jq '.[0].number // ""')
+
+          if [ -n "$NUM" ]; then
+            gh issue close "$NUM" --repo "$REPO" \
+              --comment "Nightly E2E passed on $(date -u +%Y-%m-%d): $RUN_URL. Closing automatically."
+          fi
