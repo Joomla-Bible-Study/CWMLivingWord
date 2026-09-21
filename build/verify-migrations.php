@@ -129,6 +129,35 @@ const EXPECTATIONS = [
             ],
         ],
     ],
+    // 5.7.2.sql adds idx_action_token to #__livingword_users. The index is
+    // already asserted from 5.7.0, because it was always meant to be there —
+    // 5.3.0.sql adds it but sits below the #__schemas stamp of every install
+    // from 5.0.0 to 5.5.0, so those sites never ran it. This entry describes
+    // the release that actually repairs them, and carries the rest forward
+    // because the expectations are cumulative.
+    '5.7.2' => [
+        'tables'  => ['livingword_notes', 'livingword_tools'],
+        'columns' => [
+            'livingword_groups'   => ['join_mode'],
+            'livingword_users'    => ['action_token', 'audio_version', 'email_hour', 'timezone'],
+            'livingword_links'    => ['catid'],
+            'livingword_progress' => ['passage_index'],
+        ],
+        'indexes' => [
+            'livingword_users'    => ['idx_action_token'],
+            'livingword_links'    => ['idx_catid'],
+            'livingword_progress' => [
+                'idx_user_plan_day_passage' => [
+                    'unique'  => true,
+                    'columns' => ['user_id', 'plan_id', 'day', 'passage_index'],
+                ],
+                'idx_user_plan_day' => [
+                    'unique'  => false,
+                    'columns' => ['user_id', 'plan_id', 'day'],
+                ],
+            ],
+        ],
+    ],
 ];
 
 /** Every table install.sql is expected to create, regardless of version. */
