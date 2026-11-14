@@ -8,23 +8,15 @@
     Joomla changelog types. Release notes with no recognised headings fall
     back to <note>.
 
-    Two things this comment must not contain, both of which silently break
-    the file:
-
-      * A double hyphen. XML forbids it inside a comment, so the command
-        cannot be written here with its argument separator. That defect is
-        live in CWMScriptureLinks' changelog, which Joomla cannot parse.
-
-      * The literal name of this file's root element in angle brackets.
-        cwm-changelog inserts each new entry after the first occurrence of
-        that string, and does not skip comments — so writing it above would
-        splice the entry into the middle of this comment.
-
     For that to produce a useful entry, write release notes under those
     headings. Notes that are only install instructions generate entries
     listing the system requirements as though they were changes — the
     entries below for 5.0.0 through 5.5.0 were written by hand from the
     commit history for exactly that reason.
+
+    This comment must not contain a double hyphen. XML forbids it inside a
+    comment, and Joomla cannot read the file at all when it is there, so
+    the command cannot be written here with its argument separator.
 
     Hosted at:
     https://raw.githubusercontent.com/Joomla-Bible-Study/CWMLivingWord/main/build/livingword-changelog.xml
@@ -38,8 +30,8 @@
     the Update screen shows an empty changelog.
 
     This file must exist, with its root element in place, before a release
-    runs. cwm-changelog refuses to create it, and release.sh silently skips
-    step 6 when it is missing.
+    runs. cwm-changelog refuses to create it, and release.sh skips step 6
+    when it is missing, printing only a one-line "Skipped" notice.
 -->
 <changelogs>
 
