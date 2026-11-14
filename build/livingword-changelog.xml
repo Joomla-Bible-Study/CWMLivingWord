@@ -8,36 +8,30 @@
     Joomla changelog types. Release notes with no recognised headings fall
     back to <note>.
 
-    Two things this comment must not contain, both of which silently break
-    the file:
-
-      * A double hyphen. XML forbids it inside a comment, so the command
-        cannot be written here with its argument separator. That defect is
-        live in CWMScriptureLinks' changelog, which Joomla cannot parse.
-
-      * The literal name of this file's root element in angle brackets.
-        cwm-changelog inserts each new entry after the first occurrence of
-        that string, and does not skip comments — so writing it above would
-        splice the entry into the middle of this comment.
-
     For that to produce a useful entry, write release notes under those
     headings. Notes that are only install instructions generate entries
     listing the system requirements as though they were changes — the
     entries below for 5.0.0 through 5.5.0 were written by hand from the
     commit history for exactly that reason.
 
+    This comment must not contain a double hyphen. XML forbids it inside a
+    comment, and Joomla cannot read the file at all when it is there, so
+    the command cannot be written here with its argument separator.
+
     Hosted at:
     https://raw.githubusercontent.com/Joomla-Bible-Study/CWMLivingWord/main/build/livingword-changelog.xml
 
-    Joomla reads this file via the `<changelogurl>` element in the package
-    manifest (build/pkg_livingword.xml) when checking for updates. The URL is
-    also recorded in cwm-build.config.json under `changelog.url` for tooling
-    reference; modern Akeeba ARS does not expose a changelog field on its
-    update streams, so the manifest element is the load-bearing wiring.
+    Joomla reads this file from two places. Extensions → Manage takes the
+    URL from the `<changelogurl>` element in the package manifest
+    (build/pkg_livingword.xml). Extensions → Update takes it from the update
+    stream, where ARS publishes each release's changelog URL;
+    cwm-ars-publish sets that from `changelog.url` in cwm-build.config.json
+    on every publish. A release without one falls back to its web page, and
+    the Update screen shows an empty changelog.
 
     This file must exist, with its root element in place, before a release
-    runs. cwm-changelog refuses to create it, and release.sh silently skips
-    step 6 when it is missing.
+    runs. cwm-changelog refuses to create it, and release.sh skips step 6
+    when it is missing, printing only a one-line "Skipped" notice.
 -->
 <changelogs>
 
