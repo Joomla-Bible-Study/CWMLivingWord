@@ -58,8 +58,9 @@ return new class () implements InstallerScriptInterface {
      * removing LivingWord took a stack Proclaim was still using.
      *
      * Runs in preflight because com_livingword's own postflight registers itself
-     * in the library's consumer registry, and registerScriptureConsumer() returns
-     * silently when ConsumerRegistry cannot be autoloaded. Installing later would
+     * in the library's consumer registry through the library's
+     * `src/consumer.php` entry point, and registerScriptureConsumer() skips
+     * registration when that file is not on disk yet. Installing later would
      * leave LivingWord unregistered.
      *
      * Skips when an equal or newer pkg_cwmscripture is already installed, so a
