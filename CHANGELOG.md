@@ -21,6 +21,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - The "Show Scripture Text" toggle button was hard-coded English. It is now translated.
+- **Warning-coloured text meets WCAG contrast.** `text-warning` (Bootstrap's light yellow) on a light background measured 1.72:1. The release gate's accessibility scan caught it on the dashboard's inactive-subscriber count, which only turns yellow on a site that has inactive subscribers. The same pattern was on the calendar view's partial-progress count and the plan form's audio-test messages. All four now use `text-warning-emphasis`, the same colour `livingword.css` already uses for warning text.
 - **Scripture text for chapter ranges and comma lists.** Plan readings like "Ecclesiastes 1-3", "Romans 5-8,12" and "Luke 1:26-56,2:1-7" now get their text.
   - Readings were passed to the scripture library as raw strings, and each provider read them in its own dialect. Comma lists got nothing anywhere, and a chapter range came back as the first three verses from local translations.
   - Each passage is now split by `CwmscriptureHelper::parsePassage()` and fetched as structured references through `getPassageFor()`, the way Proclaim calls the library.

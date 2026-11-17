@@ -16,6 +16,7 @@
 - **A passage that can't be fetched no longer disappears.** On days with several passages, one that couldn't be fetched was silently left out. It now shows its reference.
 - **Audio covers the whole reading.** "Romans 5-8,12" plays chapters 5 to 8 and 12; it played only chapter 5. "Philippians 2,4" plays both chapters instead of nothing, and "2 Timothy 3:10-4:22" includes chapter 4.
 - **The "Show Scripture Text" button is translated.** It was in English on every site.
+- **Warning-coloured text is readable.** Three things used Bootstrap's light yellow, which fails the WCAG contrast minimum: the dashboard's count of inactive subscribers, partly read days in the calendar plan view, and the audio-test messages on the plan form. They now use the darker warning colour.
 
 ## Notes
 

@@ -160,7 +160,7 @@ if (empty($currentMonthKey)) {
                                 <?php if ($isFullComplete) : ?>
                                     <span class="icon-checkmark text-success" aria-hidden="true"></span>
                                 <?php elseif ($isPartial) : ?>
-                                    <span class="text-warning" style="font-size: 0.6em;"><?php echo $completedPC; ?>/<?php echo $passageCount; ?></span>
+                                    <span class="text-warning-emphasis" style="font-size: 0.6em;"><?php echo $completedPC; ?>/<?php echo $passageCount; ?></span>
                                 <?php endif; ?>
                             </div>
                             <div class="livingword-cal-reading">
