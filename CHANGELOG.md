@@ -7,6 +7,36 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Milestone 1 — Engagement & Progress Tracking (planned)
+- Reading completion tracking per day (`#__livingword_progress` table)
+- Progress indicator: Day X of Y, percentage complete
+- Reading streak tracking (current and best streak)
+- Catch-up / skip UX in user Settings view
+- Chapter-level completion within multi-passage days
+- One-click email unsubscribe with signed token (CAN-SPAM compliance)
+
+### Milestone 2 — Social & Accountability (planned)
+- Group reading plans for church campaigns
+- Accountability partner feature
+- Pastor / admin congregation progress dashboard
+
+### Milestone 3 — Content & Reading Experience (planned)
+- Inline Bible text via API.Bible (with caching)
+- Audio Bible playback on home view
+- Devotional/reflection content display
+- Short-duration plan support (3–365 day plans, self-paced mode)
+
+### Milestone 4 — Notifications & Delivery (planned)
+- User-controlled email delivery time preference
+- Weekly progress digest email
+- CSV bulk import for reading plan details
+
+## [5.8.0] — 2026-11-17
+
+### Security
+
+- **Bundles CWM Scripture 1.2.20, which fixes a security problem** ([GHSA-g2v4-h5q3-xcwh](https://github.com/Joomla-Bible-Study/CWMScriptureLinks/security/advisories/GHSA-g2v4-h5q3-xcwh)). In earlier versions, anyone visiting the site could use the scripture package's translation tools to delete downloaded Bible translations or start large downloads. 1.2.20 limits them to administrators who can manage plugins.
+
 ### Removed
 
 - **BibleGateway.** LivingWord no longer sends readers to BibleGateway or any other external Bible site. Wherever no scripture text can be shown, the reading now appears as its plain reference. That covers a missing scripture library, the "Reference Only" display mode, a provider that didn't answer, and the plan view's day list. `CwmscriptureHelper::buildBibleGatewayLink()` and `getBibleGatewayUrl()` are gone, and `buildReadingLink()` is deprecated in favour of `buildReadingReference()`.
@@ -35,30 +65,6 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Plan numbers are bounded (at most 150 chapters, 200 verses, three digits), so a mistyped reading can't push an audio or chapter loop into overflow.
 - **A passage with no text is no longer dropped from the day.** If one passage of a multi-passage day can't be fetched, its heading still shows instead of vanishing. A passage counts as fetched only when every part of it returned text.
 - **Audio for comma lists and cross-chapter ranges.** "Romans 5-8,12" now plays chapters 5 to 8 and 12, not only 5. "Philippians 2,4" plays both chapters instead of nothing. "2 Timothy 3:10-4:22" includes chapter 4.
-
-### Milestone 1 — Engagement & Progress Tracking (planned)
-- Reading completion tracking per day (`#__livingword_progress` table)
-- Progress indicator: Day X of Y, percentage complete
-- Reading streak tracking (current and best streak)
-- Catch-up / skip UX in user Settings view
-- Chapter-level completion within multi-passage days
-- One-click email unsubscribe with signed token (CAN-SPAM compliance)
-
-### Milestone 2 — Social & Accountability (planned)
-- Group reading plans for church campaigns
-- Accountability partner feature
-- Pastor / admin congregation progress dashboard
-
-### Milestone 3 — Content & Reading Experience (planned)
-- Inline Bible text via API.Bible (with caching)
-- Audio Bible playback on home view
-- Devotional/reflection content display
-- Short-duration plan support (3–365 day plans, self-paced mode)
-
-### Milestone 4 — Notifications & Delivery (planned)
-- User-controlled email delivery time preference
-- Weekly progress digest email
-- CSV bulk import for reading plan details
 
 ---
 
