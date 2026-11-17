@@ -175,7 +175,7 @@ lib_cwmscripture  →  CWMScriptureLinks  →  CWMLivingWord / Proclaim
 
 1. Land and release `lib_cwmscripture`.
 2. Bump the submodule pointer in `CWMScriptureLinks` (`chore/bump-lib-submodule`).
-3. Consumers pick it up on their next build — LivingWord fetches the latest `pkg_cwmscripture` release at build time via `build/fetch_dependencies.php`.
+3. Consumers pick it up on their next build — LivingWord fetches the latest `pkg_cwmscripture` **GitHub release** at build time via `build/fetch_dependencies.php` (it asks for `releases/latest`). A `CWMScriptureLinks` tag that has no GitHub release is never bundled.
 
 A fix in the library is **not** live for consumers until step 2 happens, even though it's on all three `main` branches.
 
