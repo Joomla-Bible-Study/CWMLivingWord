@@ -30,6 +30,25 @@ use Joomla\CMS\Language\Text;
 class CwmscriptureHelper
 {
     /**
+     * Highest chapter a plan reading can name. Psalms has 150.
+     *
+     * Bounds parsePassage(). An unbounded number cast to int saturates at
+     * PHP_INT_MAX, and a chapter loop counting up to it never ends.
+     *
+     * @var    int
+     * @since  __DEPLOY_VERSION__
+     */
+    private const int MAX_CHAPTER = 150;
+
+    /**
+     * Highest verse parsePassage() accepts. Psalm 119, the longest chapter, has 176.
+     *
+     * @var    int
+     * @since  __DEPLOY_VERSION__
+     */
+    private const int MAX_VERSE = 200;
+
+    /**
      * Check if the CWM Scripture Library is installed and available.
      *
      * @return  bool
@@ -48,8 +67,11 @@ class CwmscriptureHelper
     /**
      * Get passage text for a reading reference using lib_cwmscripture.
      *
-     * Handles semicolon-separated multi-passage references by fetching each
-     * passage individually and concatenating the results.
+     * A reading holds one or more passages separated by semicolons, and each is
+     * fetched on its own. A passage that can't be fetched keeps its heading, so a
+     * day is never shown with one of its passages silently missing. Null only
+     * when no passage at all returned text, so the caller can show the plain
+     * reference instead.
      *
      * @param   string  $reading   The human-readable reading reference (e.g. "Genesis 1-3; Psalm 23")
      * @param   string  $version   Bible translation code (e.g. "kjv", "nlt")
@@ -75,51 +97,277 @@ class CwmscriptureHelper
             return null;
         }
 
-        $passages  = array_map('trim', explode(';', $reading));
-        $allText   = [];
+        $passages  = array_filter(array_map('trim', explode(';', $reading)), static fn (string $p): bool => $p !== '');
+        $blocks    = [];
         $copyright = '';
+        $anyText   = false;
 
         foreach ($passages as $passage) {
-            if (empty($passage)) {
+            $heading = '<h4>' . htmlspecialchars($passage, ENT_QUOTES, 'UTF-8') . '</h4>';
+            $text    = self::fetchPassage($provider, $passage, $version, $copyright);
+
+            if ($text === null) {
+                $blocks[] = '<div class="scripture-passage scripture-passage-unavailable">' . $heading . '</div>';
+
                 continue;
             }
 
-            try {
-                $result = $provider->getPassage($passage, $version);
-            } catch (\Throwable) {
-                // Throwable, not Exception. A fault inside the library is an
-                // Error as often as an Exception — older lib_cwmscripture
-                // releases called $this->getDatabase() from the cache read
-                // before any provider defined it, so every cached lookup raised
-                // "Call to undefined method". Catching Exception alone let that
-                // escape and take the whole reading page down with a 500, in a
-                // component whose every call site is written to fall back to
-                // the plain reference when the library cannot answer.
-                continue;
-            }
-
-            if ($result !== null && $result->hasText()) {
-                $allText[] = '<div class="scripture-passage">'
-                    . '<h4>' . htmlspecialchars($passage, ENT_QUOTES, 'UTF-8') . '</h4>'
-                    . $result->text
-                    . '</div>';
-
-                if (empty($copyright) && !empty($result->copyright)) {
-                    $copyright = $result->copyright;
-                }
-            }
+            $anyText  = true;
+            $blocks[] = '<div class="scripture-passage">' . $heading . $text . '</div>';
         }
 
-        if (empty($allText)) {
+        if (!$anyText) {
             return null;
         }
 
         return (object) [
-            'text'      => implode("\n", $allText),
+            'text'      => implode("\n", $blocks),
             'reference' => $reading,
             'copyright' => $copyright,
             'isHtml'    => true,
         ];
+    }
+
+    /**
+     * Fetch the text of one passage, or null when any part of it is unavailable.
+     *
+     * The passage is split by parsePassage() and every part is asked for as a
+     * structured reference through getPassageFor(), the way Proclaim calls the
+     * library. Passing plan strings through getPassage() instead left each
+     * provider to read them in its own dialect. The library's own parser
+     * deliberately doesn't accept a verse-less chapter range like "Genesis 1-3",
+     * and LocalProvider read that as Genesis 1:1-3. A passage parsePassage()
+     * can't split still goes to getPassage() as written, so a custom plan's
+     * reading that worked before keeps working.
+     *
+     * All or nothing per passage: showing "Romans 5-8" under the heading
+     * "Romans 5-8,12" would misquote the reading.
+     *
+     * @param   object  $provider   A lib_cwmscripture Bible provider
+     * @param   string  $passage    One passage, e.g. "Romans 4:1-5,9-25"
+     * @param   string  $version    Bible translation code
+     * @param   string  $copyright  Set to the first copyright notice a part returns
+     *
+     * @return  ?string  Passage HTML, or null when it could not be fetched in full
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    private static function fetchPassage(object $provider, string $passage, string $version, string &$copyright): ?string
+    {
+        $parts = self::parsePassage($passage);
+
+        if ($parts === []) {
+            $result = self::fetchString($provider, $passage, $version);
+
+            if ($result === null) {
+                return null;
+            }
+
+            $copyright = $copyright !== '' ? $copyright : (string) $result->copyright;
+
+            return $result->text;
+        }
+
+        $texts = [];
+
+        foreach ($parts as $part) {
+            $result = self::fetchPart($provider, $part, $version);
+
+            if ($result === null) {
+                return null;
+            }
+
+            // Disjoint parts ("Romans 5-8,12") get a label each, or the reader
+            // can't tell where one stops and the next starts.
+            $label = \count($parts) > 1
+                ? '<p class="scripture-part"><strong>' . htmlspecialchars(self::formatPart($part), ENT_QUOTES, 'UTF-8') . '</strong></p>'
+                : '';
+
+            $texts[]   = $label . $result->text;
+            $copyright = $copyright !== '' ? $copyright : (string) $result->copyright;
+        }
+
+        return implode("\n", $texts);
+    }
+
+    /**
+     * Ask the provider for one part as a structured reference.
+     *
+     * @param   object                                                                                    $provider  Bible provider
+     * @param   array{book: string, chapterBegin: int, verseBegin: int, chapterEnd: int, verseEnd: int}  $part      One part
+     * @param   string                                                                                    $version   Bible translation code
+     *
+     * @return  ?object  The provider's result when it has text, otherwise null
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    private static function fetchPart(object $provider, array $part, string $version): ?object
+    {
+        try {
+            $book = \CWM\Library\Scripture\Helper\ScriptureHelper::getBookNumber($part['book']);
+
+            if ($book === 0) {
+                return null;
+            }
+
+            // Libraries before 1.1.13 have no structured entry point; ask for the
+            // rendered part as a string there, as Proclaim's fetchPassage() does.
+            if (!method_exists($provider, 'getPassageFor')) {
+                return self::fetchString($provider, self::formatPart($part), $version);
+            }
+
+            $result = $provider->getPassageFor(
+                new \CWM\Library\Scripture\Helper\ScriptureReference(
+                    booknumber: $book,
+                    chapterBegin: $part['chapterBegin'],
+                    verseBegin: $part['verseBegin'],
+                    chapterEnd: $part['chapterEnd'],
+                    verseEnd: $part['verseEnd'],
+                    referenceText: self::formatPart($part),
+                ),
+                $version
+            );
+        } catch (\Throwable) {
+            // Throwable, not Exception. A fault inside the library is an
+            // Error as often as an Exception — older lib_cwmscripture
+            // releases called $this->getDatabase() from the cache read
+            // before any provider defined it, so every cached lookup raised
+            // "Call to undefined method". Catching Exception alone let that
+            // escape and take the whole reading page down with a 500, in a
+            // component whose every call site is written to fall back to
+            // the plain reference when the library cannot answer.
+            return null;
+        }
+
+        return $result !== null && $result->hasText() ? $result : null;
+    }
+
+    /**
+     * Ask the provider for a reference string, as written.
+     *
+     * @param   object  $provider   Bible provider
+     * @param   string  $reference  Reference string
+     * @param   string  $version    Bible translation code
+     *
+     * @return  ?object  The provider's result when it has text, otherwise null
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    private static function fetchString(object $provider, string $reference, string $version): ?object
+    {
+        try {
+            $result = $provider->getPassage($reference, $version);
+        } catch (\Throwable) {
+            // See fetchPart(): a library fault must degrade to "no text".
+            return null;
+        }
+
+        return $result !== null && $result->hasText() ? $result : null;
+    }
+
+    /**
+     * Split one plan passage into the plain references it names.
+     *
+     * Plan readings use citation shorthand that no lib_cwmscripture parser
+     * accepts, and none should have to. That means verse-less chapter ranges
+     * ("Ecclesiastes 1-3") and comma lists ("Romans 5-8,12",
+     * "Romans 4:1-5,9-25", "Genesis 16:1-15,18:1-15,21:1-7").
+     *
+     * A comma continues in the current mode. After a chapter-level item, a
+     * number is a chapter. After a "chapter:verse" item, it is a verse in that
+     * chapter, until another colon names a new chapter. A verse of 0 means
+     * whole chapters, matching ScriptureReference.
+     *
+     * Pure: no library calls, so it can be tested without lib_cwmscripture.
+     *
+     * @param   string  $passage  One passage, e.g. "Romans 4:1-5,9-25"
+     *
+     * @return  list<array{book: string, chapterBegin: int, verseBegin: int, chapterEnd: int, verseEnd: int}>
+     *          Empty when the passage is not in a form this understands
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    public static function parsePassage(string $passage): array
+    {
+        $passage = trim((string) preg_replace('/\s+/', ' ', $passage));
+
+        if (!preg_match('/^(.+?)\s+(\d[\d:,\-\s]*)$/', $passage, $m)) {
+            return [];
+        }
+
+        $book    = trim($m[1]);
+        $spec    = (string) preg_replace('/\s+/', '', $m[2]);
+        $parts   = [];
+        $chapter = 0; // The chapter verses belong to; 0 while in chapter mode.
+
+        // At most three digits per number, so no number can come near
+        // PHP_INT_MAX; MAX_CHAPTER and MAX_VERSE then bound them properly.
+        foreach (explode(',', $spec) as $item) {
+            if (preg_match('/^(\d{1,3}):(\d{1,3})-(\d{1,3}):(\d{1,3})$/', $item, $n)) {
+                $part    = [(int) $n[1], (int) $n[2], (int) $n[3], (int) $n[4]];
+                $chapter = $part[2];
+            } elseif (preg_match('/^(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?$/', $item, $n)) {
+                $part    = [(int) $n[1], (int) $n[2], (int) $n[1], (int) ($n[3] ?? $n[2])];
+                $chapter = $part[0];
+            } elseif (preg_match('/^(\d{1,3})(?:-(\d{1,3}))?$/', $item, $n)) {
+                $from = (int) $n[1];
+                $to   = (int) ($n[2] ?? $n[1]);
+                $part = $chapter > 0 ? [$chapter, $from, $chapter, $to] : [$from, 0, $to, 0];
+            } else {
+                return [];
+            }
+
+            [$chapterBegin, $verseBegin, $chapterEnd, $verseEnd] = $part;
+
+            $isVerse = $verseBegin > 0;
+
+            if (
+                $chapterBegin < 1
+                || $chapterEnd < $chapterBegin
+                || $chapterEnd > self::MAX_CHAPTER
+                || $verseBegin > self::MAX_VERSE
+                || $verseEnd > self::MAX_VERSE
+                || ($isVerse && ($verseEnd < 1 || ($chapterEnd === $chapterBegin && $verseEnd < $verseBegin)))
+            ) {
+                return [];
+            }
+
+            $parts[] = [
+                'book'         => $book,
+                'chapterBegin' => $chapterBegin,
+                'verseBegin'   => $verseBegin,
+                'chapterEnd'   => $chapterEnd,
+                'verseEnd'     => $verseEnd,
+            ];
+        }
+
+        return $parts;
+    }
+
+    /**
+     * Render one parsed part back as a reference, e.g. "Romans 4:9-25".
+     *
+     * @param   array{book: string, chapterBegin: int, verseBegin: int, chapterEnd: int, verseEnd: int}  $part  One part
+     *
+     * @return  string
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    public static function formatPart(array $part): string
+    {
+        $out = $part['book'] . ' ' . $part['chapterBegin'];
+
+        if ($part['verseBegin'] === 0) {
+            return $part['chapterEnd'] > $part['chapterBegin'] ? $out . '-' . $part['chapterEnd'] : $out;
+        }
+
+        $out .= ':' . $part['verseBegin'];
+
+        if ($part['chapterEnd'] > $part['chapterBegin']) {
+            return $out . '-' . $part['chapterEnd'] . ':' . $part['verseEnd'];
+        }
+
+        return $part['verseEnd'] > $part['verseBegin'] ? $out . '-' . $part['verseEnd'] : $out;
     }
 
     /**
@@ -258,9 +506,10 @@ class CwmscriptureHelper
     /**
      * Get audio data for a reading reference using Bible Brain.
      *
-     * Parses the first passage from a semicolon-separated reading reference,
-     * resolves the USFM book code and chapter, and returns audio URLs
-     * via BibleBrainProvider.
+     * Every passage in the semicolon-separated reading is split by
+     * parsePassage(), and every chapter it covers is fetched. A comma list like
+     * "Romans 5-8,12" plays chapters 5 to 8 and 12, and "2 Timothy 3:10-4:22"
+     * plays chapters 3 and 4. Returns audio URLs via BibleBrainProvider.
      *
      * @param   string  $reading   The human-readable reading reference (e.g. "Genesis 1-3; Psalm 23")
      * @param   string  $version   Bible translation code (e.g. "kjv", "esv")
@@ -307,18 +556,9 @@ class CwmscriptureHelper
                 continue;
             }
 
-            $parsed = self::parsePassageReference($passage);
-
-            if ($parsed === null) {
-                continue;
-            }
-
-            // Handle chapter ranges (e.g. "Genesis 1-3" → chapters 1, 2, 3)
-            $chapters = self::expandChapterRange($passage, $parsed['chapter']);
-
-            foreach ($chapters as $chapter) {
+            foreach (self::audioTargets($passage) as $target) {
                 try {
-                    $result = $provider->getAudio($parsed['book'], $chapter, $version);
+                    $result = $provider->getAudio($target['book'], $target['chapter'], $version);
                 } catch (\Throwable) {
                     // Throwable for the same reason as the passage fetch above:
                     // a library-side Error must degrade to "no audio", never to
@@ -384,35 +624,88 @@ class CwmscriptureHelper
     }
 
     /**
-     * Expand a chapter range from a reference like "Genesis 1-3" into [1, 2, 3].
+     * The book codes and chapters to fetch audio for, for one passage.
      *
-     * @param   string  $reference    The full passage reference
-     * @param   int     $startChapter The first chapter (already parsed)
+     * @param   string  $passage  One passage, e.g. "Romans 5-8,12"
      *
-     * @return  array  Array of chapter numbers
+     * @return  list<array{book: string, chapter: int}>  USFM book code and chapter
      *
-     * @since   5.7.0
+     * @since   __DEPLOY_VERSION__
      */
-    private static function expandChapterRange(string $reference, int $startChapter): array
+    private static function audioTargets(string $passage): array
     {
-        // Match patterns like "Genesis 1-3" or "Psalm 119-120"
-        if (preg_match('/\s+(\d+)\s*-\s*(\d+)\s*$/', $reference, $m)) {
-            $start = (int) $m[1];
-            $end   = (int) $m[2];
+        $targets = [];
 
-            if ($end > $start && ($end - $start) < 50) {
-                return range($start, $end);
+        foreach (self::audioChapters(self::parsePassage($passage)) as $item) {
+            $code = \CWM\Library\Scripture\Bible\AbstractBibleProvider::resolveBookCode($item['book']);
+
+            if ($code !== '') {
+                $targets[] = ['book' => $code, 'chapter' => $item['chapter']];
             }
         }
 
-        return [$startChapter];
+        if ($targets === []) {
+            // A form parsePassage() can't split gets its first chapter, as
+            // every passage did before.
+            $parsed = self::parsePassageReference($passage);
+
+            if ($parsed !== null) {
+                $targets[] = $parsed;
+            }
+        }
+
+        return $targets;
     }
 
     /**
-     * Parse a passage reference string into book USFM code and chapter.
+     * The chapters a passage's parts cover, in reading order, each once.
      *
-     * Handles formats like "Genesis 1", "Genesis 1-3", "John 3:16-18",
-     * "1 Samuel 2:1-10".
+     * "Romans 4:1-5,9-25" covers chapter 4 twice and yields it once. A part
+     * spanning 50 chapters or more yields only its first chapter, as the range
+     * expansion this replaces did, so a malformed plan can't queue a whole
+     * book of audio.
+     *
+     * Pure: no library calls.
+     *
+     * @param   list<array{book: string, chapterBegin: int, verseBegin: int, chapterEnd: int, verseEnd: int}>  $parts  Parts from parsePassage()
+     *
+     * @return  list<array{book: string, chapter: int}>
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    public static function audioChapters(array $parts): array
+    {
+        $chapters = [];
+        $seen     = [];
+
+        foreach ($parts as $part) {
+            $span  = $part['chapterEnd'] - $part['chapterBegin'];
+            $count = $span >= 50 ? 1 : $span + 1;
+
+            // Counted, not compared against chapterEnd: this is public and takes
+            // any array, and a chapter number saturated at PHP_INT_MAX would turn
+            // "$chapter <= $last" into a loop that never ends.
+            for ($offset = 0; $offset < $count; $offset++) {
+                $chapter = $part['chapterBegin'] + $offset;
+                $key     = $part['book'] . '|' . $chapter;
+
+                if (isset($seen[$key])) {
+                    continue;
+                }
+
+                $seen[$key] = true;
+                $chapters[] = ['book' => $part['book'], 'chapter' => $chapter];
+            }
+        }
+
+        return $chapters;
+    }
+
+    /**
+     * Parse a passage reference string into book USFM code and first chapter.
+     *
+     * The fallback for passages parsePassage() can't split. It handles formats
+     * like "Genesis 1", "John 3:16-18" and "1 Samuel 2:1-10".
      *
      * Book resolution is the library's job, via the public
      * `AbstractBibleProvider::resolveBookCode()`. This used to walk
