@@ -17,6 +17,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The module's "Show Reading Link" option is now "Show Scripture Text", which is what it actually switches.
 - Registration with lib_cwmscripture's consumer registry goes through the library's documented `src/consumer.php` entry point. It no longer depends on the library being autoloadable, so it also succeeds on the first install, inside the same request that installs the library.
 - The build refuses a bundled scripture package without `plg_system_cwmscripture`, the plugin that protects downloaded Bible translations during library updates.
+- **The release gate reports the version being released.** The 5.8.0-rc1 gate read "CLEAN-INSTALL TEST PASSED for 5.7.2" and "UPGRADE TEST PASSED — 5.7.2 -> 5.7.2".
+  - `test-install.sh` and `test-upgrade.sh` took the version from `versions.json` `active_development`. That was still 5.7.2, and after a pre-release it also lags the manifests.
+  - They now report against `CWM_RELEASE_VERSION`, falling back to the package manifest. Until the bump they note that the artifact is still labelled with the previous version.
+  - They also verify the release's schema expectations, so a migration added by the release is checked.
+- **The upgrade test's baseline comes from cwm-build-tools' `cwm-baseline`.** It replaces the script's own copy of the release lookup, and the 5.6.0-beta2 floor moves to `baseline.minimum` in `cwm-build.config.json`.
 
 ### Fixed
 
