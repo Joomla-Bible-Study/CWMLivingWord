@@ -36,6 +36,37 @@
 <changelogs>
 
     <!-- ============================================================ -->
+    <!-- 5.8.0                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.8.0</version>
+        <date>2026-11-17</date>
+        <security>
+            <item>Bundles CWM Scripture 1.2.20, which fixes a security problem. In earlier versions, anyone visiting the site could use the scripture package's translation tools to delete downloaded Bible translations or start large downloads (GHSA-g2v4-h5q3-xcwh).</item>
+        </security>
+        <fix>
+            <item>Readings with chapter ranges or comma lists, such as "Ecclesiastes 1-3", "Romans 5-8,12" and "Luke 1:26-56,2:1-7", now show their scripture text. Comma lists showed none, and a chapter range showed only its first three verses from translations stored on your site.</item>
+            <item>Whole chapters from GetBible.net translations come back complete, and passages that cross chapters work. This comes from the bundled CWM Scripture.</item>
+            <item>On days with several passages, one that can't be fetched now shows its reference instead of silently disappearing.</item>
+            <item>Audio covers the whole reading. "Romans 5-8,12" plays chapters 5 to 8 and 12; it played only chapter 5.</item>
+            <item>The "Show Scripture Text" button is translated. It was in English on every site.</item>
+            <item>The dashboard's inactive-subscriber count, the calendar view's partly read days and the plan form's audio-test messages use a darker warning colour that meets the WCAG contrast minimum.</item>
+        </fix>
+        <change>
+            <item>LivingWord no longer links to BibleGateway or any other external Bible site. When scripture text can't be shown, the reading appears as its plain reference.</item>
+            <item>The "Link Only (BibleGateway)" display mode is now "Reference Only (no scripture text)", and the module's "Show Reading Link" option is now "Show Scripture Text". Saved settings keep working.</item>
+            <item>Bundles CWM Scripture 1.2.20, with library 1.1.26. It also makes scripture tooltips in articles work on sites without CWM Proclaim.</item>
+            <item>LivingWord registers with the scripture library through the library's install entry point. The library knows from the first install that LivingWord depends on it.</item>
+        </change>
+        <note>
+            <item>Requires PHP 8.3 or later, and Joomla 5 or 6. No database changes.</item>
+            <item>Whole-chapter readings from API.Bible-served translations still show only their reference.</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
     <!-- 5.8.0-rc1                                                -->
     <!-- ============================================================ -->
     <changelog>
