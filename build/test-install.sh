@@ -2,10 +2,14 @@
 #
 # Clean-install release test.
 #
-# Resets every role=test install, builds the package at the active-development
-# version, installs it into a LivingWord-free site (a true fresh install — the
-# install() scriptfile path plus the full install.sql), then confirms every
-# extension in the package actually registered.
+# Resets every role=test install, builds the package at the version its
+# manifests carry, installs it into a LivingWord-free site (a true fresh
+# install — the install() scriptfile path plus the full install.sql), then
+# confirms every extension in the package actually registered.
+#
+# Under cwm-release the version being released (CWM_RELEASE_VERSION) is what
+# results are reported against and what the schema is verified for. The build
+# keeps the manifests' label until the bump; see gate-versions.sh.
 #
 # Run via: composer test:install
 #
@@ -24,24 +28,21 @@ cd "$ROOT"
 
 BIN="libraries/vendor/bin"
 
-VERSION="$(php -r '$v = json_decode(file_get_contents("build/versions.json"), true); echo $v["active_development"]["version"] ?? ($v["current"]["version"] ?? "");')"
+# shellcheck source=build/gate-versions.sh
+. "$ROOT/build/gate-versions.sh"
+gate_resolve_versions || exit 1
 
-if [ -z "$VERSION" ]; then
-    echo "ERROR: could not resolve active-development version from build/versions.json" >&2
-    exit 1
-fi
-
-ZIP="build/dist/pkg_livingword-${VERSION}.zip"
+ZIP="build/dist/pkg_livingword-${ARTIFACT_VERSION}.zip"
 
 echo "========================================================================"
-echo " CLEAN-INSTALL TEST — pkg_livingword ${VERSION}"
+echo " CLEAN-INSTALL TEST — pkg_livingword ${RELEASE_VERSION}${LABEL_NOTE}"
 echo "========================================================================"
 
 echo "-- [1/5] reset test site(s) to a clean slate"
 "$BIN/cwm-reset-testsite"
 
-echo "-- [2/5] build package ${VERSION}"
-composer build -- --version "$VERSION"
+echo "-- [2/5] build package ${ARTIFACT_VERSION}"
+composer build -- --version "$ARTIFACT_VERSION"
 
 if [ ! -f "$ZIP" ]; then
     echo "ERROR: expected build artifact not found: $ZIP" >&2
@@ -60,15 +61,17 @@ echo "-- [4/5] verify extension registration"
 "$BIN/cwm-verify" --target test || FAILURES+=("extension registration (cwm-verify)")
 
 echo "-- [5/5] verify the schema landed"
-php build/verify-migrations.php "$VERSION" || FAILURES+=("schema (verify-migrations)")
+# The release version, not the label: the code under test is the release's, so
+# its migrations are the ones that must have landed.
+php build/verify-migrations.php "$RELEASE_VERSION" || FAILURES+=("schema (verify-migrations)")
 
 echo
 if [ ${#FAILURES[@]} -gt 0 ]; then
-    echo "CLEAN-INSTALL TEST FAILED for ${VERSION}:"
+    echo "CLEAN-INSTALL TEST FAILED for ${RELEASE_VERSION}${LABEL_NOTE}:"
     for f in "${FAILURES[@]}"; do
         echo "  - ${f}"
     done
     exit 1
 fi
 
-echo "CLEAN-INSTALL TEST PASSED for ${VERSION}."
+echo "CLEAN-INSTALL TEST PASSED for ${RELEASE_VERSION}${LABEL_NOTE}."

@@ -16,28 +16,21 @@
 # not a rebuild of an old tree — that guarantees the old install.sql, so the
 # upgrade genuinely exercises the ADD COLUMN / CREATE TABLE update SQL.
 #
-# Which baseline, and why not versions.json
-# -----------------------------------------
-# It used to default to versions.json `current`, and that made this phase skip
-# itself at the one moment it mattered most. cwm-release runs the whole
-# test:release gate BEFORE it bumps — deliberately, so a failure leaves nothing
-# mutated — so during a release `active_development` and `current` are still
-# the same string, and the comparison below said "nothing newer to test" about
-# the very build being released. The 5.7.0 gate reported install, accessibility
-# and API green with the upgrade phase skipped, and the release carried a
-# postflight schema repair that only runs on the update route.
+# Which baseline
+# --------------
+# cwm-baseline (cwm-build-tools, #103) resolves and fetches it. It picks the
+# newest release strictly older than the version being released, at or above
+# `baseline.minimum` in cwm-build.config.json, preferring a stable release. That
+# is the artifact most sites are actually on, and it pulls in every migration
+# since. LivingWord used to carry its own copy of this lookup. cwm-baseline was
+# written to replace it and Proclaim's, which had drifted apart.
 #
-# So the baseline is resolved from the releases that exist instead: the newest
-# STABLE release older than the build under test, which is the artifact most
-# sites are actually on, and which pulls in every migration since. Prereleases
-# are used only when no stable one qualifies.
-#
-# "Older than" needs the version being released, though, and that is the half
-# the first fix left stale. cwm-release now exports CWM_RELEASE_VERSION for the
-# gate; without it the baseline is resolved relative to `active_development`,
-# which during a release is still the previous bump — so releasing 5.7.1 with
-# the pointer at 5.7.0-beta4 picks the newest stable below beta4. The phase runs
-# and upgrades from the wrong "before" state.
+# The target is RELEASE_VERSION from gate-versions.sh, passed as --target. It's
+# CWM_RELEASE_VERSION during a release (the gate runs before the bump) and the
+# manifest version otherwise. That's the order cwm-baseline itself uses, so the
+# version a pass reports and the version the baseline was chosen for are the
+# same by construction. Reading versions.json instead is how the 5.7.0 gate
+# skipped its upgrade phase, and how 5.8.0-rc1's reported "5.7.2 -> 5.7.2".
 #
 # Run via: composer test:upgrade [baseline-version]
 #
@@ -51,118 +44,63 @@ cd "$ROOT"
 
 BIN="libraries/vendor/bin"
 
-REPO="$(php -r '$c = json_decode(file_get_contents("cwm-build.config.json"), true); echo $c["github"]["owner"] . "/" . $c["github"]["repo"];')"
+# ARTIFACT_VERSION is what the zip carries (the manifests on disk) and names the
+# build. RELEASE_VERSION is what this run validates an upgrade *to*. That's
+# CWM_RELEASE_VERSION under cwm-release, whose gate runs before the bump, and
+# otherwise the same as ARTIFACT_VERSION. See gate-versions.sh.
+# shellcheck source=build/gate-versions.sh
+. "$ROOT/build/gate-versions.sh"
+gate_resolve_versions || exit 1
 
-NEWVER="$(php -r '$v = json_decode(file_get_contents("build/versions.json"), true); echo $v["active_development"]["version"] ?? "";')"
-
-if [ -z "$NEWVER" ]; then
-    echo "ERROR: could not resolve active_development from build/versions.json" >&2
-    exit 1
-fi
-
-# The version this run is validating an upgrade *to*, which is not always the
-# version the artifact is labelled with.
-#
-# cwm-release exports CWM_RELEASE_VERSION for the test:release gate, because the
-# gate runs before the bump and nothing on disk names the release yet. That is
-# the version the baseline must be chosen relative to: releasing 5.7.1 while
-# active_development still reads 5.7.0-beta4 otherwise resolves the newest
-# stable release below *beta4*, which can be a whole minor line too old.
-#
-# It deliberately does not become NEWVER. `composer build -- --version` only
-# substitutes the output *filename*; the manifest inside the zip is whatever is
-# on disk, so the label has to keep tracking the manifests or the artifact
-# claims a version it does not carry.
-#
-# Unset outside a release — a nightly, a PR, or a hand run — and then
-# active_development is genuinely the build under test.
-TARGETVER="${CWM_RELEASE_VERSION:-$NEWVER}"
-
-# Nothing older than this installs at all: every package before 5.6.0-beta2
-# assembled its inner extensions into a folder the manifest never pointed at,
-# so Joomla refused it (#95). Such a release cannot serve as a "before" state.
-MIN_BASELINE="5.6.0-beta2"
-
-# The newest usable release strictly older than $1, preferring stable ones.
-# Empty output (and a non-zero status) means there is no such release, or that
-# GitHub could not be reached.
-previous_release() {
-    gh release list --repo "$REPO" --limit 100 --json tagName,isPrerelease \
-        --jq '.[] | [.tagName, (.isPrerelease | tostring)] | @tsv' 2>/dev/null \
-    | php -r '
-        $newer  = $argv[1];
-        $floor  = $argv[2];
-        $stable = [];
-        $any    = [];
-
-        while (($line = fgets(STDIN)) !== false) {
-            [$tag, $prerelease] = array_pad(explode("\t", trim($line)), 2, "");
-
-            if ($tag === "") {
-                continue;
-            }
-
-            $version = ltrim($tag, "v");
-
-            // Strictly older than the build under test, and installable.
-            if (version_compare($version, $newer, ">=") || version_compare($version, $floor, "<")) {
-                continue;
-            }
-
-            $any[] = $version;
-
-            if ($prerelease !== "true") {
-                $stable[] = $version;
-            }
-        }
-
-        $pool = $stable ?: $any;
-
-        if ($pool === []) {
-            exit(1);
-        }
-
-        usort($pool, "version_compare");
-
-        echo end($pool);
-    ' "$1" "$MIN_BASELINE"
+# Exit 3 means "not applicable", as distinct from "failed": no released artifact
+# qualifies as a baseline, as on a project's first release or when every
+# candidate is below baseline.minimum. It's not a defect, and failing the gate
+# for it would teach people to ignore the gate. test-release.sh maps 3 to a loud
+# SKIPPED, deliberately: a silently skipped phase reads as a pass, which is how
+# an ungated release happens.
+not_applicable() {
+    echo "NOT APPLICABLE: no released package older than ${RELEASE_VERSION} is usable as a baseline." >&2
+    echo "                Releases below baseline.minimum in cwm-build.config.json cannot install" >&2
+    echo "                (#95). To name a baseline explicitly:  composer test:upgrade -- 5.7.2" >&2
+    exit 3
 }
 
 if [ -n "${1:-}" ]; then
     BASEVER="$1"
 else
-    BASEVER="$(previous_release "$TARGETVER" || true)"
+    # --print writes a human line and then the bare version; the version is last.
+    set +e
+    BASELINE_OUT="$("$BIN/cwm-baseline" --print --target "$RELEASE_VERSION")"
+    BASELINE_STATUS=$?
+    set -e
+
+    if [ "$BASELINE_STATUS" -eq 3 ]; then
+        # cwm-baseline has already said why; add only how to override it here.
+        echo "                For this test:  composer test:upgrade -- <version>" >&2
+        exit 3
+    elif [ "$BASELINE_STATUS" -ne 0 ]; then
+        echo "ERROR: cwm-baseline could not resolve a baseline (exit ${BASELINE_STATUS})." >&2
+        printf '%s\n' "$BASELINE_OUT" >&2
+        exit 1
+    fi
+
+    BASEVER="$(printf '%s\n' "$BASELINE_OUT" | tail -n 1)"
 fi
 
-# Exit 3 means "not applicable", as distinct from "failed" — reachable now only
-# when no released artifact qualifies as a baseline at all: the first release of
-# a project, or an offline run with nothing cached. Not a defect, and failing
-# the gate for it would teach people to ignore the gate.
-#
-# test-release.sh maps 3 to a loud SKIPPED. It stays loud deliberately: a
-# silently skipped phase reads as a pass, which is how an ungated release
-# happens.
-if [ -z "$BASEVER" ] || [ "$TARGETVER" = "$BASEVER" ]; then
-    echo "NOT APPLICABLE: no released package older than ${TARGETVER} is usable as a baseline." >&2
-    echo "                Releases before ${MIN_BASELINE} cannot install (#95), and GitHub" >&2
-    echo "                must be reachable to resolve one. To name a baseline explicitly:" >&2
-    echo "                  composer test:upgrade -- 5.6.0" >&2
-    exit 3
+if [ -z "$BASEVER" ] || [ "$RELEASE_VERSION" = "$BASEVER" ]; then
+    not_applicable
 fi
 
 BASEZIP="build/dist/pkg_livingword-${BASEVER}.zip"
-NEWZIP="build/dist/pkg_livingword-${NEWVER}.zip"
+NEWZIP="build/dist/pkg_livingword-${ARTIFACT_VERSION}.zip"
 
 echo "========================================================================"
-echo " UPGRADE TEST — ${BASEVER}  ->  ${NEWVER}"
+echo " UPGRADE TEST — ${BASEVER}  ->  ${RELEASE_VERSION}${LABEL_NOTE}"
 
-# Say so when the artifact is not labelled with the version being released. The
-# tree under test is the one that ships; only the stamp differs, because the
-# gate runs before the bump. Unstated, that gap reads as though the release
-# version itself was exercised.
-if [ "$TARGETVER" != "$NEWVER" ]; then
-    echo " Releasing ${TARGETVER} — the build is labelled ${NEWVER} until the bump."
-    echo " Baseline chosen relative to ${TARGETVER}."
+# The tree under test is the one that ships; only the stamp lags, because the
+# gate runs before the bump. LABEL_NOTE says so wherever the result is printed.
+if [ -n "$LABEL_NOTE" ]; then
+    echo " Baseline chosen relative to ${RELEASE_VERSION}, the version being released."
 fi
 
 echo "========================================================================"
@@ -171,34 +109,25 @@ echo "-- [1/6] reset test site(s) to a clean slate"
 "$BIN/cwm-reset-testsite"
 
 echo "-- [2/6] fetch released baseline ${BASEVER}"
-mkdir -p build/dist
+"$BIN/cwm-baseline" --version "$BASEVER"
 
 if [ ! -f "$BASEZIP" ]; then
-    gh release download "v${BASEVER}" \
-        --repo "$REPO" \
-        --pattern "pkg_livingword-${BASEVER}.zip" \
-        --dir build/dist
-fi
-
-if [ ! -f "$BASEZIP" ]; then
-    echo "ERROR: baseline artifact not found: $BASEZIP" >&2
-    echo "       Releases before ${MIN_BASELINE} shipped a package that cannot install" >&2
-    echo "       (see #95), so they are not usable as an upgrade baseline." >&2
+    echo "ERROR: cwm-baseline reported success but ${BASEZIP} is not there." >&2
     exit 1
 fi
 
 echo "-- [3/6] install baseline ${BASEVER} (the 'before' state)"
 "$BIN/cwm-install-zip" --zip "$BASEZIP"
 
-echo "-- [4/6] build new package ${NEWVER}"
-composer build -- --version "$NEWVER"
+echo "-- [4/6] build new package ${ARTIFACT_VERSION}"
+composer build -- --version "$ARTIFACT_VERSION"
 
 if [ ! -f "$NEWZIP" ]; then
     echo "ERROR: expected build artifact not found: $NEWZIP" >&2
     exit 1
 fi
 
-echo "-- [5/6] install ${NEWVER} over ${BASEVER} (triggers update() + migrations)"
+echo "-- [5/6] install ${ARTIFACT_VERSION} over ${BASEVER} (triggers update() + migrations)"
 "$BIN/cwm-install-zip" --zip "$NEWZIP"
 
 # As in test-install.sh: record and carry on, so one known failure does not
@@ -207,15 +136,16 @@ FAILURES=()
 
 echo "-- [6/6] verify registration + schema after upgrade"
 "$BIN/cwm-verify" --target test || FAILURES+=("extension registration (cwm-verify)")
-php build/verify-migrations.php "$NEWVER" || FAILURES+=("schema (verify-migrations)")
+# The release version, not the label: the code under test is the release's.
+php build/verify-migrations.php "$RELEASE_VERSION" || FAILURES+=("schema (verify-migrations)")
 
 echo
 if [ ${#FAILURES[@]} -gt 0 ]; then
-    echo "UPGRADE TEST FAILED — ${BASEVER} -> ${NEWVER}:"
+    echo "UPGRADE TEST FAILED — ${BASEVER} -> ${RELEASE_VERSION}${LABEL_NOTE}:"
     for f in "${FAILURES[@]}"; do
         echo "  - ${f}"
     done
     exit 1
 fi
 
-echo "UPGRADE TEST PASSED — ${BASEVER} -> ${NEWVER}."
+echo "UPGRADE TEST PASSED — ${BASEVER} -> ${RELEASE_VERSION}${LABEL_NOTE}."
