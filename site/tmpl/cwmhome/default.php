@@ -308,7 +308,7 @@ if ($showAudio && $reading) {
                                 <div class="flex-grow-1">
                                     <?php if (!$hasScripture) : ?>
                                         <p class="mb-1 <?php echo $passageCompleted ? 'text-decoration-line-through text-muted' : ''; ?>">
-                                            <?php echo CwmscriptureHelper::buildReadingLink($passage, $user->bible_version); ?>
+                                            <?php echo CwmscriptureHelper::buildReadingReference($passage, $user->bible_version); ?>
                                         </p>
                                     <?php else : ?>
                                         <div class="livingword-scripture-text <?php echo $passageCompleted ? 'opacity-50' : ''; ?>">
@@ -347,7 +347,7 @@ if ($showAudio && $reading) {
                     <?php // ── Single-passage reading ── ?>
                     <?php if (!$hasScripture) : ?>
                         <p class="lead mb-0">
-                            <?php echo CwmscriptureHelper::buildReadingLink($reading->reading, $user->bible_version); ?>
+                            <?php echo CwmscriptureHelper::buildReadingReference($reading->reading, $user->bible_version); ?>
                         </p>
                     <?php else : ?>
                         <div class="livingword-scripture-text">

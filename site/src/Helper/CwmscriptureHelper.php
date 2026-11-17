@@ -15,12 +15,15 @@ namespace CWM\Component\Livingword\Site\Helper;
 // phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Language\Text;
 
 /**
  * Scripture helper — bridges LivingWord with lib_cwmscripture.
  *
- * Provides passage text retrieval, reference formatting, and link generation
- * using the CWM Scripture Library when available, with graceful fallback.
+ * Provides passage text and audio retrieval through the CWM Scripture Library.
+ * The library is a soft dependency: when it is missing, or cannot answer, a
+ * reading is shown as its plain reference. LivingWord links to no external
+ * Bible site.
  *
  * @since  5.1.0
  */
@@ -62,9 +65,9 @@ class CwmscriptureHelper
         }
 
         // Acquiring the provider is guarded for the same reason the fetch below
-        // is: this component treats the library as optional and answers with a
-        // BibleGateway link when it cannot help, which a fatal here would deny
-        // it the chance to do.
+        // is: this component treats the library as optional and answers with
+        // the plain reference when it cannot help, which a fatal here would
+        // deny it the chance to do.
         try {
             $params   = \CWM\Library\Scripture\Helper\ScriptureParamsHelper::getParams();
             $provider = \CWM\Library\Scripture\Bible\BibleProviderFactory::getProviderForTranslation($version, $params);
@@ -85,13 +88,13 @@ class CwmscriptureHelper
                 $result = $provider->getPassage($passage, $version);
             } catch (\Throwable) {
                 // Throwable, not Exception. A fault inside the library is an
-                // Error as often as an Exception — AbstractBibleProvider's
-                // cache read calls $this->getDatabase(), which no provider
-                // defines, so every cached lookup raises "Call to undefined
-                // method" (lib_cwmscripture). Catching Exception alone let
-                // that escape and take the whole reading page down with a 500,
-                // in a component whose every call site is written to fall back
-                // to a BibleGateway link when the library cannot answer.
+                // Error as often as an Exception — older lib_cwmscripture
+                // releases called $this->getDatabase() from the cache read
+                // before any provider defined it, so every cached lookup raised
+                // "Call to undefined method". Catching Exception alone let that
+                // escape and take the whole reading page down with a 500, in a
+                // component whose every call site is written to fall back to
+                // the plain reference when the library cannot answer.
                 continue;
             }
 
@@ -127,7 +130,7 @@ class CwmscriptureHelper
      *
      * @param   string  $reading   The human-readable reading reference
      * @param   string  $version   Bible translation code
-     * @param   int     $mode      Display mode (0=hidden, 1=toggle, 2=visible)
+     * @param   int     $mode      Display mode (0=reference only, 1=toggle, 2=visible)
      *
      * @return  string  HTML output
      *
@@ -136,7 +139,7 @@ class CwmscriptureHelper
     public static function renderReading(string $reading, string $version, int $mode = 2): string
     {
         if (!self::isLibraryAvailable()) {
-            return self::buildBibleGatewayLink($reading, $version);
+            return self::buildReadingReference($reading, $version);
         }
 
         // Respect config display mode if mode not explicitly overridden
@@ -149,15 +152,15 @@ class CwmscriptureHelper
             };
         }
 
-        // Link-only mode — just show BibleGateway link, no scripture text
+        // Reference-only mode — the reference, no scripture text
         if ($mode === 0) {
-            return self::buildBibleGatewayLink($reading, $version);
+            return self::buildReadingReference($reading, $version);
         }
 
         $result = self::getPassageText($reading, $version);
 
         if ($result === null) {
-            return self::buildBibleGatewayLink($reading, $version);
+            return self::buildReadingReference($reading, $version);
         }
 
         $html = '';
@@ -170,7 +173,7 @@ class CwmscriptureHelper
                 . ' data-bs-toggle="collapse" data-bs-target="#' . $collapseId . '"'
                 . ' aria-expanded="false" aria-controls="' . $collapseId . '">'
                 . '<span class="icon-eye" aria-hidden="true"></span> '
-                . htmlspecialchars('Show Scripture Text', ENT_QUOTES, 'UTF-8')
+                . htmlspecialchars(Text::_('COM_LIVINGWORD_SCRIPTURE_SHOW_TEXT'), ENT_QUOTES, 'UTF-8')
                 . '</button></div>'
                 . '<div class="collapse" id="' . $collapseId . '">';
         }
@@ -208,68 +211,48 @@ class CwmscriptureHelper
     }
 
     /**
-     * Build a simple reading link — just the passage reference as clickable text.
+     * Render a reading reference as plain text.
      *
-     * When lib_cwmscripture is not available, returns plain text.
-     * When available, wraps in a container that can be enhanced with JS.
+     * What a reader sees wherever no scripture text is shown: the library is
+     * missing, the display mode is "reference only", or no provider could
+     * answer. Deliberately not a link — LivingWord sends readers to no external
+     * Bible site. `data-version` stays on the element so a script can enhance
+     * the reference in place.
      *
      * @param   string  $reading  The human-readable reading reference
      * @param   string  $version  Bible translation code
      *
      * @return  string  HTML output
      *
-     * @since   5.1.0
+     * @since   __DEPLOY_VERSION__
      */
-    public static function buildReadingLink(string $reading, string $version): string
+    public static function buildReadingReference(string $reading, string $version): string
     {
-        $url = self::getBibleGatewayUrl($reading, $version);
-
-        return '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener"'
-            . ' class="livingword-reading-ref" data-version="'
+        return '<span class="livingword-reading-ref" data-version="'
             . htmlspecialchars($version, ENT_QUOTES, 'UTF-8') . '">'
             . htmlspecialchars($reading, ENT_QUOTES, 'UTF-8')
-            . '</a>';
+            . '</span>';
     }
 
     /**
-     * Build a BibleGateway link for a passage reference.
-     *
-     * Used as fallback when lib_cwmscripture is not available or scripture
-     * display mode is set to 'link'.
+     * Render a reading reference.
      *
      * @param   string  $reading  The human-readable reading reference
      * @param   string  $version  Bible translation code
      *
-     * @return  string  HTML link to BibleGateway
+     * @return  string  HTML output
      *
-     * @since   5.7.0
+     * @since       5.1.0
+     *
+     * @deprecated  __DEPLOY_VERSION__  will be removed in 6.0.0
+     *              Use buildReadingReference() instead. This used to link the
+     *              reference to an external Bible site; it now returns the same
+     *              plain reference, and stays only so site template overrides
+     *              that still call it keep rendering.
      */
-    public static function buildBibleGatewayLink(string $reading, string $version): string
+    public static function buildReadingLink(string $reading, string $version): string
     {
-        $url = self::getBibleGatewayUrl($reading, $version);
-
-        return '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener"'
-            . ' class="livingword-reading-ref livingword-external-link">'
-            . htmlspecialchars($reading, ENT_QUOTES, 'UTF-8')
-            . ' <span class="icon-out-2 small" aria-hidden="true"></span></a>';
-    }
-
-    /**
-     * Get BibleGateway URL for a passage reference.
-     *
-     * @param   string  $reading  The passage reference
-     * @param   string  $version  Bible version code
-     *
-     * @return  string  BibleGateway URL
-     *
-     * @since   5.7.0
-     */
-    public static function getBibleGatewayUrl(string $reading, string $version): string
-    {
-        $passage = urlencode($reading);
-        $ver     = urlencode(strtoupper($version));
-
-        return "https://www.biblegateway.com/passage/?search={$passage}&version={$ver}";
+        return self::buildReadingReference($reading, $version);
     }
 
     /**
