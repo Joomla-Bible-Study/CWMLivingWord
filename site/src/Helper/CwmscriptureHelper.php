@@ -36,7 +36,7 @@ class CwmscriptureHelper
      * PHP_INT_MAX, and a chapter loop counting up to it never ends.
      *
      * @var    int
-     * @since  __DEPLOY_VERSION__
+     * @since  5.8.0-rc1
      */
     private const int MAX_CHAPTER = 150;
 
@@ -44,7 +44,7 @@ class CwmscriptureHelper
      * Highest verse parsePassage() accepts. Psalm 119, the longest chapter, has 176.
      *
      * @var    int
-     * @since  __DEPLOY_VERSION__
+     * @since  5.8.0-rc1
      */
     private const int MAX_VERSE = 200;
 
@@ -150,7 +150,7 @@ class CwmscriptureHelper
      *
      * @return  ?string  Passage HTML, or null when it could not be fetched in full
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     private static function fetchPassage(object $provider, string $passage, string $version, string &$copyright): ?string
     {
@@ -199,7 +199,7 @@ class CwmscriptureHelper
      *
      * @return  ?object  The provider's result when it has text, otherwise null
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     private static function fetchPart(object $provider, array $part, string $version): ?object
     {
@@ -251,7 +251,7 @@ class CwmscriptureHelper
      *
      * @return  ?object  The provider's result when it has text, otherwise null
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     private static function fetchString(object $provider, string $reference, string $version): ?object
     {
@@ -285,7 +285,7 @@ class CwmscriptureHelper
      * @return  list<array{book: string, chapterBegin: int, verseBegin: int, chapterEnd: int, verseEnd: int}>
      *          Empty when the passage is not in a form this understands
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     public static function parsePassage(string $passage): array
     {
@@ -351,7 +351,7 @@ class CwmscriptureHelper
      *
      * @return  string
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     public static function formatPart(array $part): string
     {
@@ -472,7 +472,7 @@ class CwmscriptureHelper
      *
      * @return  string  HTML output
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     public static function buildReadingReference(string $reading, string $version): string
     {
@@ -492,7 +492,7 @@ class CwmscriptureHelper
      *
      * @since       5.1.0
      *
-     * @deprecated  __DEPLOY_VERSION__  will be removed in 6.0.0
+     * @deprecated  5.8.0-rc1  will be removed in 6.0.0
      *              Use buildReadingReference() instead. This used to link the
      *              reference to an external Bible site; it now returns the same
      *              plain reference, and stays only so site template overrides
@@ -630,7 +630,7 @@ class CwmscriptureHelper
      *
      * @return  list<array{book: string, chapter: int}>  USFM book code and chapter
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     private static function audioTargets(string $passage): array
     {
@@ -671,7 +671,7 @@ class CwmscriptureHelper
      *
      * @return  list<array{book: string, chapter: int}>
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.0-rc1
      */
     public static function audioChapters(array $parts): array
     {
