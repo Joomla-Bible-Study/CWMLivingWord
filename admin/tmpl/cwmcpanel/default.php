@@ -179,7 +179,7 @@ if ($scriptureAvailable) {
                             <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_ACTIVE_7D'); ?></small>
                         </div>
                         <div>
-                            <span class="fs-2 fw-bold <?php echo $stats->inactiveUsers > 0 ? 'text-warning' : 'text-body-secondary'; ?>"><?php echo $stats->inactiveUsers; ?></span>
+                            <span class="fs-2 fw-bold <?php echo $stats->inactiveUsers > 0 ? 'text-warning-emphasis' : 'text-body-secondary'; ?>"><?php echo $stats->inactiveUsers; ?></span>
                             <br><small class="text-body-secondary"><?php echo Text::_('COM_LIVINGWORD_STATS_INACTIVE'); ?></small>
                         </div>
                     </div>

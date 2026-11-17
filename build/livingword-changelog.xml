@@ -49,6 +49,7 @@
             <item>On days with several passages, one that can't be fetched now shows its reference instead of silently disappearing.</item>
             <item>Audio covers the whole reading. "Romans 5-8,12" plays chapters 5 to 8 and 12; it played only chapter 5.</item>
             <item>The "Show Scripture Text" button is translated. It was in English on every site.</item>
+            <item>The dashboard's inactive-subscriber count, the calendar view's partly read days and the plan form's audio-test messages use a darker warning colour that meets the WCAG contrast minimum.</item>
         </fix>
         <change>
             <item>LivingWord no longer links to BibleGateway or any other external Bible site. When scripture text can't be shown, the reading appears as its plain reference.</item>

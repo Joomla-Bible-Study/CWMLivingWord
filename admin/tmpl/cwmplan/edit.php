@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!version) {
                 testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO_NO_VERSION', true); ?>';
-                testStatus.className = 'd-block mt-1 text-warning';
+                testStatus.className = 'd-block mt-1 text-warning-emphasis';
                 return;
             }
 
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!reading) {
                 testStatus.textContent = '<?php echo Text::_('COM_LIVINGWORD_PLAN_TEST_AUDIO_NO_READING', true); ?>';
-                testStatus.className = 'd-block mt-1 text-warning';
+                testStatus.className = 'd-block mt-1 text-warning-emphasis';
                 return;
             }
 
