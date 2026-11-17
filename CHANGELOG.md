@@ -21,6 +21,14 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - The "Show Scripture Text" toggle button was hard-coded English. It is now translated.
+- **Scripture text for chapter ranges and comma lists.** Plan readings like "Ecclesiastes 1-3", "Romans 5-8,12" and "Luke 1:26-56,2:1-7" now get their text.
+  - Readings were passed to the scripture library as raw strings, and each provider read them in its own dialect. Comma lists got nothing anywhere, and a chapter range came back as the first three verses from local translations.
+  - Each passage is now split by `CwmscriptureHelper::parsePassage()` and fetched as structured references through `getPassageFor()`, the way Proclaim calls the library.
+  - Whole chapters and chapter ranges served by GetBible also need lib_cwmscripture's chapter-endpoint fix (Joomla-Bible-Study/lib_cwmscripture#100). This release must ship with a scripture package that includes it.
+  - Still open: API.Bible builds no passage for a whole chapter or a chapter range. On API.Bible-served translations those readings still show only their heading; that's a library follow-up.
+  - Plan numbers are bounded (at most 150 chapters, 200 verses, three digits), so a mistyped reading can't push an audio or chapter loop into overflow.
+- **A passage with no text is no longer dropped from the day.** If one passage of a multi-passage day can't be fetched, its heading still shows instead of vanishing. A passage counts as fetched only when every part of it returned text.
+- **Audio for comma lists and cross-chapter ranges.** "Romans 5-8,12" now plays chapters 5 to 8 and 12, not only 5. "Philippians 2,4" plays both chapters instead of nothing. "2 Timothy 3:10-4:22" includes chapter 4.
 
 ### Milestone 1 — Engagement & Progress Tracking (planned)
 - Reading completion tracking per day (`#__livingword_progress` table)

@@ -133,6 +133,11 @@ Scripture text, audio and translations come from the **CWM Scripture** stack, wh
 Rules that matter here:
 
 - **Soft dependency.** Every call goes through `site/src/Helper/CwmscriptureHelper.php`, which guards on `class_exists()` / `LibraryVersion::isInstalled()` and catches `\Throwable` around library calls. A library fault must degrade the page, never 500 it.
+- **Structured references, never raw plan strings.** Plan readings use citation shorthand: chapter ranges (`Ecclesiastes 1-3`) and comma lists (`Romans 5-8,12`, `Romans 4:1-5,9-25`).
+  - `CwmscriptureHelper::parsePassage()` splits each passage into plain parts. It's pure, and unit-tested against every passage in the install seed.
+  - `fetchPart()` then asks for each part with `getPassageFor(ScriptureReference)`, the same way Proclaim's `Cwmshowscripture::fetchPassage()` does.
+  - Don't hand plan strings to `getPassage()`. The library's parsers disagree on `Genesis 1-3`: `ScriptureHelper::parseReference()` rejects it on purpose, and LocalProvider reads it as 1:1–3. None of them reads comma lists. Those are this component's data format to parse, not the library's.
+  - Audio uses the same parts (`audioChapters()`).
 - **No external Bible sites.** LivingWord does not link to BibleGateway or any other external reader. When no scripture text can be shown (library missing, display mode "reference only", or no provider answered), the reading renders as its plain reference via `CwmscriptureHelper::buildReadingReference()`. `buildReadingLink()` is a deprecated alias kept for template overrides.
 - **Display mode** is the component option `config_scripture_display`: `inline`, `toggle`, or `link` ("Reference only"). The stored value `link` is kept so saved configs still validate.
 - **Provider settings** (GetBible, API.Bible, BibleBrain audio, GDPR mode, default version) live in `plg_content_scripturelinks`'s params. Read them through `ScriptureParamsHelper::getParams()`, not this component's options.
