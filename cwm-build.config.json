@@ -6,7 +6,7 @@
     },
     "profile": "package-wrapper",
     "manifests": {
-        "_comment": "All four manifests bump in lockstep on a LivingWord release. The bundled CWM Scripture extensions (lib_cwmscripture, plg_task_cwmscripture, plg_content_scripturelinks) live in the CWMScriptureLinks repo and are versioned there \u2014 they are pulled in as prebuilt zips by the preBuild hook (build/fetch_dependencies.php) and are NOT listed here. The scripture LIBRARY (joomla-bible-study/lib-cwmscripture) is pulled in as a Composer path repository from ../lib_cwmscripture; cwm-build-tools v1.1+ walks that dep's joomlaLinks and symlinks the library into the dev Joomla automatically (no dev.links[] entry required).",
+        "_comment": "All five manifests bump in lockstep on a LivingWord release. The bundled CWM Scripture extensions (lib_cwmscripture, plg_content_scripturelinks, plg_task_cwmscripture, plg_system_cwmscripture) live in the CWMScriptureLinks repo and are versioned there \u2014 the preBuild hook (build/fetch_dependencies.php) pulls in the whole pkg_cwmscripture.zip as a prebuilt include, so none of them is listed here. Nor is the library a Composer dependency: the ../lib_cwmscripture path repository was dropped in 8d6e6da because it broke CI. At runtime it is a soft dependency \u2014 every call site is guarded by class_exists() / LibraryVersion::isInstalled().",
         "package": "build/pkg_livingword.xml",
         "extensions": [
             {
@@ -28,7 +28,7 @@
         ]
     },
     "build": {
-        "_comment": "Builds com_livingword.zip \u2014 the component itself (admin/, site/, media/, livingword.xml, script.php). cwm-package runs this as the 'self' include, then bundles its output with the other 5 sub-zips into pkg_livingword-{version}.zip. The build.outputGlob points at the PACKAGE output (what cwm-release publishes), not the component output.",
+        "_comment": "Builds com_livingword.zip \u2014 the component itself (admin/, site/, api/, media/, livingword.xml, script.php). cwm-package runs this as the 'self' include, then bundles its output with the other 4 sub-zips into pkg_livingword-{version}.zip. The build.outputGlob points at the PACKAGE output (what cwm-release publishes), not the component output.",
         "command": "cwm-package",
         "outputGlob": "build/dist/pkg_livingword-*.zip",
         "outputDir": "build/dist",
@@ -104,7 +104,7 @@
         }
     },
     "package": {
-        "_comment": "Assembles pkg_livingword-{version}.zip with 6 inner zips: com_livingword (self), mod_livingword + plg_task_livingword (inline \u2014 built from this repo), and pkg_cwmscripture (prebuilt \u2014 the whole scripture package, fetched from GitHub by the preBuild hook, installed by script.install.php rather than declared as a package child).",
+        "_comment": "Assembles pkg_livingword-{version}.zip with 5 inner zips: com_livingword (self), mod_livingword + plg_task_livingword + plg_webservices_livingword (inline \u2014 built from this repo), and pkg_cwmscripture (prebuilt \u2014 the whole scripture package, fetched from GitHub by the preBuild hook, installed by script.install.php rather than declared as a package child).",
         "manifest": "build/pkg_livingword.xml",
         "installer": "build/script.install.php",
         "outputDir": "build/dist",
@@ -222,6 +222,7 @@
             "paths": [
                 "admin/",
                 "site/",
+                "api/",
                 "mod_livingword/",
                 "plg_task_livingword/",
                 "plg_webservices_livingword/"
@@ -266,6 +267,7 @@
                     "elements": [
                         { "element": "cwmscripture", "type": "library" },
                         { "element": "cwmscripture", "type": "plugin", "folder": "task" },
+                        { "element": "cwmscripture", "type": "plugin", "folder": "system" },
                         { "element": "scripturelinks", "type": "plugin", "folder": "content" },
                         { "element": "pkg_cwmscripture", "type": "package" }
                     ],
@@ -302,7 +304,7 @@
         ],
         "tokenItem": "CWM ARS API Token",
         "tokenVault": "CWM",
-        "itemDescription": "CWM LivingWord package \u2014 Bible reading plans component, daily reading module, scheduled email task plugin, plus the bundled CWM Scripture library and content plugin for in-article scripture rendering."
+        "itemDescription": "CWM LivingWord package \u2014 Bible reading plans component, daily reading module, scheduled email task plugin and REST API web services plugin, plus the bundled CWM Scripture package (scripture library with its content, task and system plugins)."
     },
     "github": {
         "owner": "Joomla-Bible-Study",

@@ -1,290 +1,143 @@
-# CWM LivingWord Component
+# CWM LivingWord
 
-LivingWord (`com_livingword`) is a Joomla 5/6 Bible reading plan component maintained by Christian Web Ministries (CWM). Originally created by Mike Leeper (MLWebTechnologies) as a Joomla 3.x component, it has been migrated to Joomla 5+ architecture with namespaced MVC, PSR-4 autoloading, and PHP 8.3+ patterns.
+LivingWord (`com_livingword`) is a Joomla 5/6 Bible reading plan component maintained by Christian Web Ministries (CWM). It guides readers through scripture on a daily schedule, tracks their progress, and supports group reading, accountability partners, and email delivery.
 
-**Version:** 5.0.0 | **License:** GPL-2.0-or-later
+Originally created by Mike Leeper (MLWebTechnologies) as a Joomla 3.x component, it has been rebuilt for Joomla 5+ with namespaced MVC, PSR-4 autoloading, and PHP 8.3+ patterns.
+
+**License:** GPL-2.0-or-later | **Current version:** see [Releases](https://github.com/Joomla-Bible-Study/CWMLivingWord/releases) (`build/versions.json` in the repo)
 
 ## Requirements
 
-- Joomla 5.0+ or 6.0+
+- Joomla 5.x or 6.x
 - PHP 8.3+
 - MySQL 8.0+ / MariaDB 10.4+
 
-## What It Does
+## What's in the Package
 
-LivingWord provides structured Bible reading plans that guide users through scripture on a daily schedule. The system includes:
+Install `pkg_livingword-{version}.zip` through Joomla's Extension Manager. It contains:
 
-- **8 built-in reading plans**: Comprehensive, New Testament, Old Testament, Chronological, Biographical, Survey, Thru the Bible, NT + Psalms
-- **Custom plans**: Administrators can create and manage their own reading plans
-- **Daily reading**: Calculates today's reading based on user start date and plan progress
-- **User preferences**: Each user selects their plan, Bible version, start date, and email preference
-- **Email notifications**: Daily reading emails sent via Joomla's Task Scheduler
-- **Resource links**: Curated Bible study links organized by category
-- **Module**: Standalone Joomla module displays today's reading in any module position
-- **Calendar & list views**: Two ways to see the full reading plan
-- **Frontend ACL**: Configurable access to Home, Resources, Settings, and Tools pages
-- **Database utilities**: Admin tools for optimize, check, repair, and backup
-
-## Architecture Overview
-
-```
-com_livingword/
-├── livingword.xml              # Joomla extension manifest
-├── script.php                  # Install/update/uninstall script
-│
-├── admin/                      # Administrator component
-│   ├── services/provider.php   # DI container registration
-│   ├── src/
-│   │   ├── Extension/          # LivingwordComponent (boot, version checks)
-│   │   ├── Controller/         # 10 controllers (CRUD + utilities)
-│   │   ├── Model/              # 8 models (list + edit for plans, links, readings, users)
-│   │   ├── View/               # 9 views (dashboard, lists, edit forms, utilities)
-│   │   ├── Table/              # 4 table classes (DB access)
-│   │   ├── Helper/             # ACL helper
-│   │   └── Dispatcher/         # Admin dispatcher
-│   ├── tmpl/                   # 9 admin templates
-│   ├── forms/                  # 4 edit forms + 4 filter forms (XML)
-│   ├── sql/                    # Install, uninstall, update SQL
-│   ├── language/en-GB/         # Admin language strings
-│   ├── access.xml              # ACL definitions
-│   └── config.xml              # Component configuration
-│
-├── site/                       # Frontend component
-│   ├── src/
-│   │   ├── Controller/         # Display controller
-│   │   ├── Model/              # 5 models (home, plan view, resources, settings, tools)
-│   │   ├── View/               # 5 views with prepareDocument() for page titles
-│   │   ├── Helper/             # 4 helpers (reading calc, BibleGateway, user, menu)
-│   │   ├── Dispatcher/         # Site dispatcher
-│   │   └── Service/            # URL router
-│   ├── tmpl/                   # 6 site templates (includes calendar layout)
-│   └── language/en-GB/         # Site language strings
-│
-├── mod_livingword/             # Joomla module (today's reading widget)
-│   ├── src/Helper/             # Gets today's reading for module display
-│   ├── src/Dispatcher/         # Module dispatcher
-│   ├── tmpl/default.php        # Module template
-│   └── mod_livingword.xml      # Module manifest
-│
-├── plg_task_livingword/        # Task plugin (email notifications)
-│   ├── src/Extension/          # Sends daily reading emails to subscribers
-│   └── livingword.xml          # Plugin manifest
-│
-├── build/                      # Build tools
-│   └── livingword_build.php    # Build/dev automation script
-│
-└── tests/                      # PHPUnit test suites
-    ├── unit/                   # Unit tests
-    └── integration/            # Integration tests
-```
-
-## Namespace Structure
-
-| Namespace | Maps to |
+| Extension | Purpose |
 |-----------|---------|
-| `CWM\Component\Livingword\Administrator\` | `admin/src/` |
-| `CWM\Component\Livingword\Site\` | `site/src/` |
-| `CWM\Module\Livingword\Site\` | `mod_livingword/src/` |
-| `CWM\Plugin\Task\Livingword\` | `plg_task_livingword/src/` |
+| `com_livingword` | The component: admin interface, frontend views, and the REST API |
+| `mod_livingword` | Today's reading in any module position |
+| `plg_task_livingword` | Scheduled emails: daily reading, weekly progress digest, accountability-partner digest |
+| `plg_webservices_livingword` | Registers the LivingWord REST API routes |
+| `pkg_cwmscripture` (bundled) | The CWM Scripture library and its content, task and system plugins, which supply scripture text and audio |
 
-## Database Tables
+The scripture package is shared with [CWM Proclaim](https://github.com/Joomla-Bible-Study/Proclaim). The LivingWord installer installs it only when no equal or newer copy is present, and uninstalling LivingWord leaves it in place.
 
-| Table | Purpose | Key Fields |
-|-------|---------|------------|
-| `#__livingword` | User settings/preferences | userid, bibleplan, bibleversion, startdate, email |
-| `#__livingword_plans` | Reading plan definitions | name (slug), description, audio, newtest |
-| `#__livingword_plans_details` | Individual daily readings per plan | plan (FK to name), reading, audio, ordering |
-| `#__livingword_links` | Curated Bible resource links | name, url, category, target |
+## Features
 
-### How Reading Plans Work
+- **Reading plans** — 8 built-in plans (Biographical, Chronological, Comprehensive, New Testament, Old Testament, New Testament & Psalms, Survey, Thru the Bible), plus custom plans. Plans can be annual, fixed-length, or self-paced, and days can carry devotional text. Plan days can be bulk-imported from CSV.
+- **Daily reading** — today's reading for each reader, worked out from their plan and start date, with per-passage "mark as read", streak tracking, and a list or calendar view of the whole plan.
+- **Scripture text and audio** — inline Bible text and audio playback through the bundled CWM Scripture library (see [Scripture Text and Audio](#scripture-text-and-audio)).
+- **Journal** — per-day reflection notes.
+- **Groups** — reading-plan groups with leaders and members, joined through a shareable invite link.
+- **Accountability partners** — readers can pair up and receive a weekly digest of each other's progress.
+- **Email** — the daily reading arrives at each reader's preferred hour in their own timezone. Readers can mark a reading as read with one click from the email, and every email carries a token-based unsubscribe link.
+- **Resources and study tools** — curated link and study-tool catalogs organized with Joomla categories. Plans, links and groups can be tagged.
+- **REST API** — reading plans and per-user progress over the Joomla Web Services API, for mobile and third-party clients.
+- **Frontend ACL** — per-view access permissions.
+- **Database utilities** — optimize, check, repair, and SQL backup from the admin.
 
-Each plan has numbered readings stored in `#__livingword_plans_details`, ordered by the `ordering` column. The system calculates which reading to show today:
+## Scripture Text and Audio
 
-1. User has a `startdate` and optional `dateoffset` in `#__livingword`
-2. `CwmreadingHelper::getCurrentReadingDay()` computes days elapsed since start
-3. Day number wraps around `totalDays` so plans repeat annually
-4. `getReadingForDay()` fetches the reading at that offset position
+Scripture comes from the **CWM Scripture library** (`lib_cwmscripture`), which LivingWord treats as an optional dependency:
 
-Reading references use an internal format: `LWBIBLEBOOK25 1-3;LWBIBLEBOOK50 12` which `CwmbiblegatewayHelper::parseReadingReference()` converts to human-readable passages and BibleGateway.com URLs.
+- **Text** comes from locally downloaded translations, GetBible.net, or API.Bible. **Audio** comes from Bible Brain.
+- Providers, API keys, GDPR mode and the translation manager are configured in the **Content - ScriptureLinks** plugin (`plg_content_scripturelinks`), not in LivingWord.
+- The component option **Scripture Display Mode** chooses how a reading appears: *Inline*, *Toggle* (click to show), or *Reference Only*.
+- LivingWord does not send readers to external Bible websites. When scripture text is unavailable (the library is missing, the mode is Reference Only, or no provider answered), the reading is shown as its plain reference, for example "Genesis 1-3".
 
-## Admin Interface
+## Scheduled Tasks
 
-### Dashboard (cwmcpanel)
-Shows quick stats: published plans count, published links count, total subscribers.
+`plg_task_livingword` adds three task types to **System → Scheduled Tasks**:
 
-### Plans Management (cwmplans → cwmplan)
-- List all reading plans with publish/unpublish, ordering, trash
-- Edit plan: name (slug), description, message, audio support, testament type
-- Each plan links to its readings list
+| Task | What it sends | Suggested schedule |
+|------|---------------|--------------------|
+| LivingWord: Send Daily Reading Emails | Today's reading to every subscriber whose preferred hour has arrived in their timezone | **Every hour.** Each run mails only the readers whose hour it is. |
+| LivingWord: Send Weekly Progress Digest | Readings completed, streak and pace for each subscriber | Weekly |
+| LivingWord: Send Weekly Partner Progress Digest | Each accountability partner's progress | Weekly |
 
-### Readings Management (cwmplandetails → cwmplandetail)
-- List daily readings filtered by plan
-- Edit reading: plan assignment, reading reference, audio reference, figures, description
-- Ordering determines the day sequence within the plan
+Emails use the branding set in the component's Email options (logo, organization name, brand color, footer).
 
-### Links Management (cwmlinks → cwmlink)
-- Curated Bible resource links with categories
-- Edit: name, URL (auto-prepends https://), category, target window, publish state
+## REST API
 
-### Subscribers (cwmusers)
-- Read-only list of users who have configured LivingWord preferences
-- Shows username, selected plan, Bible version, email subscription status
+`plg_webservices_livingword` registers routes under `/api/index.php/v1/livingword/`. Enabling the plugin turns the API on.
 
-### Utilities (cwmutilities)
-- **Optimize** — runs `OPTIMIZE TABLE` on all 4 tables
-- **Check** — runs `CHECK TABLE` for integrity verification
-- **Repair** — runs `REPAIR TABLE` for corruption recovery
-- **Backup** — downloads SQL dump of all LivingWord data
+| Resource | Methods | Access |
+|----------|---------|--------|
+| `plans`, `plandays`, `tools`, `links`, `groups` | `GET` (list, item) | Read-only catalog. Requires an API token unless the plugin's **Public catalog reads** option is on. |
+| `progress`, `notes` | `GET`, `POST`, `PATCH`, `DELETE` | Always authenticated; scoped to the current user |
+| `settings` | `GET`, `POST`, `PATCH` | Always authenticated; the current user's single settings record |
+
+```bash
+curl -H "X-Joomla-Token: <your API token>" \
+     https://example.org/api/index.php/v1/livingword/plans
+```
 
 ## Frontend Views
 
 | View | URL param | What it shows |
 |------|-----------|---------------|
-| Home | `view=cwmhome` | Today's reading with BibleGateway link |
-| Plan View | `view=cwmplanview` | Full plan (list or calendar layout based on user/config preference) |
+| Home | `view=cwmhome` | Today's reading, progress, streak, journal, and audio player |
+| Plan View | `view=cwmplanview` | The whole plan as a list or calendar |
 | Resources | `view=cwmresources` | Bible resource links grouped by category |
-| Settings | `view=cwmsettings` | User preferences form (plan, version, start date, email) |
-| Tools | `view=cwmtools` | Bible study tools page |
+| Settings | `view=cwmsettings` | Reader preferences (plan, Bible and audio version, start date, email opt-in and hour, timezone, accountability partner, progress sharing) |
+| Tools | `view=cwmtools` | Bible study tools |
+| Groups | `view=cwmgroups`, `view=cwmgroupdetail` | Reading groups and their members' progress |
 
-Frontend navigation is built by `CwmmenuHelper::buildMenu()` and respects ACL permissions defined in `access.xml`.
+Three landing pages are reached from links rather than menus: `cwminvite` (group invitations), and `cwmcomplete` and `cwmunsubscribe` (from emails).
 
-## Module: mod_livingword
+## Configuration
 
-Displays today's reading in any Joomla module position. Gets the current user's plan and calculates today's reading using the same helpers as the component.
+Component options (**System → Global Configuration → LivingWord**):
 
-**Parameter:** `show_reading_link` (yes/no) — whether to show a link to the full reading.
+| Group | Options |
+|-------|---------|
+| General | Global start date, default Bible version, default plan, plan template (list or calendar), enable email, print icon, scripture display mode, audio player, default audio version |
+| Email | Logo URL, organization name, brand color, custom footer message |
+| Menu | Show the LivingWord navigation menu on the frontend |
+| Permissions | Standard Joomla actions, plus frontend access to Home, Settings, Tools and Links, and group administration (`livingword.groups.admin`) |
 
-## Task Plugin: plg_task_livingword
+The module has one option, **Show Scripture Text**. When it is on, the module shows the day's scripture according to the component's display mode. When it is off, the module shows only the reading reference.
 
-Registered as a Joomla Task Scheduler task (`livingword.email_notifications`). When triggered:
+## Development
 
-1. Queries all users with `email=1` who aren't blocked
-2. For each subscriber, calculates their current reading day
-3. Builds an HTML email with the reading text and BibleGateway link
-4. Sends via Joomla's mailer
-
-## Component Configuration (admin/config.xml)
-
-| Setting | Key | Description |
-|---------|-----|-------------|
-| Global Start Date | `config_startdate` | Default start date for new users |
-| Default Bible Version | `config_version` | Default version code (NLT, ESV, KJV, etc.) |
-| Parallel Version | `config_parallel_version` | Optional parallel version for comparison |
-| Show Audio Icon | `config_show_audio` | Show audio icon when version supports it |
-| Alternate Audio Version | `config_alt_audio` | Fallback audio version |
-| Default Plan | `config_plan` | Default plan slug (comp, newtest, bio, etc.) |
-| Plan Template | `config_plan_template` | Full plan display: "default" (list) or "calendar" |
-| Enable Email | `config_enable_email` | Enable daily reading email feature |
-| Show Menu | `config_show_menu` | Show LivingWord navigation menu on frontend |
-
-## ACL Permissions (admin/access.xml)
-
-| Permission | Controls |
-|------------|----------|
-| `core.admin` | Component configuration access |
-| `core.manage` | Admin panel access |
-| `core.create` | Create plans, links |
-| `core.delete` | Delete plans, links |
-| `core.edit` | Edit plans, links |
-| `core.edit.state` | Publish/unpublish/trash |
-| `livingword.home` | Frontend home page access |
-| `livingword.settings` | Frontend settings access |
-| `livingword.tools` | Frontend tools access |
-| `livingword.links` | Frontend resource links access |
-
-## Development Setup
-
-### Prerequisites
-
-- PHP 8.3+
-- [Composer](https://getcomposer.org/)
-- A local Joomla 5 or 6 installation
-- MySQL accessible from CLI (for `composer verify`)
-
-### Quick Start
+Prerequisites: PHP 8.3+, Composer, Node.js 24+ / npm 10.1+, and a local Joomla 5 or 6 site.
 
 ```bash
-# Install dependencies
-composer install
-
-# Interactive setup (configure Joomla paths, DB credentials)
-composer setup
-
-# Create symlinks to your local Joomla installation(s)
-composer symlink
-
-# Register extensions in Joomla database (creates tables, menus, namespace map)
-composer verify
+composer install     # PHP deps, incl. cwm-build-tools (creates build.properties)
+npm install          # frontend build deps
+composer setup       # interactive wizard: Joomla paths, DB and admin credentials
+composer symlink     # symlink the repo into each configured Joomla site
+composer verify      # reconcile extension rows in #__extensions (--fix to repair)
 ```
 
-After `composer symlink && composer verify`, the component is fully installed and live-linked to your source code. Any file changes are immediately reflected in Joomla.
-
-### How Dev Installation Works
-
-The `composer verify` command does the following for each configured Joomla path:
-
-1. **Plugins** — Inserts into `#__extensions` if missing
-2. **Component** — Full registration if missing:
-   - Inserts `#__extensions` row with namespace
-   - Creates `#__assets` ACL record
-   - Creates 5 admin menu items (dashboard, plans, links, subscribers)
-   - Runs `install.mysql.utf8.sql` to create all 4 tables
-   - Inserts `#__schemas` version record
-3. **Namespace map** — Adds PSR-4 entries to `administrator/cache/autoload_psr4.php` so Joomla can autoload component classes
-
-### Multiple Joomla Installations
-
-`build.properties` supports comma-separated paths for simultaneous J5/J6 development:
-
-```properties
-builder.joomla_paths=/path/to/j5-dev,/path/to/j6-dev
-```
-
-All commands (symlink, verify, clean) operate on every configured path.
-
-### Build & Test Commands
+After the first `composer verify`, install `com_livingword` itself through **System → Install → Discover**.
 
 | Command | Description |
 |---------|-------------|
-| `composer test` | Run all PHPUnit tests |
-| `composer test:unit` | Run unit tests only |
-| `composer test:integration` | Run integration tests only |
-| `composer lint` | Check code style (PSR-12 + custom rules) |
-| `composer lint:fix` | Auto-fix code style |
-| `composer lint:syntax` | Check PHP syntax errors |
-| `composer check` | Run syntax check + lint + tests |
-| `composer build` | Build installable ZIP package |
-| `composer setup` | Interactive dev environment setup |
-| `composer symlink` | Create symlinks to Joomla |
-| `composer clean` | Remove symlinks |
-| `composer verify` | Verify/register extensions in Joomla DB |
-| `composer joomla-install` | Download and install Joomla |
-| `composer joomla-latest` | Show latest Joomla version |
+| `composer check` | Syntax lint, workflow lint, code style, and PHPUnit |
+| `composer test` | PHPUnit (unit + integration) |
+| `composer test:e2e` | Playwright end-to-end suite (`test:a11y`, `test:api` for subsets) |
+| `composer build` | Build `build/dist/pkg_livingword-{version}.zip` |
+| `composer release` | Full release pipeline (bump, build, tag, GitHub release, ARS publish) |
 
-### Code Style
+The build, dev and release tooling comes from [cwm-build-tools](https://github.com/Joomla-Bible-Study/cwm-build-tools). See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and conventions, and [CLAUDE.md](CLAUDE.md) for the architecture in depth.
 
-- **PSR-12** base with custom rules via `.php-cs-fixer.dist.php`
-- PHP: 4-space indent | JS/JSON/CSS/YAML: 2-space indent
-- Unix line endings (LF), UTF-8, trim trailing whitespace
+### Repository Layout
 
-### CI/CD
-
-- **GitHub Actions CI** (`.github/workflows/ci.yml`): PHP lint + PHPUnit on push/PR
-- **CodeQL** (`.github/workflows/codeql.yml`): Weekly security scanning
-- **Auto-assign** (`.github/auto-assign.yml`): Auto-assigns reviewers
-
-## Joomla Compatibility
-
-| Feature | Joomla 5 | Joomla 6 |
-|---------|----------|----------|
-| Namespaced MVC | Yes | Yes |
-| PSR-4 autoloading | Yes | Yes |
-| `#[\Override]` attribute | Yes | Yes |
-| GenericDataException | Yes | Yes |
-| Factory::getContainer() | Yes | Yes |
-| prepareDocument() in site views | Yes | Yes |
-
-Runtime version checks in `LivingwordComponent::boot()` verify PHP 8.3+ and Joomla 5.0+ at component load time. The manifest declares compatibility with both Joomla 5.x and 6.x.
+| Path | Contents | Namespace |
+|------|----------|-----------|
+| `admin/` | Administrator component | `CWM\Component\Livingword\Administrator\` |
+| `site/` | Frontend component | `CWM\Component\Livingword\Site\` |
+| `api/` | Web Services API controllers and views | `CWM\Component\Livingword\Api\` |
+| `mod_livingword/` | Daily reading module | `CWM\Module\Livingword\Site\` |
+| `plg_task_livingword/` | Scheduled email task plugin | `CWM\Plugin\Task\Livingword\` |
+| `plg_webservices_livingword/` | API route registration | `CWM\Plugin\WebServices\Livingword\` |
+| `build/` | Package manifest and installer, build and test scripts, frontend sources (`build/media_source/`) | |
+| `tests/` | PHPUnit (`unit/`, `integration/`) and Playwright (`e2e/`) suites | |
 
 ## License
 

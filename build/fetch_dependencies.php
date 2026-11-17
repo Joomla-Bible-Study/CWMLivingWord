@@ -4,7 +4,7 @@
  * LivingWord — fetch external build dependencies.
  *
  * Downloads the latest stable pkg_cwmscripture release from GitHub. The build
- * bundles the package whole, not its three inner zips — see script.install.php.
+ * bundles the package whole, not its four inner zips — see script.install.php.
  *
  * Fails hard on any network, API, or verification error — offline builds are
  * not supported because shipping a stale scripture library would silently
@@ -17,6 +17,10 @@ const SCRIPTURE_INNER_ZIPS   = [
     'lib_cwmscripture.zip',
     'plg_content_scripturelinks.zip',
     'plg_task_cwmscripture.zip',
+    // Since pkg_cwmscripture 1.2.0. Disarms the library's legacy uninstall SQL
+    // before an update can run it; it exists for stacks like this one, which
+    // carry the library without Proclaim's own system plugin.
+    'plg_system_cwmscripture.zip',
 ];
 
 /**

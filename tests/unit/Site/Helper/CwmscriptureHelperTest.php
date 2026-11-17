@@ -12,7 +12,7 @@ use CWM\Component\Livingword\Site\Helper\CwmscriptureHelper;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for scripture helper URL generation and parsing.
+ * Tests for scripture helper reference rendering and parsing.
  *
  * Tests only pure methods that don't require lib_cwmscripture or Joomla.
  *
@@ -20,95 +20,59 @@ use PHPUnit\Framework\TestCase;
  */
 class CwmscriptureHelperTest extends TestCase
 {
-    // ── getBibleGatewayUrl ──
+    // ── buildReadingReference ──
 
-    public function testGetBibleGatewayUrlBasic(): void
+    public function testBuildReadingReferenceContainsReference(): void
     {
-        $url = CwmscriptureHelper::getBibleGatewayUrl('Genesis 1', 'kjv');
-
-        $this->assertStringContainsString('biblegateway.com', $url);
-        $this->assertStringContainsString('search=Genesis', $url);
-        $this->assertStringContainsString('version=KJV', $url);
-    }
-
-    public function testGetBibleGatewayUrlEncodesSpaces(): void
-    {
-        $url = CwmscriptureHelper::getBibleGatewayUrl('1 Samuel 1', 'nlt');
-
-        $this->assertStringContainsString('search=1+Samuel', $url);
-        $this->assertStringContainsString('version=NLT', $url);
-    }
-
-    public function testGetBibleGatewayUrlMultiPassage(): void
-    {
-        $url = CwmscriptureHelper::getBibleGatewayUrl('Genesis 1-3; Psalm 23', 'esv');
-
-        $this->assertStringContainsString('Genesis', $url);
-        $this->assertStringContainsString('Psalm', $url);
-    }
-
-    public function testGetBibleGatewayUrlEmptyReading(): void
-    {
-        $url = CwmscriptureHelper::getBibleGatewayUrl('', 'kjv');
-
-        $this->assertStringContainsString('biblegateway.com', $url);
-        $this->assertStringContainsString('search=', $url);
-    }
-
-    // ── buildReadingLink ──
-
-    public function testBuildReadingLinkContainsReference(): void
-    {
-        $html = CwmscriptureHelper::buildReadingLink('Genesis 1-3', 'kjv');
+        $html = CwmscriptureHelper::buildReadingReference('Genesis 1-3', 'kjv');
 
         $this->assertStringContainsString('Genesis 1-3', $html);
     }
 
-    public function testBuildReadingLinkHasBibleGatewayHref(): void
+    public function testBuildReadingReferenceIsNotALink(): void
     {
-        $html = CwmscriptureHelper::buildReadingLink('Psalm 23', 'niv');
+        // LivingWord links to no external Bible site: a reference is text,
+        // never a link, whatever the version.
+        $html = CwmscriptureHelper::buildReadingReference('Psalm 23', 'niv');
 
-        $this->assertStringContainsString('biblegateway.com', $html);
-        $this->assertStringContainsString('href=', $html);
+        $this->assertStringStartsWith('<span class="livingword-reading-ref"', $html);
+        $this->assertStringNotContainsString('<a ', $html);
+        $this->assertStringNotContainsString('href=', $html);
+        $this->assertStringNotContainsString('target=', $html);
+        $this->assertStringNotContainsStringIgnoringCase('biblegateway', $html);
     }
 
-    public function testBuildReadingLinkOpensInNewTab(): void
+    public function testBuildReadingReferenceHasDataVersion(): void
     {
-        $html = CwmscriptureHelper::buildReadingLink('John 3:16', 'kjv');
-
-        $this->assertStringContainsString('target="_blank"', $html);
-        $this->assertStringContainsString('rel="noopener"', $html);
-    }
-
-    public function testBuildReadingLinkHasDataVersion(): void
-    {
-        $html = CwmscriptureHelper::buildReadingLink('Genesis 1', 'web');
+        $html = CwmscriptureHelper::buildReadingReference('Genesis 1', 'web');
 
         $this->assertStringContainsString('data-version="web"', $html);
     }
 
-    public function testBuildReadingLinkEscapesHtml(): void
+    public function testBuildReadingReferenceEscapesHtml(): void
     {
-        $html = CwmscriptureHelper::buildReadingLink('Test <script>alert(1)</script>', 'kjv');
+        $html = CwmscriptureHelper::buildReadingReference('Test <script>alert(1)</script>', 'kjv');
 
         $this->assertStringNotContainsString('<script>', $html);
         $this->assertStringContainsString('&lt;script&gt;', $html);
     }
 
-    // ── buildBibleGatewayLink ──
-
-    public function testBuildBibleGatewayLinkContainsIcon(): void
+    public function testBuildReadingReferenceEscapesVersionAttribute(): void
     {
-        $html = CwmscriptureHelper::buildBibleGatewayLink('Genesis 1', 'kjv');
+        $html = CwmscriptureHelper::buildReadingReference('Genesis 1', 'kjv" onmouseover="x');
 
-        $this->assertStringContainsString('icon-out-2', $html);
+        $this->assertStringNotContainsString('" onmouseover=', $html);
+        $this->assertStringContainsString('&quot;', $html);
     }
 
-    public function testBuildBibleGatewayLinkHasExternalClass(): void
-    {
-        $html = CwmscriptureHelper::buildBibleGatewayLink('Genesis 1', 'kjv');
+    // ── buildReadingLink (deprecated alias kept for template overrides) ──
 
-        $this->assertStringContainsString('livingword-external-link', $html);
+    public function testBuildReadingLinkMatchesBuildReadingReference(): void
+    {
+        $this->assertSame(
+            CwmscriptureHelper::buildReadingReference('John 3:16', 'kjv'),
+            CwmscriptureHelper::buildReadingLink('John 3:16', 'kjv')
+        );
     }
 
     // ── isLibraryAvailable (should return false in test env) ──
@@ -127,12 +91,20 @@ class CwmscriptureHelperTest extends TestCase
 
     // ── renderReading fallback (without lib_cwmscripture) ──
 
-    public function testRenderReadingFallsToBibleGatewayLink(): void
+    public function testRenderReadingFallsBackToPlainReference(): void
     {
         $html = CwmscriptureHelper::renderReading('Genesis 1-3', 'kjv');
 
-        $this->assertStringContainsString('biblegateway.com', $html);
-        $this->assertStringContainsString('Genesis 1-3', $html);
+        $this->assertSame(CwmscriptureHelper::buildReadingReference('Genesis 1-3', 'kjv'), $html);
+        $this->assertStringNotContainsString('href=', $html);
+        $this->assertStringNotContainsStringIgnoringCase('biblegateway', $html);
+    }
+
+    public function testHelperHasNoBibleGatewayApi(): void
+    {
+        // BibleGateway is gone for good: the helper must not grow a way back.
+        $this->assertFalse(method_exists(CwmscriptureHelper::class, 'getBibleGatewayUrl'));
+        $this->assertFalse(method_exists(CwmscriptureHelper::class, 'buildBibleGatewayLink'));
     }
 
     // ── expandChapterRange (private, test via reflection) ──

@@ -187,7 +187,7 @@ $wa->registerAndUseStyle('com_livingword.main', 'media/com_livingword/css/living
                                             </td>
                                             <td class="livingword-day-cell"><?php echo $r['dayNum']; ?></td>
                                             <td>
-                                                <?php echo CwmscriptureHelper::buildReadingLink($r['reading']->reading, $user->bible_version); ?>
+                                                <?php echo CwmscriptureHelper::buildReadingReference($r['reading']->reading, $user->bible_version); ?>
                                                 <?php if (isset($noteDays[$r['dayNum']])) : ?>
                                                     <span class="icon-pencil-2 text-success ms-1" style="font-size: 0.75em;"
                                                           aria-label="<?php echo Text::_('COM_LIVINGWORD_NOTES_INDICATOR'); ?>"

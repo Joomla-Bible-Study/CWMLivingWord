@@ -17,7 +17,10 @@ use Joomla\CMS\Language\Text;
 /** @var object $reading */
 /** @var \Joomla\Registry\Registry $params */
 
-$showLink = (int) $params->get('show_reading_link', 1);
+// The param keeps its historical name so saved modules still read it; it now
+// chooses scripture text (per the component's display mode) over the bare
+// reference. No external link is ever rendered.
+$showScripture = (int) $params->get('show_reading_link', 1);
 ?>
 <div class="mod-livingword">
     <?php if (empty($reading->hasSubscription)) : ?>
@@ -26,7 +29,7 @@ $showLink = (int) $params->get('show_reading_link', 1);
         <p class="mod-livingword-day">
             <strong><?php echo Text::sprintf('COM_LIVINGWORD_DAY_OF', $reading->currentDay, $reading->totalDays); ?></strong>
         </p>
-        <?php if ($showLink) : ?>
+        <?php if ($showScripture) : ?>
             <div class="mod-livingword-reading">
                 <?php echo CwmscriptureHelper::renderReading($reading->readingText, $reading->bible_version); ?>
             </div>

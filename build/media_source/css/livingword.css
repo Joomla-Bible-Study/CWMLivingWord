@@ -194,15 +194,11 @@
   margin-top: 0;
 }
 
-/* ── Reading reference link ── */
+/* ── Reading reference ──
+   Plain text, not a link: LivingWord sends readers to no external Bible site,
+   so nothing here should look clickable. */
 .livingword-reading-ref {
   font-weight: 600;
-  color: var(--bs-primary, #0d6efd);
-  text-decoration: none;
-}
-
-.livingword-reading-ref:hover {
-  text-decoration: underline;
 }
 
 /* ── Passage checkmarks (multi-passage) ── */

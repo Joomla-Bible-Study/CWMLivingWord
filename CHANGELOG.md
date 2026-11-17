@@ -7,6 +7,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Removed
+
+- **BibleGateway.** LivingWord no longer sends readers to BibleGateway or any other external Bible site. Wherever no scripture text can be shown, the reading now appears as its plain reference. That covers a missing scripture library, the "Reference Only" display mode, a provider that didn't answer, and the plan view's day list. `CwmscriptureHelper::buildBibleGatewayLink()` and `getBibleGatewayUrl()` are gone, and `buildReadingLink()` is deprecated in favour of `buildReadingReference()`.
+
+### Changed
+
+- The "Link Only (BibleGateway)" scripture display mode is now "Reference Only (no scripture text)". Saved settings keep working.
+- The module's "Show Reading Link" option is now "Show Scripture Text", which is what it actually switches.
+- Registration with lib_cwmscripture's consumer registry goes through the library's documented `src/consumer.php` entry point. It no longer depends on the library being autoloadable, so it also succeeds on the first install, inside the same request that installs the library.
+- The build refuses a bundled scripture package without `plg_system_cwmscripture`, the plugin that protects downloaded Bible translations during library updates.
+
+### Fixed
+
+- The "Show Scripture Text" toggle button was hard-coded English. It is now translated.
+
 ### Milestone 1 — Engagement & Progress Tracking (planned)
 - Reading completion tracking per day (`#__livingword_progress` table)
 - Progress indicator: Day X of Y, percentage complete

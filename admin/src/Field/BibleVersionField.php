@@ -29,7 +29,8 @@ class BibleVersionField extends ListField
     protected $type = 'BibleVersion';
 
     /**
-     * Common Bible translations used with BibleGateway and BibleBrain.
+     * Common Bible translation codes, as the scripture library and BibleBrain
+     * audio know them.
      *
      * @var array
      * @since 5.8.0

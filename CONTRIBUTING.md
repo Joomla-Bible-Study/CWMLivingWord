@@ -35,7 +35,7 @@ composer verify      # register extensions in Joomla database
 4. Write or update tests if applicable
 5. Run the full check before pushing:
    ```bash
-   composer check    # syntax + lint + tests
+   composer check    # syntax + workflow lint + code style + tests
    ```
 6. Open a pull request against `main` using the PR template
 

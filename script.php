@@ -12,7 +12,6 @@
 
 // phpcs:enable PSR1.Files.SideEffects
 
-use CWM\Library\Scripture\Installer\ConsumerRegistry;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filter\OutputFilter;
 use Joomla\CMS\Installer\InstallerAdapter;
@@ -198,11 +197,25 @@ class Com_livingwordInstallerScript
      * dependencies, so the only extensions the library can see are the ones in
      * its `FIRST_PARTY` list or in this registry. com_livingword is currently in
      * that hardcoded list; registering means we no longer depend on staying
-     * there. Requires lib_cwmscripture 1.1.6 (#85).
+     * there.
+     *
+     * Goes through `src/consumer.php`, the entry point the library documents for
+     * install scripts, not `ConsumerRegistry` directly. Inside a package install
+     * the library lands in the same request one step ahead of us, after Joomla
+     * built its PSR-4 map, so `CWM\Library\Scripture\*` is routinely not
+     * autoloadable here and a `class_exists()` guard skipped registration
+     * silently. The entry point registers the namespace from its own directory,
+     * no-ops on libraries too old to have a registry, and never throws. The
+     * `is_file()` guard covers lib_cwmscripture older than 1.1.7, which has no
+     * entry point.
+     *
+     * `require`, not `require_once`: several consumers run in one package
+     * install, and `require_once` returns `true` instead of the registrar to
+     * every caller after the first.
      *
      * The library is a soft dependency — every call site guards on
-     * `class_exists()` / `isInstalled()` and falls back to BibleGateway — so a
-     * missing registry must never fail the install.
+     * `class_exists()` / `isInstalled()` and falls back to the plain reading
+     * reference — so a missing registry must never fail the install.
      *
      * @return  void
      *
@@ -210,11 +223,9 @@ class Com_livingwordInstallerScript
      */
     private function registerScriptureConsumer(): void
     {
-        if (!class_exists(ConsumerRegistry::class)) {
-            return;
+        if (is_file($consumer = JPATH_LIBRARIES . '/cwmscripture/src/consumer.php')) {
+            (require $consumer)->register('com_livingword', 'component', name: 'Living Word (com_livingword)');
         }
-
-        ConsumerRegistry::register('com_livingword', 'component', name: 'Living Word (com_livingword)');
     }
 
     /**
@@ -222,7 +233,8 @@ class Com_livingwordInstallerScript
      *
      * Leaving it behind would not pin the library forever — `installed()` prunes
      * rows whose extension is gone from `#__extensions` — but unregistering is
-     * the cheap, explicit half of the contract.
+     * the cheap, explicit half of the contract. Same entry point, and the same
+     * reasons, as {@see registerScriptureConsumer()}.
      *
      * @return  void
      *
@@ -230,11 +242,9 @@ class Com_livingwordInstallerScript
      */
     private function unregisterScriptureConsumer(): void
     {
-        if (!class_exists(ConsumerRegistry::class)) {
-            return;
+        if (is_file($consumer = JPATH_LIBRARIES . '/cwmscripture/src/consumer.php')) {
+            (require $consumer)->unregister('com_livingword', 'component');
         }
-
-        ConsumerRegistry::unregister('com_livingword', 'component');
     }
 
     /**
