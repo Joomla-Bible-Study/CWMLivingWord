@@ -7,6 +7,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Requires PHP 8.4 or later** (was 8.3). A site on PHP 8.3 keeps the version it has: the update feed's PHP minimum stops Joomla offering the update, and the installer refuses PHP 8.3.
+
 ### Milestone 1 — Engagement & Progress Tracking (planned)
 - Reading completion tracking per day (`#__livingword_progress` table)
 - Progress indicator: Day X of Y, percentage complete

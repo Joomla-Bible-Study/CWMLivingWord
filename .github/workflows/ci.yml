@@ -56,7 +56,7 @@ jobs:
     # the CI equivalent of the `^1.4` Composer constraint in composer.json.
     uses: Joomla-Bible-Study/cwm-build-tools/.github/workflows/joomla-package-ci.yml@v1
     with:
-      php-version: '8.3'
+      php-version: '8.5'
       # PHP CS Fixer was held off during the migration because the tree had
       # formatting it would reject. That debt is paid — `composer lint` reports
       # 0 of 97 files fixable — so it gates now, in its own change, which is

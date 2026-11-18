@@ -44,18 +44,18 @@ class LivingwordComponent extends MVCComponent implements
     }
 
     /**
-     * Minimum PHP version ID required (8.3.0 = 80300).
+     * Minimum PHP version ID required (8.4.0 = 80400).
      *
      * @since 5.0.0
      */
-    public const int MIN_PHP_VERSION_ID = 80300;
+    public const int MIN_PHP_VERSION_ID = 80400;
 
     /**
      * Minimum PHP version as a display string for error messages.
      *
      * @since 5.0.0
      */
-    public const string MIN_PHP_VERSION = '8.3.0';
+    public const string MIN_PHP_VERSION = '8.4.0';
 
     /**
      * Minimum Joomla version required.
