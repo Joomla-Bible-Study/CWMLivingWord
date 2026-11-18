@@ -16,7 +16,6 @@
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
-    "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.2",
     "csso": "^5.0.5",
     "eslint": "^10.15.0",
