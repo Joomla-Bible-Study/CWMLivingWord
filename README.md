@@ -9,7 +9,7 @@ Originally created by Mike Leeper (MLWebTechnologies) as a Joomla 3.x component,
 ## Requirements
 
 - Joomla 5.x or 6.x
-- PHP 8.3+
+- PHP 8.4+
 - MySQL 8.0+ / MariaDB 10.4+
 
 ## What's in the Package
@@ -104,7 +104,7 @@ The module has one option, **Show Scripture Text**. When it is on, the module sh
 
 ## Development
 
-Prerequisites: PHP 8.3+, Composer, Node.js 24+ / npm 10.1+, and a local Joomla 5 or 6 site.
+Prerequisites: PHP 8.5 (the shipped code supports 8.4+), Composer, Node.js 24+ / npm 10.1+, and a local Joomla 5 or 6 site.
 
 ```bash
 composer install     # PHP deps, incl. cwm-build-tools (creates build.properties)

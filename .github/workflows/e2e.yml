@@ -104,7 +104,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.5'
           extensions: mbstring, json, simplexml, pdo, pdo_mysql, mysqli, zip, gd
 
       - name: Cache Composer dependencies

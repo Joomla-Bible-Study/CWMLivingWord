@@ -93,7 +93,7 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `style`
 - **JS/CSS/YAML/JSON indent:** 2 spaces
 - **Line endings:** Unix (LF)
 - **Encoding:** UTF-8, no BOM
-- **PHP 8.3+ features** are welcome (readonly, match, enums, etc.)
+- **PHP 8.4 features** are welcome (readonly, match, enums, property hooks, etc.). Development and CI run on 8.5, but sites may run 8.4, so nothing 8.5-only (the pipe operator `|>`, `clone()` with properties, `array_first()` / `array_last()`).
 - **Joomla naming:** Follow Joomla 5/6 conventions (namespaced MVC, DI container, PSR-4)
 
 ## Database changes

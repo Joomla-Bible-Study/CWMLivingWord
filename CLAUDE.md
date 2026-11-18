@@ -22,7 +22,7 @@ This follows the standard **Joomla 5/6 MVC component pattern** with namespaced c
 
 ### Top-level Layout
 
-- `livingword.xml` — Joomla extension manifest (Joomla 5+6 compatibility, PHP 8.3+)
+- `livingword.xml` — Joomla extension manifest (Joomla 5+6 compatibility, PHP 8.4+)
 - `script.php` — Install/update/uninstall script with version checks
 - `admin/` — Administrator component (controllers, models, views, templates, forms, SQL, language)
 - `site/` — Frontend component (controllers, models, views, templates, language)
@@ -151,7 +151,7 @@ The build, dev, and release pipeline is driven entirely by [`cwm-build-tools`](h
 
 ### Prerequisites
 
-- PHP 8.3+
+- PHP 8.5 for development. The shipped code must still run on 8.4, so no 8.5-only syntax or functions such as the pipe operator (`|>`), `clone()` with properties, or `array_first()` / `array_last()`.
 - Composer
 - Node.js 24+ and npm 10.1+ (for frontend asset pipeline; see `engines` in `package.json`)
 - A local Joomla 5 (or 6) installation for symlinked development

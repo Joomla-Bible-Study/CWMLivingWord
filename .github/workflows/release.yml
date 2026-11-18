@@ -20,7 +20,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.5'
           extensions: mbstring, json, xml, zip, curl
           coverage: none
 
@@ -108,7 +108,7 @@ jobs:
 
           ## Requirements
 
-          - PHP 8.3+
+          - PHP 8.4+
           - Joomla 5.x / 6.x
           EOF
           )"
