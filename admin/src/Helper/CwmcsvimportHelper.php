@@ -21,7 +21,7 @@ namespace CWM\Component\Livingword\Administrator\Helper;
  * import itself is CwmutilitiesController::csvimport(), which needs a session
  * token, a database and an uploaded file before it reads a single row.
  *
- * @since  __DEPLOY_VERSION__
+ * @since  5.8.1
  */
 final class CwmcsvimportHelper
 {
@@ -36,7 +36,7 @@ final class CwmcsvimportHelper
      *
      * @return  \Generator<int, array<int, string|null>>
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.1
      */
     public static function rows($handle): \Generator
     {

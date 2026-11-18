@@ -36,6 +36,26 @@
 <changelogs>
 
     <!-- ============================================================ -->
+    <!-- 5.8.1                                                    -->
+    <!-- ============================================================ -->
+    <changelog>
+        <element>pkg_livingword</element>
+        <type>package</type>
+        <version>5.8.1</version>
+        <date>2026-11-18</date>
+        <fix>
+            <item>Importing a reading plan from a CSV file no longer raises a PHP deprecation notice for every row on PHP 8.4 and 8.5.</item>
+            <item>On a PHP version older than 8.3, LivingWord switches itself off instead of breaking the site, and administrators see a banner explaining why.</item>
+        </fix>
+        <change>
+            <item>Bundles CWM Scripture 1.2.21, which adds the same PHP safeguard to the scripture plugins.</item>
+        </change>
+        <note>
+            <item>PHP 8.3 is supported until CWM Proclaim 11 is released. From then on, LivingWord and the other CWM extensions require PHP 8.4 or later.</item>
+        </note>
+    </changelog>
+
+    <!-- ============================================================ -->
     <!-- 5.8.0                                                    -->
     <!-- ============================================================ -->
     <changelog>
