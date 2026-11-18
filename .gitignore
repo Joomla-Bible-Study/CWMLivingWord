@@ -91,4 +91,6 @@ build.properties
 /build/dist/
 /media/com_livingword/js/
 /media/com_livingword/css/
+/admin/livingword.xml
+/admin/script.php
 # === cwm-build-tools: end extension paths ===
