@@ -14,6 +14,7 @@ namespace CWM\Component\Livingword\Administrator\Controller;
 
 // phpcs:enable PSR1.Files.SideEffects
 
+use CWM\Component\Livingword\Administrator\Helper\CwmcsvimportHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Controller\BaseController;
@@ -205,7 +206,7 @@ class CwmutilitiesController extends BaseController
         try {
             $db->transactionStart();
 
-            while (($row = fgetcsv($handle)) !== false) {
+            foreach (CwmcsvimportHelper::rows($handle) as $row) {
                 $lineNum++;
 
                 // Skip header row if present

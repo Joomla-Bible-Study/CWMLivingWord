@@ -108,7 +108,7 @@ jobs:
 
           ## Requirements
 
-          - PHP 8.4+
+          - PHP 8.3+
           - Joomla 5.x / 6.x
           EOF
           )"

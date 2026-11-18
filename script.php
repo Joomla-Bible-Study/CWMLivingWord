@@ -33,7 +33,7 @@ class Com_livingwordInstallerScript
      * @var string
      * @since 5.0.0
      */
-    protected string $minimumPhp = '8.4.0';
+    protected string $minimumPhp = '8.3.0';
 
     /**
      * Minimum Joomla version required.
