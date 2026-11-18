@@ -22,7 +22,7 @@ This follows the standard **Joomla 5/6 MVC component pattern** with namespaced c
 
 ### Top-level Layout
 
-- `livingword.xml` — Joomla extension manifest (Joomla 5+6 compatibility, PHP 8.4+)
+- `livingword.xml` — Joomla extension manifest (Joomla 5+6 compatibility, PHP 8.3+)
 - `script.php` — Install/update/uninstall script with version checks
 - `admin/` — Administrator component (controllers, models, views, templates, forms, SQL, language)
 - `site/` — Frontend component (controllers, models, views, templates, language)
@@ -151,7 +151,7 @@ The build, dev, and release pipeline is driven entirely by [`cwm-build-tools`](h
 
 ### Prerequisites
 
-- PHP 8.5 for development. The shipped code must still run on 8.4, so no 8.5-only syntax or functions such as the pipe operator (`|>`), `clone()` with properties, or `array_first()` / `array_last()`.
+- PHP 8.5 for development. The shipped code supports PHP 8.3+. Its floor is 8.3 until Proclaim 11's release, then 8.4, as the CWM extensions move together. A second CI job runs the tests on 8.3, so don't use anything newer than 8.3: no 8.4 property hooks, asymmetric visibility, `new Foo()->bar()` without parentheses or `array_find()` / `array_any()`, and no 8.5 pipe operator (`|>`), `clone()` with properties or `array_first()` / `array_last()`. PHPUnit stays on 12.5, the last line that runs on 8.3; 13 needs PHP 8.4.1.
 - Composer
 - Node.js 24+ and npm 10.1+ (for frontend asset pipeline; see `engines` in `package.json`)
 - A local Joomla 5 (or 6) installation for symlinked development
@@ -258,7 +258,7 @@ When in doubt, ask before deleting.
 
 ### CI/CD
 
-- **GitHub Actions CI** (`.github/workflows/ci.yml`): on push/PR to `main`, runs cwm-build-tools' reusable `joomla-package-ci.yml@v1`. That covers PHP syntax lint, php-cs-fixer, ESLint, PHPUnit, migration schema replay, and a full `composer build`.
+- **GitHub Actions CI** (`.github/workflows/ci.yml`): on push/PR to `main`, runs cwm-build-tools' reusable `joomla-package-ci.yml@v1`. That covers PHP syntax lint, php-cs-fixer, ESLint, PHPUnit, migration schema replay, and a full `composer build`. A second job, `php83`, runs the syntax lint and PHPUnit on PHP 8.3 through `joomla-library-ci.yml@v1`, which can skip packaging: packaging needs cwm-build-tools, and so PHP 8.4.
 - **Nightly E2E** (`.github/workflows/e2e.yml`): Playwright suite at 04:23 UTC, plus manual dispatch
 - **Release** (`.github/workflows/release.yml`): runs on `v*` tags
 - **CodeQL** (`.github/workflows/codeql.yml`): Weekly security scanning

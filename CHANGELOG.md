@@ -7,9 +7,13 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Changed
+### Deprecated
 
-- **Requires PHP 8.4 or later** (was 8.3). A site on PHP 8.3 keeps the version it has: the update feed's PHP minimum stops Joomla offering the update, and the installer refuses PHP 8.3.
+- **PHP 8.3 support ends with Proclaim 11.** PHP 8.3 is supported until Proclaim 11 is released. From then on, the CWM extensions, this one included, require PHP 8.4 or later.
+
+### Fixed
+
+- **Importing reading plan details from CSV no longer raises a PHP deprecation on PHP 8.4 and 8.5.** The import called `fgetcsv()` without its `$escape` argument, which PHP 8.4 deprecates. It now passes the old default, a backslash, explicitly, so every file is read exactly as before.
 
 ### Milestone 1 — Engagement & Progress Tracking (planned)
 - Reading completion tracking per day (`#__livingword_progress` table)
