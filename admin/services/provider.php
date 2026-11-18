@@ -68,7 +68,7 @@ return new class () implements ServiceProviderInterface {
      *
      * @return  void
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.1
      */
     private function standDown(Container $container): void
     {
@@ -108,7 +108,7 @@ return new class () implements ServiceProviderInterface {
      *
      * @return  void
      *
-     * @since   __DEPLOY_VERSION__
+     * @since   5.8.1
      */
     private function postPhpBanner(): void
     {
