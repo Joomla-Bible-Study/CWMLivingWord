@@ -317,7 +317,8 @@
     },
     "release": {
         "_comment": "Hand-written notes lead the GitHub release body, with the generated pull-request list kept beneath. These are also what ARS republishes on the download page \u2014 the only changelog a site administrator following an update link ever sees. Use the headings cwm-changelog recognises (## New features, ## Fixes, ## Changes, ## Notes) so the same file also produces a real Joomla changelog entry instead of the install boilerplate that generated ones produced.",
-        "notesFile": "build/release-notes-{version}.md"
+        "notesFile": "build/release-notes-{version}.md",
+        "viaPullRequest": true
     },
     "changelog": {
         "file": "build/livingword-changelog.xml",
