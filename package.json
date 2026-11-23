@@ -20,7 +20,7 @@
     "csso": "^5.0.5",
     "eslint": "^10.15.0",
     "globals": "^17.14.0",
-    "rollup": "^4.68.5",
+    "rollup": "^4.68.7",
     "rollup-plugin-gzip": "^4.2.3"
   },
   "scripts": {
